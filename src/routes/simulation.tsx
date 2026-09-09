@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import {
   Activity,
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -214,6 +215,8 @@ function SimulationPage() {
 function SimulationReady() {
   const simJourneys = useMemo(() => simulationJourneys(), []);
   const [journeyId, setJourneyId] = useState(simJourneys[0]?.journey_id ?? "");
+  const [holdStationIndex, setHoldStationIndex] = useState(1);
+  const [holdMinutes, setHoldMinutes] = useState(0);
 
   const journey = useMemo(
     () => simJourneys.find((j) => j.journey_id === journeyId) ?? simJourneys[0],
@@ -221,8 +224,19 @@ function SimulationReady() {
   );
 
   const simulation = useMemo(
-    () => (journey ? buildSimulation(journey) : null),
-    [journey],
+    () =>
+      journey
+        ? buildSimulation(
+            journey,
+            holdMinutes > 0
+              ? {
+                  stationIndex: holdStationIndex,
+                  additionalDelayMinutes: holdMinutes,
+                }
+              : null,
+          )
+        : null,
+    [journey, holdMinutes, holdStationIndex],
   );
 
   const [speedIndex, setSpeedIndex] = useState(1);
@@ -233,11 +247,11 @@ function SimulationReady() {
   const speedRef = useRef<number>(SPEEDS[speedIndex] ?? 1);
   speedRef.current = SPEEDS[speedIndex] ?? 1;
 
-  // Reset the clock whenever a different run is selected.
+  // Reset the clock whenever the selected run or delay scenario changes.
   useEffect(() => {
     setSimTime(null);
     setRunning(true);
-  }, [journey?.journey_id]);
+  }, [journey?.journey_id, holdMinutes, holdStationIndex]);
 
   // Animation loop: the sim clock advances at SPEEDS[speedIndex]× real time.
   useEffect(() => {
@@ -522,6 +536,71 @@ function SimulationReady() {
             </div>
           </div>
 
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <div>
+                  <p className="text-xs font-semibold text-foreground">Station hold scenario</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Add a hold at a station and watch the model re-forecast the remaining ETAs.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  Held at
+                  <Select
+                    value={String(holdStationIndex)}
+                    onValueChange={(value) => setHoldStationIndex(Number(value))}
+                  >
+                    <SelectTrigger className="h-9 w-[150px] bg-background text-xs text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stops.slice(1, -1).map((stop) => (
+                        <SelectItem key={stop.code} value={String(stop.index)} className="text-xs">
+                          {stop.code} — {stop.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+
+                <div className="flex min-w-[220px] flex-1 items-center gap-3">
+                  <label htmlFor="station-hold" className="whitespace-nowrap text-xs text-muted-foreground">
+                    Extra hold
+                  </label>
+                  <Slider
+                    id="station-hold"
+                    value={[holdMinutes]}
+                    onValueChange={(value) => setHoldMinutes(value[0] ?? 0)}
+                    min={0}
+                    max={15}
+                    step={1}
+                    aria-label="Extra station hold in minutes"
+                    className="w-28 cursor-pointer"
+                  />
+                  <span className="min-w-12 font-mono text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    +{holdMinutes} min
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div aria-live="polite" className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              {simulation.delayScenario ? (
+                <>
+                  <strong className="text-amber-700 dark:text-amber-300">Scenario active:</strong>{" "}
+                  {simulation.delayScenario.additionalDelayMinutes}-minute hold at {stops[simulation.delayScenario.stationIndex]?.code}. At departure, the LightGBM forecast receives the new running delay and recalculates each downstream ETA from learned historical section patterns.
+                </>
+              ) : (
+                "No added hold. This is the baseline replay seeded from the selected historical run."
+              )}
+            </div>
+          </div>
+
           {/* Interactive Timeline Scrubber */}
           <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
@@ -600,6 +679,7 @@ function SimulationReady() {
             <thead className="bg-secondary/60 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-2 text-left">Stop</th>
+                <th className="px-4 py-2 text-right">Station hold</th>
                 <th className="px-4 py-2 text-right">Timetable</th>
                 <th className="px-4 py-2 text-right">
                   <span className="inline-flex items-center gap-1">
@@ -643,6 +723,15 @@ function SimulationReady() {
                         {stop.code}
                       </span>{" "}
                       <span className="text-muted-foreground">{stop.name}</span>
+                    </td>
+                    <td className="px-4 py-2 text-right">
+                      {stop.stationHoldMinutes > 0 ? (
+                        <span className="font-mono font-medium text-amber-700 dark:text-amber-300">
+                          +{stop.stationHoldMinutes} min
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-2 text-right text-muted-foreground">
                       <EtaCell value={stop.scheduledArrival} />

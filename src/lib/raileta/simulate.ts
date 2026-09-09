@@ -111,6 +111,8 @@ export type SimStop = {
   actualArrival: Date | null;
   /** Simulated actual departure (null at the terminus). */
   actualDeparture: Date | null;
+  /** Extra dwell injected at this stop for the interactive delay scenario. */
+  stationHoldMinutes: number;
   /** Static timetable ETA (scheduled + origin delay, no recovery). */
   staticArrival: Date | null;
   /** Model's dynamic ETA (null at the origin). */
@@ -141,6 +143,15 @@ export type SimEvent = {
   stationIndex: number;
 };
 
+/**
+ * A user-selected operational hold. It represents a train being held at one
+ * intermediate station; it is deliberately separate from the captured run.
+ */
+export type DelayScenario = {
+  stationIndex: number;
+  additionalDelayMinutes: number;
+};
+
 export type Simulation = {
   journey: Journey;
   stops: SimStop[];
@@ -165,6 +176,8 @@ export type Simulation = {
   /** Mean |error| of each ETA vs the simulated actuals, stops after origin. */
   dynamicMae: number | null;
   staticMae: number | null;
+  /** Null for the historical-replay baseline, otherwise the injected hold. */
+  delayScenario: DelayScenario | null;
 };
 
 function minutesBetween(a: Date, b: Date): number {
@@ -207,7 +220,10 @@ export function simulationJourneys(): Journey[] {
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
-export function buildSimulation(journey: Journey): Simulation {
+export function buildSimulation(
+  journey: Journey,
+  delayScenario: DelayScenario | null = null,
+): Simulation {
   const hops: Hop[] = journey.hops;
   const stopCount = hops.length + 2; // hops join 4 hops → 6 corridor stops
 
@@ -272,6 +288,12 @@ export function buildSimulation(journey: Journey): Simulation {
         schedDep !== null ? schedDep + Math.max(0, delay) * MIN : null;
       const earliest = prevArrival! + DWELL * MIN;
       depTime = propagated !== null ? Math.max(propagated, earliest) : earliest;
+      // The hold becomes known when the train is at this station. From this
+      // point the model receives the new running delay and re-forecasts every
+      // remaining captured section using its historical behaviour.
+      if (delayScenario?.stationIndex === j) {
+        depTime += delayScenario.additionalDelayMinutes * MIN;
+      }
       if (schedDep !== null) {
         delay = (depTime - schedDep) / MIN;
       }
@@ -377,8 +399,12 @@ export function buildSimulation(journey: Journey): Simulation {
               arrival.getTime() + 0.5 * MIN,
             )
           : arrival.getTime() + DWELL * MIN;
-      actualDeparture[i] = new Date(dep);
-      prevActualDep = dep;
+      const heldDeparture =
+        delayScenario?.stationIndex === i
+          ? dep + delayScenario.additionalDelayMinutes * MIN
+          : dep;
+      actualDeparture[i] = new Date(heldDeparture);
+      prevActualDep = heldDeparture;
     }
   }
 
@@ -406,6 +432,10 @@ export function buildSimulation(journey: Journey): Simulation {
       scheduledDeparture: scheduledDeparture[i] ?? null,
       actualArrival: actualArrival[i] ?? null,
       actualDeparture: actualDeparture[i] ?? null,
+      stationHoldMinutes:
+        delayScenario?.stationIndex === i
+          ? delayScenario.additionalDelayMinutes
+          : 0,
       staticArrival: staticArrival[i] ?? null,
       dynamicArrival: dynamicArrival[i] ?? null,
       staticDelay,
@@ -481,6 +511,7 @@ export function buildSimulation(journey: Journey): Simulation {
     actualFinalArrival: last.actualArrival,
     dynamicMae,
     staticMae,
+    delayScenario,
   };
 }
 
