@@ -1,88 +1,136 @@
-# RailETA — Bengaluru → Mysuru train ETA prediction
+# RailETA
 
-RailETA predicts station-by-station arrival times for trains on the KSR Bengaluru (SBC) →
-Mysuru Jn (MYS) corridor, using a LightGBM model trained on **real, publicly published
-historical running data**. No records are fabricated, duplicated, or synthetically modified
-anywhere in this project. Where the upstream sources have no data, the gap stays a gap and is
-reported as such.
+### Bengaluru → Mysuru ETA intelligence, built on real historical train-running data
 
-## What is in the box
+> A research prototype that predicts station-by-station arrival times for the KSR Bengaluru (SBC) → Mysuru Junction (MYS) corridor. RailETA uses a LightGBM model and keeps the full data journey visible—from collection to dashboard.
 
-| Part | Path | What it does |
-| --- | --- | --- |
-| Data collection | `ml/data_loader.py` | Fetches corridor train list, route geometry, and historical running records; caches every raw payload with its source URL |
-| Cleaning | `ml/preprocessing.py` | Parses genuine scheduled/actual timestamps, drops cancelled/partial/implausible records, writes a cleaning report |
-| Features | `ml/feature_engineering.py` | Builds causal, non-leaking features (historical section stats use strictly earlier journeys only) |
-| Training | `ml/train.py` | LightGBM regressor on section travel time, chronological train/valid/test split |
-| Evaluation | `ml/evaluate.py` | Test metrics vs. a scheduled-time + current-delay baseline, feature importance, SHAP |
-| Export | `ml/export_artifacts.py` | Exports the trained trees and real data into `src/data/` for the web app, with Python↔browser parity check |
-| API | `backend/main.py` | FastAPI: `/health`, `/predict-eta`, `/predict-journey`, `/model-info`, `/dataset`, `/data-sources` |
-| Web app | `src/` | Dashboard (historical replay), Dataset & Sources page, ML Model page |
+| 🧭 Corridor | 🧠 Model | 🖥️ Experience | 🔎 Operating mode |
+| :--- | :--- | :--- | :--- |
+| SBC → MYS | LightGBM regressor | React + Vite dashboard | Historical replay |
 
-## Data sources
+## Why RailETA?
 
-All sources are public. Full per-source provenance — URL, fields, extraction method, record
-count, date range, collection date, and limitations — is written to `data/data_sources.json`
-and rendered on the **Dataset & Sources** page.
+RailETA is designed around one simple principle: **be useful without inventing data**. It learns from publicly available completed journeys, reports data gaps honestly, and makes the model, evaluation, and source provenance visible in the web app.
 
-- **RailRadar API** (`https://api.railradar.in/v1`) — train metadata, route geometry with real
-  distances, and completed historical journeys with scheduled and actual station timestamps.
-  Requires a free API key (Bearer auth). Free tier: 10 requests/minute, 1,000/month, which is
-  the binding constraint on dataset size.
-- **eRail** (`https://erail.in`) — the list of trains actually running the SBC → MYS corridor.
-- **Open-Meteo Archive** (`https://archive-api.open-meteo.com`) — optional real historical
-  weather for the corridor; enabled via `config/pipeline.json`.
+```mermaid
+flowchart LR
+    A[Public rail data] --> B[Collect & cache]
+    B --> C[Clean genuine timestamps]
+    C --> D[Causal feature engineering]
+    D --> E[LightGBM training]
+    E --> F[Evaluate against timetable baseline]
+    F --> G[Export browser-ready artifacts]
+    G --> H[RailETA dashboard]
 
-There is **no free, legal, public live-position feed** for Indian Railways. The dashboard
-therefore runs in **historical replay mode** over genuine completed journeys, and says so on
-screen. It never simulates live movement.
+    classDef source fill:#1e3a5f,stroke:#60a5fa,color:#fff
+    classDef process fill:#134e4a,stroke:#5eead4,color:#fff
+    classDef output fill:#4c1d95,stroke:#c4b5fd,color:#fff
+    class A source
+    class B,C,D,E,F process
+    class G,H output
+```
 
-## Reproduce it
+## What you can explore
 
-```bash
-# 1. Python environment
-python3 -m venv .venv && source .venv/bin/activate
+| View | What it answers |
+| :--- | :--- |
+| 🚆 **Replay dashboard** | How did a real past journey progress, and what ETA did the model produce? |
+| 📊 **ML Model page** | How was the model trained, evaluated, and compared to the timetable baseline? |
+| 🗂️ **Dataset & Sources** | Which sources supplied each field, when was data collected, and what are its limitations? |
+| 🔌 **FastAPI service** | How can another client request an ETA, journey prediction, or model metadata? |
+
+## Project map
+
+```text
+RailETA
+├── ml/                 Data collection, feature engineering, training and evaluation
+├── backend/            FastAPI prediction endpoints
+├── src/                React dashboard and browser-side model artifacts
+├── data/               Cached raw payloads, processed datasets and provenance
+├── models/             Trained model, metrics and metadata
+├── scripts/            End-to-end pipeline helpers
+└── config/             Pipeline limits and collection settings
+```
+
+## Run locally
+
+### 1. Start the dashboard
+
+```powershell
+npm install
+npm run dev
+```
+
+Open the URL Vite prints—normally `http://localhost:8080`.
+
+### 2. Start the API (optional)
+
+Open a second PowerShell window:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+uvicorn backend.main:app --reload --port 8000
+```
+
+The API is available at `http://localhost:8000`; interactive documentation is at `http://localhost:8000/docs`.
+
+### 3. Reproduce the ML pipeline
+
+You need Python 3.10+ and a RailRadar API key. Put the key in `.env.local`—it is intentionally ignored by Git.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
 
-# 2. API key (never commit this)
-echo 'RAILRADAR_API_KEY=your_key_here' > .env.local
-
-# 3. Full pipeline: collect -> clean -> features -> train -> evaluate -> export
+# Add RAILRADAR_API_KEY=your_key_here to .env.local
 bash scripts/run_all.sh
 ```
 
-Individual stages:
+Individual stages are also available:
 
 ```bash
-bash scripts/scrape.sh     # python -m ml.data_loader
+bash scripts/scrape.sh
 python -m ml.preprocessing
 python -m ml.feature_engineering
-bash scripts/train.sh      # python -m ml.train && python -m ml.evaluate
+bash scripts/train.sh
 python -m ml.export_artifacts
-bash scripts/serve_api.sh  # uvicorn backend.main:app --reload --port 8000
+bash scripts/serve_api.sh
 ```
 
-Web app:
+## API at a glance
 
-```bash
-bun install
-bun run dev     # http://localhost:8080
-```
+| Endpoint | Purpose |
+| :--- | :--- |
+| `GET /health` | Service health check |
+| `POST /predict-eta` | Estimate arrival at one station |
+| `POST /predict-journey` | Predict a complete remaining journey |
+| `GET /model-info` | Model metadata and evaluation context |
+| `GET /dataset` | Dataset summary |
+| `GET /data-sources` | Provenance and source limitations |
 
-Collection respects the provider's published quota: `config/pipeline.json` caps requests
-(`max_history_requests`), throttles them (`min_request_interval_seconds`), and caches every
-journey under `data/raw/runs/`, so a re-run resumes instead of re-spending quota.
+## Data sources & integrity
+
+RailETA records provenance—including source URL, fields, extraction method, record count, date range, collection date, and constraints—in [`data/data_sources.json`](data/data_sources.json).
+
+| Source | Used for | Important constraint |
+| :--- | :--- | :--- |
+| [RailRadar API](https://api.railradar.in/v1) | Train metadata, route geometry and completed historical runs | Free API tier is rate- and quota-limited |
+| [eRail](https://erail.in) | Corridor train list | Availability depends on the upstream site |
+| [Open-Meteo Archive](https://archive-api.open-meteo.com) | Optional historic weather | Enabled through `config/pipeline.json` |
+
+The collection pipeline observes configured request caps and throttling, then caches raw payloads under `data/raw/runs/` so reruns can resume without unnecessarily consuming quota.
 
 ## Honest limitations
 
-- **Small sample.** The free API quota limits the dataset to a few hundred real journeys across
-  a handful of daily corridor trains. Metrics on the held-out test set are reported exactly as
-  measured, including cases where the model does not beat the timetable baseline.
-- **Gaps stay gaps.** Cancelled runs, partial journeys, and missing actual timestamps are
-  dropped, not imputed. Their counts appear in the cleaning report.
-- **Replay, not live.** ETAs on the dashboard are computed from a chosen point in a real past
-  journey, using only information available at that point.
-- **Provider dependency.** All actual-timestamp data ultimately traces to NTES-derived feeds
-  republished by the source APIs, and inherits their reporting delays and errors.
-- **Not operational.** This is a research prototype and must not be used for operational,
-  commercial, or safety-critical decisions.
+> **This is a historical-replay research prototype—not a live train-tracking or operational system.**
+
+- **No fabricated journeys.** Missing, cancelled, partial, or implausible records are excluded rather than invented or imputed.
+- **Small sample sizes.** Free-tier API limits constrain the amount of training data; held-out metrics are reported as measured, even where the model does not outperform the timetable baseline.
+- **No legal free live-position feed.** The dashboard replays genuine completed journeys and clearly labels that mode.
+- **Provider dependency.** Actual timestamps rely on NTES-derived data republished by the upstream providers and may inherit their delays or inaccuracies.
+- **Not for safety-critical or commercial decisions.**
+
+---
+
+Built for transparent rail ETA experimentation on the Bengaluru–Mysuru corridor.
