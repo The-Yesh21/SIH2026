@@ -1,0 +1,117 @@
+{
+  "model": "LightGBM Regression",
+  "prediction_target": "section travel time (minutes)",
+  "training_date": "2026-09-08T23:49:40.833008+05:30",
+  "dataset_version": "2026-09-08T23:33:33.787064+05:30",
+  "features": [
+    "train_code",
+    "section_code",
+    "station_sequence",
+    "section_distance_km",
+    "remaining_distance_km",
+    "scheduled_section_travel_time",
+    "day_of_week",
+    "is_weekend",
+    "hour",
+    "month",
+    "current_delay",
+    "previous_station_delay",
+    "previous_section_travel_time",
+    "time_since_departure",
+    "hist_mean_section_time",
+    "hist_median_section_time",
+    "hist_section_variance",
+    "hist_mean_section_overage",
+    "hist_median_section_overage",
+    "hist_section_overage_rate",
+    "hist_recent_section_overage",
+    "train_punctuality_dev",
+    "journey_overage_so_far",
+    "temperature_c",
+    "precipitation_mm",
+    "humidity_pct",
+    "wind_speed_kmph",
+    "visibility_m"
+  ],
+  "weather_used": true,
+  "fill_values": {
+    "hist_mean_section_time": 7.504545454545454,
+    "hist_median_section_time": 7.683333333333334,
+    "hist_section_variance": 3.8926735480943746,
+    "previous_section_travel_time": 7.058333333333334,
+    "current_delay": 26.0,
+    "previous_station_delay": 23.0,
+    "time_since_departure": 41.91666666666667,
+    "hist_mean_section_overage": -2.0098484848484848,
+    "hist_median_section_overage": -2.0499999999999994,
+    "hist_section_overage_rate": 0.017699115044247787,
+    "hist_recent_section_overage": -1.5966666666666667,
+    "train_punctuality_dev": -1.1880433962264152,
+    "journey_overage_so_far": -0.7569444444444444,
+    "temperature_c": 23.0,
+    "precipitation_mm": 0.0,
+    "humidity_pct": 85.0,
+    "wind_speed_kmph": 10.05,
+    "visibility_m": 0.0
+  },
+  "train_codes": {
+    "16216": 0,
+    "16220": 1,
+    "16228": 2,
+    "56232": 3
+  },
+  "section_codes": {
+    "BDRL-CGKR": 0,
+    "CGKR-PANP": 1,
+    "HNK-MYA": 2,
+    "KNDV-NYH": 3,
+    "MAD-HNK": 4,
+    "MYA-Y": 5,
+    "PANP-S": 6,
+    "RMGM-CPT": 7,
+    "SBC-KNDV": 8
+  },
+  "parameters": {
+    "boosting_type": "gbdt",
+    "class_weight": null,
+    "colsample_bytree": 0.9,
+    "importance_type": "split",
+    "learning_rate": 0.05,
+    "max_depth": -1,
+    "min_child_samples": 20,
+    "min_child_weight": 0.001,
+    "min_split_gain": 0.0,
+    "n_estimators": 800,
+    "n_jobs": null,
+    "num_leaves": 15,
+    "objective": "regression_l1",
+    "random_state": 42,
+    "reg_alpha": 1,
+    "reg_lambda": 1,
+    "subsample": 0.9,
+    "subsample_for_bin": 200000,
+    "subsample_freq": 1,
+    "verbose": -1
+  },
+  "best_iteration": 79,
+  "split": {
+    "method": "chronological (by journey start date)",
+    "train_records": 503,
+    "validation_records": 143,
+    "test_records": 112,
+    "date_ranges": {
+      "train": [
+        "2026-06-07",
+        "2026-08-09"
+      ],
+      "valid": [
+        "2026-08-10",
+        "2026-08-23"
+      ],
+      "test": [
+        "2026-08-24",
+        "2026-09-06"
+      ]
+    }
+  }
+}

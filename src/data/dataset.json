@@ -1,0 +1,322 @@
+{
+  "summary": {
+    "built_at": "2026-09-08T23:33:33.787064+05:30",
+    "station_records": 15837,
+    "journeys": 661,
+    "unique_trains": 8,
+    "date_range": [
+      "2026-06-07",
+      "2026-09-06"
+    ],
+    "clean_sections": 758,
+    "unique_sections": 9,
+    "missing_actual_arrival_pct": 68.51,
+    "missing_actual_departure_pct": 72.13
+  },
+  "cleaning_report": {
+    "raw_sections": 820,
+    "dropped_duplicates": 0,
+    "dropped_non_positive_travel_time": 25,
+    "dropped_excessive_travel_time": 0,
+    "dropped_invalid_schedule": 0,
+    "dropped_invalid_distance": 0,
+    "dropped_impossible_speed": 37,
+    "dropped_absurd_delay": 0,
+    "clean_sections": 758
+  },
+  "trains": [
+    {
+      "train_id": "16228",
+      "train_name": "Talguppa - Mysuru Express",
+      "journeys": 91,
+      "sections": 488
+    },
+    {
+      "train_id": "16216",
+      "train_name": "Chamundi Express",
+      "journeys": 90,
+      "sections": 90
+    },
+    {
+      "train_id": "16220",
+      "train_name": "Chamarajanagar Express",
+      "journeys": 82,
+      "sections": 82
+    },
+    {
+      "train_id": "56232",
+      "train_name": "SMVT Bengaluru - Mysuru Passenger",
+      "journeys": 41,
+      "sections": 98
+    }
+  ],
+  "sections": [
+    {
+      "section_id": "BDRL-CGKR",
+      "from": "BDRL",
+      "from_name": "Byadrahalli",
+      "to": "CGKR",
+      "to_name": "Chandragiri Koppal Halt",
+      "observations": 22,
+      "mean": 4.94,
+      "median": 4.72,
+      "variance": 6.467,
+      "scheduled_mean": 5.0,
+      "distance_km": 5.1,
+      "remaining_km": 27.9,
+      "station_sequence": 17
+    },
+    {
+      "section_id": "CGKR-PANP",
+      "from": "CGKR",
+      "from_name": "Chandragiri Koppal Halt",
+      "to": "PANP",
+      "to_name": "Pandavapura",
+      "observations": 16,
+      "mean": 3.93,
+      "median": 3.45,
+      "variance": 3.535,
+      "scheduled_mean": 6.0,
+      "distance_km": 3.9,
+      "remaining_km": 22.8,
+      "station_sequence": 18
+    },
+    {
+      "section_id": "HNK-MYA",
+      "from": "HNK",
+      "from_name": "Hanakere",
+      "to": "MYA",
+      "to_name": "Mandya",
+      "observations": 90,
+      "mean": 8.39,
+      "median": 8.69,
+      "variance": 4.513,
+      "scheduled_mean": 9.0,
+      "distance_km": 10.1,
+      "remaining_km": 54.7,
+      "station_sequence": 14
+    },
+    {
+      "section_id": "KNDV-NYH",
+      "from": "KNDV",
+      "from_name": "Krishnadevaraya Halt",
+      "to": "NYH",
+      "to_name": "Nayandahalli",
+      "observations": 69,
+      "mean": 4.03,
+      "median": 3.78,
+      "variance": 3.784,
+      "scheduled_mean": 5.0,
+      "distance_km": 2.7,
+      "remaining_km": 133.1,
+      "station_sequence": 2
+    },
+    {
+      "section_id": "MAD-HNK",
+      "from": "MAD",
+      "from_name": "Maddur",
+      "to": "HNK",
+      "to_name": "Hanakere",
+      "observations": 87,
+      "mean": 7.25,
+      "median": 6.87,
+      "variance": 9.874,
+      "scheduled_mean": 9.0,
+      "distance_km": 9.0,
+      "remaining_km": 63.7,
+      "station_sequence": 13
+    },
+    {
+      "section_id": "MYA-Y",
+      "from": "MYA",
+      "from_name": "Mandya",
+      "to": "Y",
+      "to_name": "Yeliyur",
+      "observations": 82,
+      "mean": 6.31,
+      "median": 6.19,
+      "variance": 3.269,
+      "scheduled_mean": 8.0,
+      "distance_km": 7.9,
+      "remaining_km": 44.6,
+      "station_sequence": 15
+    },
+    {
+      "section_id": "PANP-S",
+      "from": "PANP",
+      "from_name": "Pandavapura",
+      "to": "S",
+      "to_name": "Shrirangapattana",
+      "observations": 20,
+      "mean": 3.86,
+      "median": 3.27,
+      "variance": 2.778,
+      "scheduled_mean": 6.0,
+      "distance_km": 4.4,
+      "remaining_km": 18.9,
+      "station_sequence": 19
+    },
+    {
+      "section_id": "RMGM-CPT",
+      "from": "RMGM",
+      "from_name": "Ramanagaram",
+      "to": "CPT",
+      "to_name": "Channapatna",
+      "observations": 300,
+      "mean": 8.04,
+      "median": 8.14,
+      "variance": 4.931,
+      "scheduled_mean": 10.0,
+      "distance_km": 11.2,
+      "remaining_km": 93.2,
+      "station_sequence": 9
+    },
+    {
+      "section_id": "SBC-KNDV",
+      "from": "SBC",
+      "from_name": "KSR Bengaluru",
+      "to": "KNDV",
+      "to_name": "Krishnadevaraya Halt",
+      "observations": 72,
+      "mean": 7.05,
+      "median": 6.84,
+      "variance": 12.14,
+      "scheduled_mean": 6.0,
+      "distance_km": 5.2,
+      "remaining_km": 138.3,
+      "station_sequence": 1
+    }
+  ],
+  "stations": [
+    {
+      "code": "SBC",
+      "name": "KSR Bengaluru",
+      "lat": 12.9781739,
+      "lng": 77.5695603
+    },
+    {
+      "code": "KNDV",
+      "name": "Krishnadevaraya Halt",
+      "lat": 12.95722,
+      "lng": 77.53856
+    },
+    {
+      "code": "RMGM",
+      "name": "Ramanagaram",
+      "lat": 12.7210476,
+      "lng": 77.2837376
+    },
+    {
+      "code": "MAD",
+      "name": "Maddur",
+      "lat": 12.6046711,
+      "lng": 77.0496996
+    },
+    {
+      "code": "HNK",
+      "name": "Hanakere",
+      "lat": 12.5655888,
+      "lng": 76.9810211
+    },
+    {
+      "code": "MYA",
+      "name": "Mandya",
+      "lat": 12.5288845,
+      "lng": 76.8967003
+    },
+    {
+      "code": "BDRL",
+      "name": "Byadrahalli",
+      "lat": 12.501991,
+      "lng": 76.7522213
+    },
+    {
+      "code": "CGKR",
+      "name": "Chandragiri Koppal Halt",
+      "lat": 12.4781644,
+      "lng": 76.7133009
+    },
+    {
+      "code": "PANP",
+      "name": "Pandavapura",
+      "lat": 12.4637766,
+      "lng": 76.681066
+    },
+    {
+      "code": "S",
+      "name": "Shrirangapattana",
+      "lat": 12.42505,
+      "lng": 76.6781
+    }
+  ],
+  "feature_config": {
+    "features": [
+      "train_code",
+      "section_code",
+      "station_sequence",
+      "section_distance_km",
+      "remaining_distance_km",
+      "scheduled_section_travel_time",
+      "day_of_week",
+      "is_weekend",
+      "hour",
+      "month",
+      "current_delay",
+      "previous_station_delay",
+      "previous_section_travel_time",
+      "time_since_departure",
+      "hist_mean_section_time",
+      "hist_median_section_time",
+      "hist_section_variance",
+      "hist_mean_section_overage",
+      "hist_median_section_overage",
+      "hist_section_overage_rate",
+      "hist_recent_section_overage",
+      "train_punctuality_dev",
+      "journey_overage_so_far",
+      "temperature_c",
+      "precipitation_mm",
+      "humidity_pct",
+      "wind_speed_kmph",
+      "visibility_m"
+    ],
+    "fill_values": {
+      "hist_mean_section_time": 7.504545454545454,
+      "hist_median_section_time": 7.683333333333334,
+      "hist_section_variance": 3.8926735480943746,
+      "previous_section_travel_time": 7.058333333333334,
+      "current_delay": 26.0,
+      "previous_station_delay": 23.0,
+      "time_since_departure": 41.91666666666667,
+      "hist_mean_section_overage": -2.0098484848484848,
+      "hist_median_section_overage": -2.0499999999999994,
+      "hist_section_overage_rate": 0.017699115044247787,
+      "hist_recent_section_overage": -1.5966666666666667,
+      "train_punctuality_dev": -1.1880433962264152,
+      "journey_overage_so_far": -0.7569444444444444,
+      "temperature_c": 23.0,
+      "precipitation_mm": 0.0,
+      "humidity_pct": 85.0,
+      "wind_speed_kmph": 10.05,
+      "visibility_m": 0.0
+    },
+    "train_codes": {
+      "16216": 0,
+      "16220": 1,
+      "16228": 2,
+      "56232": 3
+    },
+    "section_codes": {
+      "BDRL-CGKR": 0,
+      "CGKR-PANP": 1,
+      "HNK-MYA": 2,
+      "KNDV-NYH": 3,
+      "MAD-HNK": 4,
+      "MYA-Y": 5,
+      "PANP-S": 6,
+      "RMGM-CPT": 7,
+      "SBC-KNDV": 8
+    },
+    "weather_used": true
+  }
+}
