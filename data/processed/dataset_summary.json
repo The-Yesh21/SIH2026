@@ -1,0 +1,14 @@
+{
+  "built_at": "2026-09-08T23:33:33.787064+05:30",
+  "station_records": 15837,
+  "journeys": 661,
+  "unique_trains": 8,
+  "date_range": [
+    "2026-06-07",
+    "2026-09-06"
+  ],
+  "clean_sections": 758,
+  "unique_sections": 9,
+  "missing_actual_arrival_pct": 68.51,
+  "missing_actual_departure_pct": 72.13
+}

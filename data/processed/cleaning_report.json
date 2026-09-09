@@ -1,0 +1,11 @@
+{
+  "raw_sections": 820,
+  "dropped_duplicates": 0,
+  "dropped_non_positive_travel_time": 25,
+  "dropped_excessive_travel_time": 0,
+  "dropped_invalid_schedule": 0,
+  "dropped_invalid_distance": 0,
+  "dropped_impossible_speed": 37,
+  "dropped_absurd_delay": 0,
+  "clean_sections": 758
+}

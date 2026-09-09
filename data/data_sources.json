@@ -1,0 +1,100 @@
+[
+  {
+    "collection_date": "2026-09-07T11:22:35.287396+05:30",
+    "source_name": "eRail \u2014 Trains between stations (SBC \u2192 MYS)",
+    "source_url": "https://erail.in/rail/getTrains.aspx?Station_From=SBC&Station_To=MYS&DataSource=0&Language=0&Cache=true",
+    "data_description": "Public list of scheduled trains operating from KSR Bengaluru (SBC) to Mysuru Jn (MYS), with scheduled departure/arrival and running days.",
+    "data_type": "Timetable / schedule",
+    "historical_or_current": "Current timetable",
+    "date_range": "Timetable valid at collection date",
+    "fields_available": [
+      "alighting_code",
+      "alighting_station",
+      "boarding_code",
+      "boarding_station",
+      "origin_of_service",
+      "run_days_bitmap",
+      "sched_arr_mys",
+      "sched_dep_sbc",
+      "sched_duration",
+      "terminus_of_service",
+      "train_id",
+      "train_name"
+    ],
+    "extraction_method": "HTTP GET of eRail's public getTrains endpoint, tilde/caret delimited parse",
+    "record_count": 8,
+    "limitations": "Third-party aggregator of Indian Railways timetables; not an official IR endpoint."
+  },
+  {
+    "collection_date": "2026-09-06T22:51:20.094444+05:30",
+    "source_name": "RailRadar \u2014 train route API",
+    "source_url": "https://api.railradar.in/v1/trains/{train_number}",
+    "data_description": "Station-by-station route for each corridor train: sequence, station code/name, latitude, longitude, cumulative distance from origin, halt flag, scheduled times.",
+    "data_type": "Route / geography / schedule",
+    "historical_or_current": "Current",
+    "date_range": "As of collection date",
+    "fields_available": [
+      "sequence",
+      "station.code",
+      "station.name",
+      "station.lat",
+      "station.lng",
+      "distance",
+      "isHalt",
+      "arrival",
+      "departure"
+    ],
+    "extraction_method": "HTTP GET of RailRadar's public JSON web API",
+    "record_count": 629,
+    "limitations": "Community/third-party aggregator; coordinates are approximate station points."
+  },
+  {
+    "collection_date": "2026-09-06T23:55:39.473339+05:30",
+    "source_name": "RailRadar \u2014 train running history API (NTES-sourced)",
+    "source_url": "https://api.railradar.in/v1/trains/{train_number}/live?date={YYYY-MM-DD}",
+    "data_description": "Per-journey, per-station actual arrival and departure timestamps with delay in minutes, for a specific train number and start date. Provider field on the payload reports NTES (National Train Enquiry System) as upstream for completed runs.",
+    "data_type": "Historical running / actual arrival & departure records",
+    "historical_or_current": "Historical",
+    "date_range": "2026-06-07 to 2026-09-04",
+    "fields_available": [
+      "trainNumber",
+      "trainName",
+      "startDate",
+      "status",
+      "delayMinutes",
+      "route[].sequence",
+      "route[].stationCode",
+      "route[].stationName",
+      "route[].scheduledArrival",
+      "route[].scheduledDeparture",
+      "route[].actualArrival",
+      "route[].actualDeparture",
+      "route[].delayArrival",
+      "route[].delayDeparture",
+      "route[].distance"
+    ],
+    "extraction_method": "HTTP GET per (train, date) against RailRadar's public JSON web API",
+    "record_count": 640,
+    "limitations": "Coverage is uneven: cancelled runs and dates where the upstream feed retained no actuals return nothing, and some journeys carry actuals for only part of the route. Those gaps are left as gaps."
+  },
+  {
+    "collection_date": "2026-09-06T23:55:40.471835+05:30",
+    "source_name": "Open-Meteo Historical Weather Archive",
+    "source_url": "https://archive-api.open-meteo.com/v1/archive?latitude=12.6&longitude=77.05&start_date=2026-06-07&end_date=2026-09-04&hourly=temperature_2m,precipitation,relative_humidity_2m,wind_speed_10m,visibility&timezone=Asia%2FKolkata",
+    "data_description": "Hourly reanalysis weather for the mid-corridor point between Bengaluru and Mysuru: temperature, precipitation, humidity, wind speed, visibility.",
+    "data_type": "Weather",
+    "historical_or_current": "Historical",
+    "date_range": "2026-06-07 to 2026-09-04",
+    "fields_available": [
+      "time",
+      "temperature_2m",
+      "precipitation",
+      "relative_humidity_2m",
+      "wind_speed_10m",
+      "visibility"
+    ],
+    "extraction_method": "HTTP GET of Open-Meteo archive API (free, no key)",
+    "record_count": 2160,
+    "limitations": "Single corridor midpoint, hourly resolution; reanalysis rather than station observation."
+  }
+]

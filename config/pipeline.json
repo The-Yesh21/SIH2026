@@ -1,0 +1,53 @@
+{
+  "corridor": {
+    "name": "Bengaluru -> Mysuru",
+    "origin_station_code": "SBC",
+    "origin_station_name": "KSR Bengaluru City Junction",
+    "destination_station_code": "MYS",
+    "destination_station_name": "Mysuru Junction"
+  },
+  "scrape": {
+    "days_back": 90,
+    "max_workers": 1,
+    "min_seconds_between_requests": 6.5,
+    "request_timeout_seconds": 40,
+    "retries": 2,
+    "max_history_requests": 740,
+    "max_trains": 8,
+    "daily_trains_only": true,
+    "api_quota_note": "RailRadar API free tier: 10 requests/minute, 1000 requests/month. The corridor scrape is budgeted inside that quota, which is why it covers the 8 daily corridor trains rather than all 38 services.",
+    "train_list_source": "erail.in trains-between-stations (SBC -> MYS)",
+    "running_history_source": "api.railradar.in official API v1 (provider: NTES / WIMT)"
+  },
+  "cleaning": {
+    "min_section_travel_minutes": 0.5,
+    "max_section_speed_kmph": 180,
+    "max_section_travel_minutes": 240,
+    "max_abs_delay_minutes": 720
+  },
+  "split": {
+    "method": "chronological",
+    "train_fraction": 0.7,
+    "validation_fraction": 0.15,
+    "test_fraction": 0.15
+  },
+  "model": {
+    "objective": "regression_l1",
+    "target": "actual_section_travel_time",
+    "num_leaves": 15,
+    "learning_rate": 0.05,
+    "n_estimators": 800,
+    "min_child_samples": 20,
+    "subsample": 0.9,
+    "colsample_bytree": 0.9,
+    "reg_alpha": 1,
+    "reg_lambda": 1,
+    "early_stopping_rounds": 50
+  },
+  "weather": {
+    "enabled": true,
+    "source": "Open-Meteo Historical Archive API",
+    "latitude": 12.6,
+    "longitude": 77.05
+  }
+}
