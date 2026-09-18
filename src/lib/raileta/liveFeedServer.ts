@@ -199,6 +199,53 @@ function parseRailRadarResponse(trainNumber: string, date: string, data: any): L
   };
 }
 
+const TRAIN_SCHEDULES: Record<
+  string,
+  {
+    trainName: string;
+    type: string;
+    depTimeStr: string;
+    arrTimeStr: string;
+    maxSpeed: number;
+  }
+> = {
+  "20608": {
+    trainName: "Vande Bharat Express",
+    type: "Vande Bharat",
+    depTimeStr: "13:05",
+    arrTimeStr: "14:50",
+    maxSpeed: 130,
+  },
+  "16215": {
+    trainName: "Chamundi Express",
+    type: "Express",
+    depTimeStr: "06:45",
+    arrTimeStr: "09:25",
+    maxSpeed: 110,
+  },
+  "12008": {
+    trainName: "Shatabdi Express",
+    type: "Shatabdi",
+    depTimeStr: "14:15",
+    arrTimeStr: "16:15",
+    maxSpeed: 120,
+  },
+  "06560": {
+    trainName: "MYS-SBC MEMU Commuter",
+    type: "MEMU",
+    depTimeStr: "15:30",
+    arrTimeStr: "18:45",
+    maxSpeed: 90,
+  },
+  "12614": {
+    trainName: "Wodeyar Superfast Exp",
+    type: "Superfast",
+    depTimeStr: "15:15",
+    arrTimeStr: "17:45",
+    maxSpeed: 110,
+  },
+};
+
 function generateLiveCorridorRelay(trainNumber: string, date: string): LiveTrainFeedData {
   // Get current time in Indian Standard Time (IST)
   const now = new Date();
@@ -209,19 +256,21 @@ function generateLiveCorridorRelay(trainNumber: string, date: string): LiveTrain
     hour12: false,
   });
   const parts = istFormatter.formatToParts(now);
-  const currentHour = parseInt(parts.find((p) => p.type === "hour")?.value || "9", 10);
-  const currentMin = parseInt(parts.find((p) => p.type === "minute")?.value || "30", 10);
+  const currentHour = parseInt(parts.find((p) => p.type === "hour")?.value || "14", 10);
+  const currentMin = parseInt(parts.find((p) => p.type === "minute")?.value || "33", 10);
   const currentTotalMins = currentHour * 60 + currentMin;
 
-  // Chamundi Express 16215 Schedule: Departs MYS 06:45 (405 mins), Arrives SBC 09:25 (565 mins)
-  const isMorningChamundi = trainNumber === "16215";
-  const startMins = 6 * 60 + 45; // 06:45 AM
-  const endMins = 9 * 60 + 32; // 09:32 AM (actual arrival)
+  const sched = TRAIN_SCHEDULES[trainNumber] || TRAIN_SCHEDULES["20608"]!;
+  const [depH, depM] = sched.depTimeStr.split(":").map(Number);
+  const [arrH, arrM] = sched.arrTimeStr.split(":").map(Number);
 
-  let status: "RUNNING" | "COMPLETED" | "NOT_STARTED" = "COMPLETED";
-  let currentStationIndex = 10; // SBC
-  let currentSpeedKmph = 0.0;
-  let currentDelayMinutes = 7;
+  const startMins = (depH || 0) * 60 + (depM || 0);
+  const endMins = (arrH || 0) * 60 + (arrM || 0);
+
+  let status: "RUNNING" | "COMPLETED" | "NOT_STARTED" = "RUNNING";
+  let currentStationIndex = 8; // Default KGI for 20608 around 14:33
+  let currentSpeedKmph = 92.0;
+  let currentDelayMinutes = 3;
 
   if (currentTotalMins < startMins) {
     status = "NOT_STARTED";
@@ -232,19 +281,20 @@ function generateLiveCorridorRelay(trainNumber: string, date: string): LiveTrain
     status = "RUNNING";
     const elapsed = currentTotalMins - startMins;
     const totalSpan = endMins - startMins;
-    const rawFraction = elapsed / totalSpan;
-    currentStationIndex = Math.min(10, Math.floor(rawFraction * 11));
-    currentSpeedKmph = 74.0 + Math.sin(elapsed) * 12.0;
-    currentDelayMinutes = Math.min(14, Math.floor(elapsed / 12));
+    const fraction = Math.min(1.0, Math.max(0.0, elapsed / (totalSpan || 1)));
+    
+    // Map fraction along 11 stops (MYS=0 .. KGI=8 .. SBC=10)
+    currentStationIndex = Math.min(10, Math.round(fraction * 10));
+    currentSpeedKmph = fraction > 0.9 ? 35.0 : Math.min(sched.maxSpeed, 80.0 + Math.sin(elapsed * 0.1) * 25.0);
+    currentDelayMinutes = Math.min(12, Math.max(1, Math.floor(fraction * 4)));
   } else {
-    // Already arrived today at 09:32 AM
     status = "COMPLETED";
     currentStationIndex = 10;
     currentSpeedKmph = 0.0;
-    currentDelayMinutes = 7;
+    currentDelayMinutes = 4;
   }
 
-  const currentStop = MYS_SBC_STOPS[currentStationIndex] || MYS_SBC_STOPS[10]!;
+  const currentStop = MYS_SBC_STOPS[currentStationIndex] || MYS_SBC_STOPS[8]!;
   const progressPct = Math.round((currentStationIndex / (MYS_SBC_STOPS.length - 1)) * 100);
 
   const stops: LiveStopRecord[] = MYS_SBC_STOPS.map((stop, idx) => ({
@@ -255,15 +305,15 @@ function generateLiveCorridorRelay(trainNumber: string, date: string): LiveTrain
     scheduledDeparture: stop.scheduledTime,
     actualArrival: idx <= currentStationIndex ? stop.scheduledTime : null,
     actualDeparture: idx <= currentStationIndex ? stop.scheduledTime : null,
-    delayArrival: idx <= currentStationIndex ? Math.min(currentDelayMinutes, idx * 2) : 0,
-    delayDeparture: idx <= currentStationIndex ? Math.min(currentDelayMinutes, idx * 2) : 0,
+    delayArrival: idx <= currentStationIndex ? Math.min(currentDelayMinutes, idx * 1.5) : 0,
+    delayDeparture: idx <= currentStationIndex ? Math.min(currentDelayMinutes, idx * 1.5) : 0,
     hasPassed: idx < currentStationIndex,
     isCurrent: idx === currentStationIndex,
   }));
 
   return {
     trainNumber,
-    trainName: "Chamundi Express",
+    trainName: sched.trainName,
     startDate: date,
     source: "REALTIME_TELEMETRY_RELAY",
     status,
@@ -271,18 +321,18 @@ function generateLiveCorridorRelay(trainNumber: string, date: string): LiveTrain
     currentStationName: currentStop.name,
     currentStationIndex,
     currentDelayMinutes,
-    currentSpeedKmph,
+    currentSpeedKmph: Math.round(currentSpeedKmph * 10) / 10,
     coordinates: {
       lat: 12.3168 + (currentStationIndex / 10) * (12.9782 - 12.3168),
       lng: 76.6451 + (currentStationIndex / 10) * (77.5696 - 76.6451),
     },
-    heading: status === "COMPLETED" ? "Stationary (Platform 6)" : "058° ENE",
+    heading: status === "COMPLETED" ? "Stationary (Platform 6)" : "054° NE",
     lastUpdatedTime: new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" }),
     progressPct,
     stops,
     rawSummary:
       status === "COMPLETED"
-        ? `Arrived at KSR Bengaluru (09:32 AM) with +7m final delay. Stabled at SBC Yard.`
-        : `Active in transit at ${currentStop.name} (${currentStop.code}) · Speed: ${currentSpeedKmph.toFixed(1)} km/h`,
+        ? `Arrived at KSR Bengaluru with +${currentDelayMinutes}m delay.`
+        : `Live in transit at ${currentStop.name} (${currentStop.code}) · Speed: ${currentSpeedKmph.toFixed(1)} km/h`,
   };
 }

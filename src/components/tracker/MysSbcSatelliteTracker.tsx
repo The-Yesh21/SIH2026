@@ -107,16 +107,16 @@ export const MYS_SBC_TRAINS: MysSbcTrain[] = [
     destination: "SBC (14:50 PM)",
     scheduledDep: "13:05",
     scheduledArr: "14:50",
-    currentStopIndex: 3, // Mandya
-    currentProgressPct: 34,
-    speedKmph: 112.0,
+    currentStopIndex: 8, // Kengeri (KGI)
+    currentProgressPct: 86,
+    speedKmph: 92.0,
     maxSpeedKmph: 130,
     baseDelayMin: 2,
-    lat: 12.5241,
-    lng: 76.8972,
-    heading: "054° NE",
+    lat: 12.9121,
+    lng: 77.4831,
+    heading: "054° NE (Approaching KGI)",
     operationalStatus: "ACTIVE_ON_TRACK",
-    actualArrivalNotes: "Live afternoon high-speed service currently in transit between Mandya and Maddur.",
+    actualArrivalNotes: "Live afternoon high-speed service actively approaching Kengeri (KGI) on schedule (+2 min).",
   },
   {
     id: "12008",
