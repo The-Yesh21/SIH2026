@@ -62,6 +62,15 @@ BASE_FEATURES = [
     "section_congestion_count",
     "corridor_active_density",
     "reactionary_delay_risk",
+    "is_peak_commuter_window",
+    "is_suburban_dwell_surge_station",
+    "commuter_dwell_surge_risk",
+    "is_freight_siding_conflict_zone",
+    "freight_preceding_risk",
+    "is_terminal_approach_section",
+    "terminal_reception_risk",
+    "scheduled_buffer_slack_ratio",
+    "slack_recovery_potential",
 ]
 TRAFFIC_FEATURES = [
     "preceding_train_headway_mins",
@@ -72,6 +81,17 @@ TRAFFIC_FEATURES = [
     "corridor_active_density",
     "reactionary_delay_risk",
 ]
+CORRIDOR_PATTERN_FEATURES = [
+    "is_peak_commuter_window",
+    "is_suburban_dwell_surge_station",
+    "commuter_dwell_surge_risk",
+    "is_freight_siding_conflict_zone",
+    "freight_preceding_risk",
+    "is_terminal_approach_section",
+    "terminal_reception_risk",
+    "scheduled_buffer_slack_ratio",
+    "slack_recovery_potential",
+]
 DEVIATION_FEATURES = [
     "hist_mean_section_overage",
     "hist_median_section_overage",
@@ -81,6 +101,10 @@ DEVIATION_FEATURES = [
     "journey_overage_so_far",
 ]
 WEATHER_FEATURES = ["temperature_c", "precipitation_mm", "humidity_pct", "wind_speed_kmph", "visibility_m"]
+
+CORRIDOR_COMMUTER_STATIONS = {"KGI", "MYA", "RMGM", "CPT", "MAD"}
+FREIGHT_SIDING_STATIONS = {"BID", "RMGM", "BYD", "YPR", "SBC"}
+TERMINAL_APPROACH_STATIONS = {"SBC", "MYS", "YPR", "SMVB"}
 
 TRAIN_PRIORITIES = {
     "12614": 1,  # Superfast Express (Wodeyar SF)
@@ -192,6 +216,56 @@ def build_features(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str], dict]:
     df["train_code"] = df["train_id"].map(train_codes)
     df["section_code"] = df["section_id"].map(section_codes)
 
+    # Commuter peak window (morning 07:00-10:00, evening 16:30-20:30)
+    hour = df["hour"]
+    df["is_peak_commuter_window"] = (
+        ((hour >= 7) & (hour <= 10)) | ((hour >= 17) & (hour <= 20))
+    ).astype(int)
+
+    # Suburban dwell surge station (Kengeri, Mandya, Ramanagaram, Channapatna, Maddur)
+    is_commuter_from = df["section_from"].isin(CORRIDOR_COMMUTER_STATIONS)
+    is_commuter_to = df["section_to"].isin(CORRIDOR_COMMUTER_STATIONS)
+    df["is_suburban_dwell_surge_station"] = (is_commuter_from | is_commuter_to).astype(int)
+
+    # Commuter dwell surge risk: passenger surge impact amplified for express/passenger services
+    prio_weight = np.where(df["train_priority"] >= 2, 1.5, 1.0)
+    df["commuter_dwell_surge_risk"] = (
+        df["is_peak_commuter_window"] * df["is_suburban_dwell_surge_station"] * prio_weight
+    ).astype(np.float32)
+
+    # Freight & Siding conflict zone (Bidadi industrial siding, Ramanagaram loops, Byatrayanhalli)
+    is_freight_from = df["section_from"].isin(FREIGHT_SIDING_STATIONS)
+    is_freight_to = df["section_to"].isin(FREIGHT_SIDING_STATIONS)
+    df["is_freight_siding_conflict_zone"] = (is_freight_from | is_freight_to).astype(int)
+
+    # Freight preceding risk: lower priority train ahead in siding/yard conflict zone
+    df["freight_preceding_risk"] = (
+        df["is_freight_siding_conflict_zone"]
+        * df["preceding_is_lower_priority"]
+        * (10.0 / (df["preceding_train_headway_mins"] + 5.0))
+    ).astype(np.float32)
+
+    # Terminal approach section (entering SBC / MYS / major terminal yards)
+    df["is_terminal_approach_section"] = (
+        df["section_to"].isin(TERMINAL_APPROACH_STATIONS) | (df["remaining_distance_km"] <= 20.0)
+    ).astype(int)
+
+    # Terminal reception holding risk: terminal approach combined with active traffic density
+    df["terminal_reception_risk"] = (
+        df["is_terminal_approach_section"] * (df["corridor_active_density"] / 3.0)
+    ).astype(np.float32)
+
+    # Timetable buffer slack ratio & recovery potential (captures speed margin on double track)
+    nominal_kinematic_time = np.maximum(1.0, (df["section_distance_km"] / 85.0) * 60.0)
+    df["scheduled_buffer_slack_ratio"] = (
+        df["scheduled_section_travel_time"] / nominal_kinematic_time
+    ).astype(np.float32)
+
+    df["slack_recovery_potential"] = (
+        np.maximum(0.0, df["scheduled_buffer_slack_ratio"] - 1.0)
+        * np.minimum(1.0, np.maximum(0.0, df["current_delay"]) / 15.0)
+    ).astype(np.float32)
+
     features = list(BASE_FEATURES)
     weather = _weather_frame()
     weather_used = False
@@ -216,7 +290,7 @@ def build_features(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str], dict]:
         "delay_momentum",
         "log_current_delay",
         "time_since_departure",
-    ] + DEVIATION_FEATURES + TRAFFIC_FEATURES + (WEATHER_FEATURES if weather_used else []):
+    ] + DEVIATION_FEATURES + TRAFFIC_FEATURES + CORRIDOR_PATTERN_FEATURES + (WEATHER_FEATURES if weather_used else []):
         median = float(pd.to_numeric(df[col], errors="coerce").median()) if df[col].notna().any() else 0.0
         fill_values[col] = 0.0 if np.isnan(median) else median
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(fill_values[col])

@@ -146,6 +146,21 @@ export function forecastJourney(journey: Journey, atIndex: number): JourneyForec
           ? overages.reduce((a, b) => a + b, 0) / overages.length
           : (fills["journey_overage_so_far"] ?? 0);
       }
+      if ("slack_recovery_potential" in features) {
+        const slackRatio = features["scheduled_buffer_slack_ratio"] ?? 1.0;
+        features["slack_recovery_potential"] =
+          Math.max(0, slackRatio - 1.0) * Math.min(1.0, Math.max(0, delay) / 15.0);
+      }
+      if ("is_peak_commuter_window" in features) {
+        const curHour = cursor.getHours();
+        const isPeak = (curHour >= 7 && curHour <= 10) || (curHour >= 17 && curHour <= 20) ? 1 : 0;
+        features["is_peak_commuter_window"] = isPeak;
+        if ("commuter_dwell_surge_risk" in features) {
+          const isCommuterStation = features["is_suburban_dwell_surge_station"] ?? 0;
+          const prioWeight = (features["train_priority"] ?? 2) >= 2 ? 1.5 : 1.0;
+          features["commuter_dwell_surge_risk"] = isPeak * isCommuterStation * prioWeight;
+        }
+      }
       if (stats) {
         if ("hist_mean_section_time" in features)
           features["hist_mean_section_time"] = stats.mean;
