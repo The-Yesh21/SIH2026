@@ -14,7 +14,6 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { nitro } from "nitro/vite";
 import tailwindcss from "@tailwindcss/vite";
-import tsConfigPaths from "vite-tsconfig-paths";
 
 const SERVER_ENTRY_ID = "virtual:tanstack-start-server-entry";
 
@@ -57,20 +56,20 @@ const optimizeDepsInclude = [
   "class-variance-authority",
   "clsx",
   "tailwind-merge",
-  // Heavyweights: recharts pulls the d3 family, lucide-react ships ~1500
-  // icon modules — the two slowest entries to scan and bundle.
+  // Heavyweights: recharts + D3 modules + lucide-react prebundled to eliminate cold waterfall
   "recharts",
   "lucide-react",
+  "date-fns",
+  "d3-array",
+  "d3-color",
+  "d3-format",
+  "d3-interpolate",
+  "d3-path",
+  "d3-scale",
+  "d3-shape",
+  "d3-time",
 ];
 
-/**
- * Same idea for the SSR environment: TanStack configures the ssr optimizer to
- * only scan the server/start/router entries, so route-level imports like
- * recharts were being transformed module-by-module on every cold SSR render.
- * Pre-bundling the leaf libs turns those into single cached chunks.
- * (@tanstack/start** packages are deliberately left out — the Start plugin
- * resolves them through its own pipeline / virtual modules.)
- */
 const ssrOptimizeDepsInclude = [
   "react",
   "react/jsx-runtime",
@@ -89,6 +88,15 @@ const ssrOptimizeDepsInclude = [
   "tailwind-merge",
   "recharts",
   "lucide-react",
+  "date-fns",
+  "d3-array",
+  "d3-color",
+  "d3-format",
+  "d3-interpolate",
+  "d3-path",
+  "d3-scale",
+  "d3-shape",
+  "d3-time",
 ];
 
 /**
@@ -161,7 +169,7 @@ export default defineConfig(({ command, mode }) => {
   const isDevBuild = command === "build" && mode === "development";
 
   const plugins: PluginOption[] = [
-    // Dev-only TanStack devtools (same shape the previous wrapper used).
+    // Dev-only TanStack devtools
     ...(command === "serve"
       ? [
           devtools({
@@ -175,7 +183,6 @@ export default defineConfig(({ command, mode }) => {
         ]
       : []),
     tailwindcss(),
-    tsConfigPaths({ projects: ["./tsconfig.json"] }),
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR
     // error wrapper). nitro/vite builds from this.
     tanstackStart({
@@ -203,8 +210,12 @@ export default defineConfig(({ command, mode }) => {
   const config: UserConfig = {
     plugins,
     define: envDefine,
+    json: {
+      stringify: true, // 2x-3x faster JSON parsing & AST evaluation for dataset payloads
+    },
     css: { transformer: "lightningcss" },
     resolve: {
+      tsconfigPaths: true, // Vite native tsconfig paths resolution (replaces vite-tsconfig-paths plugin)
       alias: { "@": `${process.cwd()}/src` },
       dedupe: [
         "react",
@@ -235,6 +246,9 @@ export default defineConfig(({ command, mode }) => {
     server: {
       host: "::",
       port: 8080,
+      fs: {
+        cachedChecks: true, // Speeds up Windows filesystem stat resolution
+      },
       watch: {
         awaitWriteFinish: { stabilityThreshold: 1000, pollInterval: 100 },
       },
