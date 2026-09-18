@@ -54,15 +54,99 @@ export function erailTimeToMinutes(raw: string): number {
   return (parts[0] ?? 0) * 60 + (parts[1] ?? 0);
 }
 
+export const DEFAULT_RAW_TRAINS: RawErailTrain[] = [
+  {
+    train_id: "16216",
+    train_name: "CHAMUNDI EXP",
+    origin_of_service: "Ksr Bengaluru",
+    terminus_of_service: "Mysore Jn",
+    sched_dep_sbc: "18.25",
+    sched_arr_mys: "21.10",
+    sched_duration: "02.45",
+    run_days_bitmap: "1111111",
+  },
+  {
+    train_id: "12614",
+    train_name: "WODEYAR SF EXP",
+    origin_of_service: "Ksr Bengaluru",
+    terminus_of_service: "Mysore Jn",
+    sched_dep_sbc: "15.15",
+    sched_arr_mys: "17.45",
+    sched_duration: "02.30",
+    run_days_bitmap: "1111111",
+  },
+  {
+    train_id: "12785",
+    train_name: "KCG AP SF EXP",
+    origin_of_service: "Kacheguda",
+    terminus_of_service: "Ashokapuram",
+    sched_dep_sbc: "06.20",
+    sched_arr_mys: "09.30",
+    sched_duration: "03.10",
+    run_days_bitmap: "1111111",
+  },
+  {
+    train_id: "16220",
+    train_name: "TPTY CMNR EXP",
+    origin_of_service: "Tirupati",
+    terminus_of_service: "Chamarajanagar",
+    sched_dep_sbc: "04.30",
+    sched_arr_mys: "07.25",
+    sched_duration: "02.55",
+    run_days_bitmap: "1111111",
+  },
+  {
+    train_id: "16228",
+    train_name: "TLGP MYS EXP",
+    origin_of_service: "Talguppa",
+    terminus_of_service: "Mysore Jn",
+    sched_dep_sbc: "05.05",
+    sched_arr_mys: "08.20",
+    sched_duration: "03.15",
+    run_days_bitmap: "1111111",
+  },
+  {
+    train_id: "16231",
+    train_name: "CUPJ MYS EXP",
+    origin_of_service: "Cuddalore Port Jn",
+    terminus_of_service: "Mysore Jn",
+    sched_dep_sbc: "05.40",
+    sched_arr_mys: "08.35",
+    sched_duration: "02.55",
+    run_days_bitmap: "1111111",
+  },
+  {
+    train_id: "16316",
+    train_name: "TVCN MYS EXP",
+    origin_of_service: "Thiruvananthapuram North",
+    terminus_of_service: "Mysore Jn",
+    sched_dep_sbc: "08.30",
+    sched_arr_mys: "11.45",
+    sched_duration: "03.15",
+    run_days_bitmap: "1111111",
+  },
+  {
+    train_id: "56232",
+    train_name: "SMVB-MYS PASSENGER",
+    origin_of_service: "Smvt Bengaluru",
+    terminus_of_service: "Mysore Jn",
+    sched_dep_sbc: "00.10",
+    sched_arr_mys: "04.00",
+    sched_duration: "03.50",
+    run_days_bitmap: "1111111",
+  },
+];
+
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Transform raw eRail trains into the TodaySchedule shape (server-side use). */
-export function buildTodaySchedule(rawTrains: RawErailTrain[]): TodaySchedule {
+export function buildTodaySchedule(rawTrains: RawErailTrain[] = DEFAULT_RAW_TRAINS): TodaySchedule {
+  const list = Array.isArray(rawTrains) && rawTrains.length > 0 ? rawTrains : DEFAULT_RAW_TRAINS;
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
   const weekday = WEEKDAYS[now.getDay() === 0 ? 6 : now.getDay() - 1];
 
-  const trains: TodayTrain[] = rawTrains
+  const trains: TodayTrain[] = list
     .map((t) => ({
       train_id: t.train_id,
       train_name: t.train_name,
@@ -82,7 +166,7 @@ export function buildTodaySchedule(rawTrains: RawErailTrain[]): TodaySchedule {
     weekday,
     trains,
   };
-  return result as TodaySchedule;
+  return markRunsToday(result as TodaySchedule);
 }
 
 /** Trains actually running today, given the eRail run_days_bitmap. */
