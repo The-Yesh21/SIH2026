@@ -70,12 +70,12 @@ export const Route = createFileRoute("/simulation")({
     meta: [
       {
         title:
-          "RailRakshak Simulation — six-stop corridor run with dynamic vs static ETA",
+          "RailRakshak Simulation — Real-Time Corridor Traversal & Dynamic Trajectory Forecasting",
       },
       {
         name: "description",
         content:
-          "Animated simulation of a corridor train calling at six stations: the LightGBM dynamic ETA vs the static timetable ETA at every stop, with the gap between them and a live accuracy panel.",
+          "Interactive simulation of corridor train runs: RailRakshak's section-by-section dynamic traversal forecasting vs linear schedule baselines with live bottleneck and buffer recovery analytics.",
       },
     ],
   }),

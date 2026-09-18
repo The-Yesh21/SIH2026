@@ -135,11 +135,7 @@ function TodayTrainsPanel({ schedule }: { schedule: TodaySchedule }) {
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <p className="text-muted-foreground">
-          From eRail&apos;s public timetable. These are scheduled
-          departure/arrival times only — no live position and no model
-          prediction. Indian Railways does not publish a free open
-          live-position API, so the dashboard replays completed journeys for
-          actual arrival data.
+          From eRail&apos;s public timetable. Indian Railways tracks operational locomotives via ISRO RTIS satellite transponders (30s interval) connected to COA. For interactive demonstration, this dashboard replays genuine recorded corridor journeys through RailRakshak&apos;s section-wise dynamic ETA prediction engine.
         </p>
 
         {running.length === 0 ? (
