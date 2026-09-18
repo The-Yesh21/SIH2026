@@ -80,6 +80,7 @@ export function TrainCorridorTrack({
       }, 3500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [motion.isMoving, activePopoverStop]);
 
   // Station coordinates along the track (distributed proportionally to actual km)

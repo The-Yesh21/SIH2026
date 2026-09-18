@@ -187,8 +187,14 @@ def main() -> None:
     test = pd.read_parquet(PROCESSED / "split_test.parquet")
 
     # ---- historical section statistics (real data only) -------------------
+    def _safe_float(val: float | None, default: float = 0.0) -> float:
+        if val is None or pd.isna(val) or np.isnan(val) or np.isinf(val):
+            return default
+        return float(val)
+
     stats: dict[str, dict] = {}
     for section_id, grp in df.groupby("section_id"):
+        overage = grp["actual_section_travel_time"] - grp["scheduled_section_travel_time"]
         stats[section_id] = {
             "section_id": section_id,
             "from": grp["section_from"].iloc[0],
@@ -196,15 +202,18 @@ def main() -> None:
             "to": grp["section_to"].iloc[0],
             "to_name": grp["section_to_name"].iloc[0],
             "observations": int(len(grp)),
-            "mean": round(float(grp["actual_section_travel_time"].mean()), 2),
-            "median": round(float(grp["actual_section_travel_time"].median()), 2),
-            "variance": round(float(grp["actual_section_travel_time"].var(ddof=1) or 0), 3),
-            "scheduled_mean": round(float(grp["scheduled_section_travel_time"].mean()), 2),
-            "distance_km": round(float(grp["section_distance_km"].median()), 2),
-            "remaining_km": round(float(grp["remaining_distance_km"].median()), 2),
+            "mean": round(_safe_float(grp["actual_section_travel_time"].mean()), 2),
+            "median": round(_safe_float(grp["actual_section_travel_time"].median()), 2),
+            "variance": round(_safe_float(grp["actual_section_travel_time"].var(ddof=1)), 3),
+            "scheduled_mean": round(_safe_float(grp["scheduled_section_travel_time"].mean()), 2),
+            "mean_overage": round(_safe_float(overage.mean()), 2),
+            "median_overage": round(_safe_float(overage.median()), 2),
+            "overage_rate": round(_safe_float((overage > 2.0).mean()), 3),
+            "distance_km": round(_safe_float(grp["section_distance_km"].median()), 2),
+            "remaining_km": round(_safe_float(grp["remaining_distance_km"].median()), 2),
             "station_sequence": int(grp["station_sequence"].median()),
         }
-    (PROCESSED / "section_stats.json").write_text(json.dumps(stats, indent=2))
+    (PROCESSED / "section_stats.json").write_text(json.dumps(stats, indent=2, allow_nan=False))
 
     # ---- parity check: python booster vs browser tree walk ----------------
     sample = test[features].head(200)

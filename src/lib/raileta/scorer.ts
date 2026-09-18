@@ -82,8 +82,9 @@ export function explainFeatures(
     // with half of its subtree's mass (leaf values flow up unchanged).
     const walk = (node: TreeNode): number => {
       if (isLeaf(node)) return node.v;
-      const subtree = walk(node.l) + walk(node.r);
-      totals[node.f] += subtree / 2;
+      const subtree = walk(node.l!) + walk(node.r!);
+      const fi = node.f;
+      totals[fi] = (totals[fi] ?? 0) + subtree / 2;
       return subtree / 2;
     };
     walk(tree);

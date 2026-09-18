@@ -1,161 +1,221 @@
 {
   "evaluated_on": "chronologically held-out most recent test dates",
-  "test_records": 112,
+  "test_records": 631,
   "test_date_range": [
     "2026-08-24",
     "2026-09-06"
   ],
   "lightgbm": {
-    "mae": 2.413,
-    "rmse": 3.367,
-    "r2": -0.0768,
-    "median_abs_error": 2.379,
-    "bias": -1.742
+    "mae": 3.764,
+    "rmse": 6.015,
+    "r2": 0.7629,
+    "median_abs_error": 2.436,
+    "bias": -1.365
   },
   "baseline_scheduled_plus_delay": {
-    "mae": 1.521,
-    "rmse": 2.682,
-    "r2": 0.3164,
-    "median_abs_error": 1.0,
-    "bias": 0.115
+    "mae": 5.677,
+    "rmse": 11.41,
+    "r2": 0.1467,
+    "median_abs_error": 2.0,
+    "bias": 2.71
   },
-  "improvement_pct_mae": -58.65,
+  "improvement_pct_mae": 33.7,
   "validation_window": {
-    "records": 112,
+    "records": 631,
     "date_range": [
       "2026-08-10",
       "2026-08-23"
     ],
     "lightgbm": {
-      "mae": 1.695,
-      "rmse": 2.121,
-      "r2": 0.2948,
-      "median_abs_error": 1.518,
-      "bias": 0.314
+      "mae": 3.218,
+      "rmse": 5.873,
+      "r2": 0.7505,
+      "median_abs_error": 2.112,
+      "bias": -0.513
     },
     "baseline_scheduled_plus_delay": {
-      "mae": 2.518,
-      "rmse": 2.949,
-      "r2": -0.3631,
-      "median_abs_error": 2.45,
-      "bias": 1.829
+      "mae": 5.703,
+      "rmse": 10.219,
+      "r2": 0.2445,
+      "median_abs_error": 2.967,
+      "bias": 3.326
     },
-    "improvement_pct_mae": 32.68,
+    "improvement_pct_mae": 43.57,
     "note": "Model corrects systematic timetable error well when the schedule is the weak point; where the timetable is already near the noise floor the schedule-only baseline is hard to beat."
   },
   "mean_absolute_delay_prediction_error": {
-    "lightgbm": 2.203,
-    "baseline": 1.482,
-    "records": 112
+    "lightgbm": 3.643,
+    "baseline": 5.501,
+    "records": 631
   },
   "feature_importance_gain": [
     {
-      "feature": "train_punctuality_dev",
-      "gain": 435.1
-    },
-    {
-      "feature": "wind_speed_kmph",
-      "gain": 376.96
-    },
-    {
-      "feature": "hist_recent_section_overage",
-      "gain": 329.63
-    },
-    {
-      "feature": "time_since_departure",
-      "gain": 301.72
-    },
-    {
-      "feature": "hist_section_variance",
-      "gain": 291.51
-    },
-    {
-      "feature": "hist_section_overage_rate",
-      "gain": 285.2
-    },
-    {
-      "feature": "previous_station_delay",
-      "gain": 273.19
-    },
-    {
-      "feature": "previous_section_travel_time",
-      "gain": 256.11
-    },
-    {
-      "feature": "temperature_c",
-      "gain": 254.35
-    },
-    {
-      "feature": "hist_median_section_overage",
-      "gain": 247.68
-    },
-    {
-      "feature": "hist_mean_section_time",
-      "gain": 215.84
+      "feature": "scheduled_speed_kmph",
+      "gain": 94140.4
     },
     {
       "feature": "hist_mean_section_overage",
-      "gain": 214.84
+      "gain": 18074.33
     },
     {
-      "feature": "hist_median_section_time",
-      "gain": 205.57
+      "feature": "hist_median_section_overage",
+      "gain": 9705.71
     },
     {
-      "feature": "current_delay",
-      "gain": 183.95
+      "feature": "hist_recent_section_overage",
+      "gain": 9136.45
     },
     {
-      "feature": "humidity_pct",
-      "gain": 179.35
-    },
-    {
-      "feature": "day_of_week",
-      "gain": 163.79
-    },
-    {
-      "feature": "journey_overage_so_far",
-      "gain": 150.74
-    },
-    {
-      "feature": "section_distance_km",
-      "gain": 33.48
-    },
-    {
-      "feature": "hour",
-      "gain": 25.23
-    },
-    {
-      "feature": "section_code",
-      "gain": 22.76
-    },
-    {
-      "feature": "remaining_distance_km",
-      "gain": 22.41
-    },
-    {
-      "feature": "month",
-      "gain": 15.37
+      "feature": "train_punctuality_dev",
+      "gain": 6663.1
     },
     {
       "feature": "station_sequence",
-      "gain": 15.35
+      "gain": 4666.54
+    },
+    {
+      "feature": "previous_section_travel_time",
+      "gain": 3795.7
+    },
+    {
+      "feature": "journey_overage_so_far",
+      "gain": 3768.16
+    },
+    {
+      "feature": "hist_section_variance",
+      "gain": 3646.17
+    },
+    {
+      "feature": "hist_section_overage_rate",
+      "gain": 3477.18
+    },
+    {
+      "feature": "temperature_c",
+      "gain": 3476.02
+    },
+    {
+      "feature": "current_delay",
+      "gain": 3282.64
+    },
+    {
+      "feature": "time_since_departure",
+      "gain": 3240.14
     },
     {
       "feature": "scheduled_section_travel_time",
-      "gain": 3.79
+      "gain": 3160.42
+    },
+    {
+      "feature": "wind_speed_kmph",
+      "gain": 2815.56
+    },
+    {
+      "feature": "delay_momentum",
+      "gain": 2808.52
+    },
+    {
+      "feature": "previous_station_delay",
+      "gain": 2412.19
+    },
+    {
+      "feature": "remaining_distance_km",
+      "gain": 2273.81
+    },
+    {
+      "feature": "hist_median_section_time",
+      "gain": 2178.99
+    },
+    {
+      "feature": "hist_mean_section_time",
+      "gain": 2095.29
+    },
+    {
+      "feature": "section_distance_km",
+      "gain": 1908.04
+    },
+    {
+      "feature": "section_code",
+      "gain": 1859.35
+    },
+    {
+      "feature": "humidity_pct",
+      "gain": 1788.7
+    },
+    {
+      "feature": "corridor_active_density",
+      "gain": 1734.36
     },
     {
       "feature": "train_code",
-      "gain": 0.0
+      "gain": 1333.44
     },
     {
-      "feature": "is_weekend",
-      "gain": 0.0
+      "feature": "preceding_train_headway_mins",
+      "gain": 1330.37
+    },
+    {
+      "feature": "day_of_week",
+      "gain": 1316.5
+    },
+    {
+      "feature": "hour_cos",
+      "gain": 1118.08
+    },
+    {
+      "feature": "hour",
+      "gain": 1100.19
+    },
+    {
+      "feature": "hour_sin",
+      "gain": 829.44
+    },
+    {
+      "feature": "preceding_train_delay_mins",
+      "gain": 693.01
+    },
+    {
+      "feature": "preceding_train_overage_mins",
+      "gain": 468.37
+    },
+    {
+      "feature": "log_current_delay",
+      "gain": 464.85
     },
     {
       "feature": "precipitation_mm",
-      "gain": 0.0
+      "gain": 456.7
+    },
+    {
+      "feature": "month",
+      "gain": 453.1
+    },
+    {
+      "feature": "reactionary_delay_risk",
+      "gain": 189.85
+    },
+    {
+      "feature": "is_weekend",
+      "gain": 51.91
+    },
+    {
+      "feature": "preceding_is_lower_priority",
+      "gain": 29.1
+    },
+    {
+      "feature": "train_priority",
+      "gain": 23.21
+    },
+    {
+      "feature": "section_congestion_count",
+      "gain": 8.02
+    },
+    {
+      "feature": "is_on_time",
+      "gain": 4.66
+    },
+    {
+      "feature": "is_delayed",
+      "gain": 3.74
     },
     {
       "feature": "visibility_m",
@@ -164,136 +224,204 @@
   ],
   "shap_mean_abs": [
     {
-      "feature": "hist_section_overage_rate",
-      "mean_abs_shap": 0.2446
-    },
-    {
-      "feature": "train_punctuality_dev",
-      "mean_abs_shap": 0.1638
-    },
-    {
-      "feature": "hist_median_section_overage",
-      "mean_abs_shap": 0.1588
+      "feature": "scheduled_speed_kmph",
+      "mean_abs_shap": 3.4312
     },
     {
       "feature": "hist_mean_section_overage",
-      "mean_abs_shap": 0.157
-    },
-    {
-      "feature": "hist_mean_section_time",
-      "mean_abs_shap": 0.1325
-    },
-    {
-      "feature": "previous_station_delay",
-      "mean_abs_shap": 0.1179
+      "mean_abs_shap": 0.7365
     },
     {
       "feature": "hist_recent_section_overage",
-      "mean_abs_shap": 0.1079
-    },
-    {
-      "feature": "current_delay",
-      "mean_abs_shap": 0.0974
-    },
-    {
-      "feature": "wind_speed_kmph",
-      "mean_abs_shap": 0.0874
-    },
-    {
-      "feature": "hist_median_section_time",
-      "mean_abs_shap": 0.0746
-    },
-    {
-      "feature": "humidity_pct",
-      "mean_abs_shap": 0.0657
-    },
-    {
-      "feature": "day_of_week",
-      "mean_abs_shap": 0.057
-    },
-    {
-      "feature": "journey_overage_so_far",
-      "mean_abs_shap": 0.053
-    },
-    {
-      "feature": "time_since_departure",
-      "mean_abs_shap": 0.0521
-    },
-    {
-      "feature": "hist_section_variance",
-      "mean_abs_shap": 0.0396
-    },
-    {
-      "feature": "remaining_distance_km",
-      "mean_abs_shap": 0.0331
-    },
-    {
-      "feature": "temperature_c",
-      "mean_abs_shap": 0.0311
-    },
-    {
-      "feature": "hour",
-      "mean_abs_shap": 0.0309
-    },
-    {
-      "feature": "previous_section_travel_time",
-      "mean_abs_shap": 0.023
-    },
-    {
-      "feature": "section_distance_km",
-      "mean_abs_shap": 0.0138
-    },
-    {
-      "feature": "section_code",
-      "mean_abs_shap": 0.008
-    },
-    {
-      "feature": "month",
-      "mean_abs_shap": 0.0074
-    },
-    {
-      "feature": "scheduled_section_travel_time",
-      "mean_abs_shap": 0.004
+      "mean_abs_shap": 0.3083
     },
     {
       "feature": "station_sequence",
-      "mean_abs_shap": 0.0038
+      "mean_abs_shap": 0.2918
+    },
+    {
+      "feature": "delay_momentum",
+      "mean_abs_shap": 0.2907
+    },
+    {
+      "feature": "hist_median_section_overage",
+      "mean_abs_shap": 0.2679
+    },
+    {
+      "feature": "train_punctuality_dev",
+      "mean_abs_shap": 0.2588
+    },
+    {
+      "feature": "time_since_departure",
+      "mean_abs_shap": 0.2507
+    },
+    {
+      "feature": "scheduled_section_travel_time",
+      "mean_abs_shap": 0.201
+    },
+    {
+      "feature": "hist_section_variance",
+      "mean_abs_shap": 0.1116
+    },
+    {
+      "feature": "hist_median_section_time",
+      "mean_abs_shap": 0.1076
+    },
+    {
+      "feature": "current_delay",
+      "mean_abs_shap": 0.1018
+    },
+    {
+      "feature": "journey_overage_so_far",
+      "mean_abs_shap": 0.0955
     },
     {
       "feature": "train_code",
-      "mean_abs_shap": 0.0
+      "mean_abs_shap": 0.0894
     },
     {
-      "feature": "is_weekend",
-      "mean_abs_shap": 0.0
+      "feature": "previous_section_travel_time",
+      "mean_abs_shap": 0.0882
+    },
+    {
+      "feature": "temperature_c",
+      "mean_abs_shap": 0.0838
+    },
+    {
+      "feature": "hist_mean_section_time",
+      "mean_abs_shap": 0.0815
+    },
+    {
+      "feature": "hour",
+      "mean_abs_shap": 0.0805
+    },
+    {
+      "feature": "remaining_distance_km",
+      "mean_abs_shap": 0.0788
+    },
+    {
+      "feature": "hist_section_overage_rate",
+      "mean_abs_shap": 0.0786
+    },
+    {
+      "feature": "section_code",
+      "mean_abs_shap": 0.0723
+    },
+    {
+      "feature": "section_distance_km",
+      "mean_abs_shap": 0.068
+    },
+    {
+      "feature": "humidity_pct",
+      "mean_abs_shap": 0.0623
+    },
+    {
+      "feature": "wind_speed_kmph",
+      "mean_abs_shap": 0.0613
+    },
+    {
+      "feature": "corridor_active_density",
+      "mean_abs_shap": 0.0549
+    },
+    {
+      "feature": "preceding_train_headway_mins",
+      "mean_abs_shap": 0.0519
+    },
+    {
+      "feature": "day_of_week",
+      "mean_abs_shap": 0.0517
+    },
+    {
+      "feature": "previous_station_delay",
+      "mean_abs_shap": 0.0505
+    },
+    {
+      "feature": "hour_cos",
+      "mean_abs_shap": 0.0365
+    },
+    {
+      "feature": "month",
+      "mean_abs_shap": 0.0319
+    },
+    {
+      "feature": "hour_sin",
+      "mean_abs_shap": 0.0264
+    },
+    {
+      "feature": "preceding_train_overage_mins",
+      "mean_abs_shap": 0.0244
     },
     {
       "feature": "precipitation_mm",
-      "mean_abs_shap": 0.0
+      "mean_abs_shap": 0.0205
+    },
+    {
+      "feature": "log_current_delay",
+      "mean_abs_shap": 0.0165
+    },
+    {
+      "feature": "preceding_train_delay_mins",
+      "mean_abs_shap": 0.0152
+    },
+    {
+      "feature": "reactionary_delay_risk",
+      "mean_abs_shap": 0.0085
+    },
+    {
+      "feature": "is_weekend",
+      "mean_abs_shap": 0.0047
+    },
+    {
+      "feature": "is_on_time",
+      "mean_abs_shap": 0.0012
+    },
+    {
+      "feature": "train_priority",
+      "mean_abs_shap": 0.001
+    },
+    {
+      "feature": "preceding_is_lower_priority",
+      "mean_abs_shap": 0.0005
+    },
+    {
+      "feature": "section_congestion_count",
+      "mean_abs_shap": 0.0004
+    },
+    {
+      "feature": "is_delayed",
+      "mean_abs_shap": 0.0002
     },
     {
       "feature": "visibility_m",
       "mean_abs_shap": 0.0
     }
   ],
-  "browser_scorer_parity_max_abs_diff": 6.05e-08,
+  "browser_scorer_parity_max_abs_diff": 2.975e-07,
   "model_metadata": {
     "model": "LightGBM Regression",
     "prediction_target": "section travel time (minutes)",
-    "training_date": "2026-09-08T23:49:40.833008+05:30",
+    "training_date": "2026-09-18T09:35:11.906787+05:30",
     "features": [
       "train_code",
       "section_code",
+      "train_priority",
       "station_sequence",
       "section_distance_km",
       "remaining_distance_km",
       "scheduled_section_travel_time",
+      "scheduled_speed_kmph",
       "day_of_week",
       "is_weekend",
       "hour",
+      "hour_sin",
+      "hour_cos",
       "month",
       "current_delay",
       "previous_station_delay",
+      "delay_momentum",
+      "is_delayed",
+      "is_on_time",
+      "log_current_delay",
       "previous_section_travel_time",
       "time_since_departure",
       "hist_mean_section_time",
@@ -305,6 +433,13 @@
       "hist_recent_section_overage",
       "train_punctuality_dev",
       "journey_overage_so_far",
+      "preceding_train_headway_mins",
+      "preceding_train_delay_mins",
+      "preceding_train_overage_mins",
+      "preceding_is_lower_priority",
+      "section_congestion_count",
+      "corridor_active_density",
+      "reactionary_delay_risk",
       "temperature_c",
       "precipitation_mm",
       "humidity_pct",
@@ -314,9 +449,9 @@
     "weather_used": true,
     "split": {
       "method": "chronological (by journey start date)",
-      "train_records": 503,
-      "validation_records": 143,
-      "test_records": 112,
+      "train_records": 2286,
+      "validation_records": 620,
+      "test_records": 631,
       "date_ranges": {
         "train": [
           "2026-06-07",
@@ -332,26 +467,26 @@
         ]
       }
     },
-    "best_iteration": 79
+    "best_iteration": 1000
   },
   "model_parameters": {
     "boosting_type": "gbdt",
     "class_weight": null,
-    "colsample_bytree": 0.9,
+    "colsample_bytree": 0.85,
     "importance_type": "split",
-    "learning_rate": 0.05,
+    "learning_rate": 0.03,
     "max_depth": -1,
-    "min_child_samples": 20,
+    "min_child_samples": 15,
     "min_child_weight": 0.001,
     "min_split_gain": 0.0,
-    "n_estimators": 800,
+    "n_estimators": 1000,
     "n_jobs": null,
-    "num_leaves": 15,
-    "objective": "regression_l1",
+    "num_leaves": 24,
+    "objective": "huber",
     "random_state": 42,
-    "reg_alpha": 1,
-    "reg_lambda": 1,
-    "subsample": 0.9,
+    "reg_alpha": 0.5,
+    "reg_lambda": 1.0,
+    "subsample": 0.85,
     "subsample_for_bin": 200000,
     "subsample_freq": 1,
     "verbose": -1

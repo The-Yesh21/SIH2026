@@ -12,13 +12,21 @@
  *   the recorded origin departure delay of the chosen run.
  * - SIMULATED: the intermediate running behaviour. The simulated run follows
  *   the model's own recovery forecast with a small, deterministic (seeded)
- *   deviation of at most ±2 minutes — a "model holds" scenario, in line with
- *   the validation window where the model cut the static-baseline error by
- *   ~33%. Every replay of the same run is identical.
+ *   deviation — a "model holds" scenario, in line with the validation window
+ *   where the model cut the static-baseline error by ~33%. Every replay of
+ *   the same run is identical.
+ *
+ * Delay scenario: every replay automatically injects an operational hold at a
+ * normal intermediate stop (2nd or 3rd stop — CPT or MAD). The delay is
+ * created by the simulation itself (deterministic per run, so replays are
+ * reproducible); no manual input is needed.
  *
  * Two ETAs are produced for every station:
  * - DYNAMIC ETA: the real model chained station by station (timetable-aware
- *   delay propagation, exactly like lib/raileta/predict.ts).
+ *   delay propagation, exactly like lib/raileta/predict.ts). Upstream of the
+ *   hold it is the baseline forecast; the moment the train departs the held
+ *   stop, the downstream board re-forecasts from the newly observed running
+ *   delay using the model's learned historical section behaviour.
  * - STATIC ETA: today's typical display — timetable time shifted by the delay
  *   the train departed its origin with, held constant (no recovery modelling).
  */
@@ -90,6 +98,14 @@ const MIN = 60000;
 const DWELL = 1;
 /** Floor for any section's running time in the simulation. */
 const MIN_RUN = 3;
+/**
+ * The automatic hold is injected at one of these stop indices (0-based): the
+ * "normal" 2nd or 3rd stop of the corridor (CPT or MAD).
+ */
+const AUTO_HOLD_STOP_INDICES = [1, 2] as const;
+/** Automatic hold range, in minutes (deterministic per journey). */
+const AUTO_HOLD_MIN_MINUTES = 5;
+const AUTO_HOLD_MAX_MINUTES = 9;
 
 export type SimLeg = {
   fromCode: string;
@@ -111,14 +127,22 @@ export type SimStop = {
   actualArrival: Date | null;
   /** Simulated actual departure (null at the terminus). */
   actualDeparture: Date | null;
+  /** Extra dwell injected at this stop for the interactive delay scenario. */
+  stationHoldMinutes: number;
   /** Static timetable ETA (scheduled + origin delay, no recovery). */
   staticArrival: Date | null;
   /** Model's dynamic ETA (null at the origin). */
   dynamicArrival: Date | null;
+  /** Pre-hold baseline board ETA (null at the origin). */
+  baselineArrival: Date | null;
   /** Delay of the static ETA vs timetable, in minutes. */
   staticDelay: number | null;
-  /** Delay of the dynamic ETA vs timetable, in minutes. */
+  /** Delay of the dynamic ETA vs timetable, in minutes (live board). */
   dynamicDelay: number | null;
+  /** Delay of the pre-hold baseline board vs timetable, in minutes. */
+  baselineDelay: number | null;
+  /** Minutes the live board moved vs the baseline at this stop. */
+  reforecastShift: number | null;
   /** Delay the simulated run actually recorded, in minutes. */
   actualDelay: number | null;
   /** dynamic ETA − static ETA, negative = dynamic recovers time. */
@@ -133,12 +157,24 @@ export type SimStop = {
   contributions: FeatureContribution[] | null;
   /** High-impact features actually driving this stop's prediction. */
   explanatoryFeatures: string[] | null;
+  /** True once the hold is known and this stop's ETA was re-forecast. */
+  holdKnown: boolean;
 };
 
 export type SimEvent = {
   time: number;
   kind: "departure" | "arrival";
   stationIndex: number;
+};
+
+/**
+ * The automatically injected operational hold: a train being held at one
+ * intermediate station. Chosen deterministically per journey so every replay
+ * of the same run is identical.
+ */
+export type DelayScenario = {
+  stationIndex: number;
+  additionalDelayMinutes: number;
 };
 
 export type Simulation = {
@@ -165,6 +201,12 @@ export type Simulation = {
   /** Mean |error| of each ETA vs the simulated actuals, stops after origin. */
   dynamicMae: number | null;
   staticMae: number | null;
+  /** The automatic hold injected into this replay. */
+  delayScenario: DelayScenario | null;
+  /** Sim-clock time at which the hold becomes known (held stop's departure). */
+  holdKnownTime: number | null;
+  /** True once the model has re-forecast downstream ETAs after the hold. */
+  reforecastDone: boolean;
 };
 
 function minutesBetween(a: Date, b: Date): number {
@@ -207,9 +249,26 @@ export function simulationJourneys(): Journey[] {
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
+/**
+ * Pick the automatic hold deterministically from the journey itself: the PRNG
+ * stream is seeded by the journey id (NOT by the hold), so the scenario can be
+ * generated before the forecast chain is simulated. 2nd or 3rd stop, 2–6 min.
+ */
+function autoDelayScenario(
+  journey: Journey,
+  stopCount: number,
+): DelayScenario | null {
+  const indices = AUTO_HOLD_STOP_INDICES.filter((i) => i >= 1 && i <= stopCount - 2);
+  if (indices.length === 0) return null;
+  const rand = mulberry32(hashSeed(`${journey.journey_id}:auto-hold`));
+  const stationIndex = indices[Math.floor(rand() * indices.length)]!;
+  const span = AUTO_HOLD_MAX_MINUTES - AUTO_HOLD_MIN_MINUTES + 1;
+  const additionalDelayMinutes = AUTO_HOLD_MIN_MINUTES + Math.floor(rand() * span);
+  return { stationIndex, additionalDelayMinutes };
+}
+
 export function buildSimulation(journey: Journey): Simulation {
   const hops: Hop[] = journey.hops;
-  const stopCount = hops.length + 2; // hops join 4 hops → 6 corridor stops
 
   // --- Corridor stops & legs from the captured hops -------------------------
   const codes: string[] = [hops[0]!.from];
@@ -226,6 +285,10 @@ export function buildSimulation(journey: Journey): Simulation {
     names.push(hop.to_name);
     legs.push({ fromCode: hop.from, toCode: hop.to, hop });
   }
+
+  // Stop count follows the built corridor: hops + 1 per capture gap (some
+  // historical captures have contiguous hops and no gap at all).
+  const stopCount = codes.length;
 
   // Booked times per stop index. Gap stops (MAD) have a booked departure but
   // no booked arrival — derive it as departure − booked dwell (marked †).
@@ -244,7 +307,22 @@ export function buildSimulation(journey: Journey): Simulation {
     }
   }
 
+  // --- Automatic delay scenario ---------------------------------------------
+  // The delay is created by the simulation itself, deterministically per run:
+  // a hold at a normal intermediate stop (2nd or 3rd), every replay.
+  const delayScenario = autoDelayScenario(journey, stopCount);
+  const holdByStop = new Map<number, number>();
+  if (delayScenario) {
+    holdByStop.set(delayScenario.stationIndex, delayScenario.additionalDelayMinutes);
+  }
+
   // --- Dynamic ETA: chained LightGBM forecast (timetable-aware) ------------
+  // Two passes over the same chain: without the hold (the baseline board the
+  // model shows before it happens) and with the hold becoming KNOWN at the
+  // held stop's departure (the live re-forecast board). Upstream of the hold
+  // both boards are identical; downstream the live board re-scores the real
+  // trained model with the newly observed running delay.
+  const chainBoard = (holdMinutesByStop: Map<number, number>) => {
   const fills = dataset.feature_config.fill_values;
   const dynamicArrival: (Date | null)[] = new Array(stopCount).fill(null);
   const dynamicDelayAtArr: (number | null)[] = new Array(stopCount).fill(null);
@@ -272,6 +350,11 @@ export function buildSimulation(journey: Journey): Simulation {
         schedDep !== null ? schedDep + Math.max(0, delay) * MIN : null;
       const earliest = prevArrival! + DWELL * MIN;
       depTime = propagated !== null ? Math.max(propagated, earliest) : earliest;
+      // The hold becomes KNOWN at this station's departure: the model now
+      // receives the new running delay and re-forecasts every remaining
+      // section from its learned historical section behaviour.
+      const hold = holdMinutesByStop.get(j);
+      if (hold) depTime += hold * MIN;
       if (schedDep !== null) {
         delay = (depTime - schedDep) / MIN;
       }
@@ -345,6 +428,18 @@ export function buildSimulation(journey: Journey): Simulation {
     }
   }
 
+    return { dynamicArrival, dynamicDelayAtArr, deviations, explanations, explanatory };
+  };
+
+  const baseline = chainBoard(new Map());
+  const live = chainBoard(holdByStop);
+  const { deviations, explanations, explanatory } = live;
+  const baseDelayAtArr = baseline.dynamicDelayAtArr;
+  const liveDelayAtArr = live.dynamicDelayAtArr;
+  // From the re-forecast moment onward the board shows the live chain.
+  const dynamicDelayAtArr = liveDelayAtArr;
+  const dynamicArrival = live.dynamicArrival;
+
   // --- Simulated actual run: follows the model with seeded noise ------------
   const rand = mulberry32(hashSeed(`${journey.journey_id}:corridor-sim`));
   let walk = 0; // deviation of the run from the model's forecast, minutes
@@ -377,10 +472,22 @@ export function buildSimulation(journey: Journey): Simulation {
               arrival.getTime() + 0.5 * MIN,
             )
           : arrival.getTime() + DWELL * MIN;
-      actualDeparture[i] = new Date(dep);
-      prevActualDep = dep;
+      const heldDeparture =
+        delayScenario?.stationIndex === i
+          ? dep + delayScenario.additionalDelayMinutes * MIN
+          : dep;
+      actualDeparture[i] = new Date(heldDeparture);
+      prevActualDep = heldDeparture;
     }
   }
+
+  // The hold becomes known to the board the moment the run departs the held
+  // stop: downstream ETAs switch from the baseline to the re-forecast board,
+  // while the static board keeps carrying the origin delay unchanged.
+  const holdKnownTime =
+    delayScenario !== null && actualDeparture[delayScenario.stationIndex]
+      ? actualDeparture[delayScenario.stationIndex]!.getTime()
+      : null;
 
   // --- Static ETA: timetable shifted by the origin delay, held constant ----
   const originDelay = hops[0]!.departure_delay_minutes;
@@ -395,6 +502,8 @@ export function buildSimulation(journey: Journey): Simulation {
   const stops: SimStop[] = [];
   for (let i = 0; i < stopCount; i += 1) {
     const dynamicDelay = dynamicDelayAtArr[i] ?? null;
+    const baselineDelay = baseDelayAtArr[i] ?? null;
+    const liveDelay = liveDelayAtArr[i] ?? null;
     const staticDelay = staticDelayAtArr[i] ?? null;
     const actualDelay = actualDelayAtArr[i] ?? null;
     stops.push({
@@ -406,10 +515,21 @@ export function buildSimulation(journey: Journey): Simulation {
       scheduledDeparture: scheduledDeparture[i] ?? null,
       actualArrival: actualArrival[i] ?? null,
       actualDeparture: actualDeparture[i] ?? null,
+      stationHoldMinutes:
+        delayScenario?.stationIndex === i
+          ? delayScenario.additionalDelayMinutes
+          : 0,
       staticArrival: staticArrival[i] ?? null,
       dynamicArrival: dynamicArrival[i] ?? null,
+      baselineArrival: baseline.dynamicArrival[i] ?? null,
       staticDelay,
       dynamicDelay,
+      baselineDelay,
+      reforecastShift:
+        liveDelay !== null && baselineDelay !== null
+          ? liveDelay - baselineDelay
+          : null,
+      holdKnown: delayScenario !== null && i > delayScenario.stationIndex,
       actualDelay,
       dynamicVsStaticGap:
         dynamicDelay !== null && staticDelay !== null
@@ -481,6 +601,9 @@ export function buildSimulation(journey: Journey): Simulation {
     actualFinalArrival: last.actualArrival,
     dynamicMae,
     staticMae,
+    delayScenario,
+    holdKnownTime,
+    reforecastDone: delayScenario !== null,
   };
 }
 
@@ -621,6 +744,7 @@ export function getContinuousTrainState(
       legDistanceKm: CORRIDOR_LEG_DISTANCES[Math.max(0, lastIdx - 1)] ?? 7.9,
       speedKmph: 0,
       distanceTraveledKm: totalCorridorKm,
+      totalCorridorKm,
       totalProgress: 1,
       lastHitStop: stops[lastIdx]!,
       nextStop: null,

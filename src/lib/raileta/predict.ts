@@ -127,6 +127,10 @@ export function forecastJourney(journey: Journey, atIndex: number): JourneyForec
       // Replace running-state features with values known at forecast time.
       if ("current_delay" in features) features["current_delay"] = delay;
       if ("previous_station_delay" in features) features["previous_station_delay"] = delay;
+      if ("delay_momentum" in features) features["delay_momentum"] = delay - (hop.features["previous_station_delay"] ?? delay);
+      if ("is_delayed" in features) features["is_delayed"] = delay > 15 ? 1 : 0;
+      if ("is_on_time" in features) features["is_on_time"] = delay <= 5 ? 1 : 0;
+      if ("log_current_delay" in features) features["log_current_delay"] = Math.log1p(Math.max(0, delay));
       if ("previous_section_travel_time" in features) {
         features["previous_section_travel_time"] =
           previousSectionTime ?? fills["previous_section_travel_time"] ?? 0;

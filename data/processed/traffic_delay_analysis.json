@@ -1,0 +1,650 @@
+{
+  "summary": {
+    "total_observed_sections": 3537,
+    "unique_journeys": 660,
+    "date_range": [
+      "2026-06-07",
+      "2026-09-06"
+    ]
+  },
+  "section_bottlenecks": [
+    {
+      "section_id": "BDRL-CGKR",
+      "total_runs": 18,
+      "avg_scheduled_time": 5.0,
+      "avg_actual_time": 4.74,
+      "avg_overage_minutes": -0.26,
+      "median_overage_minutes": -0.56,
+      "overage_rate": 16.67,
+      "avg_dep_delay": 31.17
+    },
+    {
+      "section_id": "BDRL-NHY",
+      "total_runs": 2,
+      "avg_scheduled_time": 28.0,
+      "avg_actual_time": 23.17,
+      "avg_overage_minutes": -4.83,
+      "median_overage_minutes": -4.83,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 53.0
+    },
+    {
+      "section_id": "BDRL-PANP",
+      "total_runs": 10,
+      "avg_scheduled_time": 12.0,
+      "avg_actual_time": 12.32,
+      "avg_overage_minutes": 0.32,
+      "median_overage_minutes": 1.0,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 14.3
+    },
+    {
+      "section_id": "BID-BDRL",
+      "total_runs": 1,
+      "avg_scheduled_time": 103.0,
+      "avg_actual_time": 85.72,
+      "avg_overage_minutes": -17.28,
+      "median_overage_minutes": -17.28,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 89.0
+    },
+    {
+      "section_id": "BID-CPT",
+      "total_runs": 2,
+      "avg_scheduled_time": 21.0,
+      "avg_actual_time": 26.5,
+      "avg_overage_minutes": 5.5,
+      "median_overage_minutes": 5.5,
+      "overage_rate": 100.0,
+      "avg_dep_delay": 20.5
+    },
+    {
+      "section_id": "BID-RMGM",
+      "total_runs": 310,
+      "avg_scheduled_time": 10.0,
+      "avg_actual_time": 10.93,
+      "avg_overage_minutes": 0.93,
+      "median_overage_minutes": 1.08,
+      "overage_rate": 31.29,
+      "avg_dep_delay": 36.14
+    },
+    {
+      "section_id": "CGKR-NHY",
+      "total_runs": 1,
+      "avg_scheduled_time": 22.0,
+      "avg_actual_time": 22.02,
+      "avg_overage_minutes": 0.02,
+      "median_overage_minutes": 0.02,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 25.0
+    },
+    {
+      "section_id": "CGKR-PANP",
+      "total_runs": 14,
+      "avg_scheduled_time": 6.0,
+      "avg_actual_time": 3.66,
+      "avg_overage_minutes": -2.34,
+      "median_overage_minutes": -3.1,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 28.43
+    },
+    {
+      "section_id": "CPT-MAD",
+      "total_runs": 309,
+      "avg_scheduled_time": 15.04,
+      "avg_actual_time": 14.78,
+      "avg_overage_minutes": -0.27,
+      "median_overage_minutes": -0.53,
+      "overage_rate": 18.12,
+      "avg_dep_delay": 40.83
+    },
+    {
+      "section_id": "HNK-MYA",
+      "total_runs": 90,
+      "avg_scheduled_time": 9.0,
+      "avg_actual_time": 8.39,
+      "avg_overage_minutes": -0.61,
+      "median_overage_minutes": -0.31,
+      "overage_rate": 10.0,
+      "avg_dep_delay": 38.09
+    },
+    {
+      "section_id": "KGI-BID",
+      "total_runs": 294,
+      "avg_scheduled_time": 14.89,
+      "avg_actual_time": 15.69,
+      "avg_overage_minutes": 0.8,
+      "median_overage_minutes": 0.4,
+      "overage_rate": 29.93,
+      "avg_dep_delay": 34.27
+    },
+    {
+      "section_id": "KGI-MAD",
+      "total_runs": 1,
+      "avg_scheduled_time": 53.0,
+      "avg_actual_time": 74.0,
+      "avg_overage_minutes": 21.0,
+      "median_overage_minutes": 21.0,
+      "overage_rate": 100.0,
+      "avg_dep_delay": 21.0
+    },
+    {
+      "section_id": "KGI-MYA",
+      "total_runs": 92,
+      "avg_scheduled_time": 62.98,
+      "avg_actual_time": 62.56,
+      "avg_overage_minutes": -0.42,
+      "median_overage_minutes": -1.16,
+      "overage_rate": 33.7,
+      "avg_dep_delay": 34.75
+    },
+    {
+      "section_id": "KGI-RMGM",
+      "total_runs": 252,
+      "avg_scheduled_time": 26.24,
+      "avg_actual_time": 26.48,
+      "avg_overage_minutes": 0.24,
+      "median_overage_minutes": -0.07,
+      "overage_rate": 25.0,
+      "avg_dep_delay": 38.06
+    },
+    {
+      "section_id": "KNDV-KGI",
+      "total_runs": 78,
+      "avg_scheduled_time": 11.0,
+      "avg_actual_time": 12.31,
+      "avg_overage_minutes": 1.31,
+      "median_overage_minutes": 1.62,
+      "overage_rate": 42.31,
+      "avg_dep_delay": 21.21
+    },
+    {
+      "section_id": "MAD-BDRL",
+      "total_runs": 1,
+      "avg_scheduled_time": 67.0,
+      "avg_actual_time": 35.98,
+      "avg_overage_minutes": -31.02,
+      "median_overage_minutes": -31.02,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 54.0
+    },
+    {
+      "section_id": "MAD-HNK",
+      "total_runs": 87,
+      "avg_scheduled_time": 9.0,
+      "avg_actual_time": 7.25,
+      "avg_overage_minutes": -1.75,
+      "median_overage_minutes": -2.13,
+      "overage_rate": 2.3,
+      "avg_dep_delay": 38.66
+    },
+    {
+      "section_id": "MAD-MYA",
+      "total_runs": 294,
+      "avg_scheduled_time": 21.87,
+      "avg_actual_time": 13.54,
+      "avg_overage_minutes": -8.34,
+      "median_overage_minutes": -5.58,
+      "overage_rate": 4.08,
+      "avg_dep_delay": 46.89
+    },
+    {
+      "section_id": "MAD-MYS",
+      "total_runs": 1,
+      "avg_scheduled_time": 100.0,
+      "avg_actual_time": 57.0,
+      "avg_overage_minutes": -43.0,
+      "median_overage_minutes": -43.0,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 26.0
+    },
+    {
+      "section_id": "MAD-NHY",
+      "total_runs": 1,
+      "avg_scheduled_time": 96.0,
+      "avg_actual_time": 77.18,
+      "avg_overage_minutes": -18.82,
+      "median_overage_minutes": -18.82,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 72.0
+    },
+    {
+      "section_id": "MAD-PANP",
+      "total_runs": 3,
+      "avg_scheduled_time": 37.0,
+      "avg_actual_time": 35.67,
+      "avg_overage_minutes": -1.33,
+      "median_overage_minutes": -1.0,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 42.33
+    },
+    {
+      "section_id": "MYA-BDRL",
+      "total_runs": 34,
+      "avg_scheduled_time": 50.0,
+      "avg_actual_time": 19.84,
+      "avg_overage_minutes": -30.16,
+      "median_overage_minutes": -34.08,
+      "overage_rate": 2.94,
+      "avg_dep_delay": 52.18
+    },
+    {
+      "section_id": "MYA-CGKR",
+      "total_runs": 6,
+      "avg_scheduled_time": 56.0,
+      "avg_actual_time": 24.08,
+      "avg_overage_minutes": -31.92,
+      "median_overage_minutes": -31.12,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 74.83
+    },
+    {
+      "section_id": "MYA-MYS",
+      "total_runs": 45,
+      "avg_scheduled_time": 104.0,
+      "avg_actual_time": 53.17,
+      "avg_overage_minutes": -50.83,
+      "median_overage_minutes": -52.07,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 62.09
+    },
+    {
+      "section_id": "MYA-PANP",
+      "total_runs": 173,
+      "avg_scheduled_time": 19.5,
+      "avg_actual_time": 17.33,
+      "avg_overage_minutes": -2.18,
+      "median_overage_minutes": -2.88,
+      "overage_rate": 6.94,
+      "avg_dep_delay": 44.41
+    },
+    {
+      "section_id": "MYA-Y",
+      "total_runs": 82,
+      "avg_scheduled_time": 8.0,
+      "avg_actual_time": 6.31,
+      "avg_overage_minutes": -1.69,
+      "median_overage_minutes": -1.81,
+      "overage_rate": 1.22,
+      "avg_dep_delay": 41.18
+    },
+    {
+      "section_id": "NYH-BID",
+      "total_runs": 1,
+      "avg_scheduled_time": 21.0,
+      "avg_actual_time": 26.0,
+      "avg_overage_minutes": 5.0,
+      "median_overage_minutes": 5.0,
+      "overage_rate": 100.0,
+      "avg_dep_delay": 13.0
+    },
+    {
+      "section_id": "NYH-KGI",
+      "total_runs": 17,
+      "avg_scheduled_time": 5.0,
+      "avg_actual_time": 7.53,
+      "avg_overage_minutes": 2.53,
+      "median_overage_minutes": 3.0,
+      "overage_rate": 52.94,
+      "avg_dep_delay": 18.82
+    },
+    {
+      "section_id": "PANP-MYS",
+      "total_runs": 81,
+      "avg_scheduled_time": 60.0,
+      "avg_actual_time": 26.45,
+      "avg_overage_minutes": -33.55,
+      "median_overage_minutes": -38.42,
+      "overage_rate": 1.23,
+      "avg_dep_delay": 61.4
+    },
+    {
+      "section_id": "PANP-NHY",
+      "total_runs": 129,
+      "avg_scheduled_time": 10.77,
+      "avg_actual_time": 11.69,
+      "avg_overage_minutes": 0.93,
+      "median_overage_minutes": 0.85,
+      "overage_rate": 32.56,
+      "avg_dep_delay": 27.5
+    },
+    {
+      "section_id": "RMGM-CPT",
+      "total_runs": 298,
+      "avg_scheduled_time": 10.0,
+      "avg_actual_time": 8.04,
+      "avg_overage_minutes": -1.96,
+      "median_overage_minutes": -1.85,
+      "overage_rate": 2.35,
+      "avg_dep_delay": 40.36
+    },
+    {
+      "section_id": "RMGM-MAD",
+      "total_runs": 80,
+      "avg_scheduled_time": 24.02,
+      "avg_actual_time": 22.55,
+      "avg_overage_minutes": -1.48,
+      "median_overage_minutes": -1.78,
+      "overage_rate": 15.0,
+      "avg_dep_delay": 43.81
+    },
+    {
+      "section_id": "RMGM-MYA",
+      "total_runs": 176,
+      "avg_scheduled_time": 35.62,
+      "avg_actual_time": 32.26,
+      "avg_overage_minutes": -3.36,
+      "median_overage_minutes": -3.92,
+      "overage_rate": 10.23,
+      "avg_dep_delay": 40.77
+    },
+    {
+      "section_id": "SBC-KGI",
+      "total_runs": 373,
+      "avg_scheduled_time": 20.37,
+      "avg_actual_time": 17.15,
+      "avg_overage_minutes": -3.23,
+      "median_overage_minutes": -3.08,
+      "overage_rate": 9.92,
+      "avg_dep_delay": 44.32
+    },
+    {
+      "section_id": "SBC-KNDV",
+      "total_runs": 70,
+      "avg_scheduled_time": 6.0,
+      "avg_actual_time": 7.0,
+      "avg_overage_minutes": 1.0,
+      "median_overage_minutes": 0.67,
+      "overage_rate": 35.71,
+      "avg_dep_delay": 19.0
+    },
+    {
+      "section_id": "SBC-MYA",
+      "total_runs": 1,
+      "avg_scheduled_time": 83.0,
+      "avg_actual_time": 82.0,
+      "avg_overage_minutes": -1.0,
+      "median_overage_minutes": -1.0,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 32.0
+    },
+    {
+      "section_id": "SBC-NYH",
+      "total_runs": 18,
+      "avg_scheduled_time": 13.0,
+      "avg_actual_time": 17.78,
+      "avg_overage_minutes": 4.78,
+      "median_overage_minutes": 5.0,
+      "overage_rate": 83.33,
+      "avg_dep_delay": 13.5
+    },
+    {
+      "section_id": "SBC-RMGM",
+      "total_runs": 1,
+      "avg_scheduled_time": 54.0,
+      "avg_actual_time": 43.47,
+      "avg_overage_minutes": -10.53,
+      "median_overage_minutes": -10.53,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 50.0
+    },
+    {
+      "section_id": "Y-PANP",
+      "total_runs": 91,
+      "avg_scheduled_time": 31.0,
+      "avg_actual_time": 12.65,
+      "avg_overage_minutes": -18.35,
+      "median_overage_minutes": -18.3,
+      "overage_rate": 0.0,
+      "avg_dep_delay": 41.7
+    }
+  ],
+  "delay_propagation_dynamics": [
+    {
+      "preceding_status": "Clear Track (>60m headway)",
+      "sample_count": 3117,
+      "avg_section_overage": -4.08,
+      "delay_occurrence_rate": 15.62
+    },
+    {
+      "preceding_status": "Close Headway + Preceding Delayed (>15m)",
+      "sample_count": 372,
+      "avg_section_overage": -0.37,
+      "delay_occurrence_rate": 19.35
+    },
+    {
+      "preceding_status": "Close Headway + Preceding On-Time",
+      "sample_count": 48,
+      "avg_section_overage": 0.92,
+      "delay_occurrence_rate": 39.58
+    }
+  ],
+  "hourly_traffic_profile": [
+    {
+      "dep_hour": 0,
+      "active_movements": 57,
+      "avg_departure_delay": 25.51,
+      "avg_section_overage": -0.49,
+      "avg_corridor_density": 4.539999961853027
+    },
+    {
+      "dep_hour": 1,
+      "active_movements": 135,
+      "avg_departure_delay": 36.5,
+      "avg_section_overage": -0.41,
+      "avg_corridor_density": 6.130000114440918
+    },
+    {
+      "dep_hour": 2,
+      "active_movements": 120,
+      "avg_departure_delay": 42.09,
+      "avg_section_overage": -8.11,
+      "avg_corridor_density": 5.389999866485596
+    },
+    {
+      "dep_hour": 3,
+      "active_movements": 50,
+      "avg_departure_delay": 63.52,
+      "avg_section_overage": -4.13,
+      "avg_corridor_density": 4.480000019073486
+    },
+    {
+      "dep_hour": 4,
+      "active_movements": 61,
+      "avg_departure_delay": 31.9,
+      "avg_section_overage": -0.08,
+      "avg_corridor_density": 6.739999771118164
+    },
+    {
+      "dep_hour": 5,
+      "active_movements": 540,
+      "avg_departure_delay": 21.38,
+      "avg_section_overage": 0.53,
+      "avg_corridor_density": 12.279999732971191
+    },
+    {
+      "dep_hour": 6,
+      "active_movements": 778,
+      "avg_departure_delay": 36.52,
+      "avg_section_overage": -2.54,
+      "avg_corridor_density": 16.229999542236328
+    },
+    {
+      "dep_hour": 7,
+      "active_movements": 602,
+      "avg_departure_delay": 52.02,
+      "avg_section_overage": -5.44,
+      "avg_corridor_density": 13.100000381469727
+    },
+    {
+      "dep_hour": 8,
+      "active_movements": 196,
+      "avg_departure_delay": 77.35,
+      "avg_section_overage": -15.5,
+      "avg_corridor_density": 7.71999979019165
+    },
+    {
+      "dep_hour": 9,
+      "active_movements": 165,
+      "avg_departure_delay": 41.41,
+      "avg_section_overage": -5.07,
+      "avg_corridor_density": 4.360000133514404
+    },
+    {
+      "dep_hour": 10,
+      "active_movements": 109,
+      "avg_departure_delay": 52.58,
+      "avg_section_overage": -14.93,
+      "avg_corridor_density": 2.9700000286102295
+    },
+    {
+      "dep_hour": 11,
+      "active_movements": 12,
+      "avg_departure_delay": 132.67,
+      "avg_section_overage": -13.0,
+      "avg_corridor_density": 4.0
+    },
+    {
+      "dep_hour": 12,
+      "active_movements": 4,
+      "avg_departure_delay": 320.5,
+      "avg_section_overage": -8.64,
+      "avg_corridor_density": 3.5
+    },
+    {
+      "dep_hour": 13,
+      "active_movements": 7,
+      "avg_departure_delay": 373.57,
+      "avg_section_overage": -2.64,
+      "avg_corridor_density": 5.570000171661377
+    },
+    {
+      "dep_hour": 14,
+      "active_movements": 5,
+      "avg_departure_delay": 469.4,
+      "avg_section_overage": -4.97,
+      "avg_corridor_density": 7.199999809265137
+    },
+    {
+      "dep_hour": 15,
+      "active_movements": 78,
+      "avg_departure_delay": 8.27,
+      "avg_section_overage": -0.59,
+      "avg_corridor_density": 2.009999990463257
+    },
+    {
+      "dep_hour": 16,
+      "active_movements": 89,
+      "avg_departure_delay": 13.18,
+      "avg_section_overage": -0.47,
+      "avg_corridor_density": 2.0
+    },
+    {
+      "dep_hour": 17,
+      "active_movements": 3,
+      "avg_departure_delay": 102.67,
+      "avg_section_overage": -3.56,
+      "avg_corridor_density": 2.0
+    },
+    {
+      "dep_hour": 18,
+      "active_movements": 56,
+      "avg_departure_delay": 15.05,
+      "avg_section_overage": 2.25,
+      "avg_corridor_density": 4.139999866485596
+    },
+    {
+      "dep_hour": 19,
+      "active_movements": 321,
+      "avg_departure_delay": 22.81,
+      "avg_section_overage": -1.3,
+      "avg_corridor_density": 5.429999828338623
+    },
+    {
+      "dep_hour": 20,
+      "active_movements": 138,
+      "avg_departure_delay": 32.14,
+      "avg_section_overage": -3.36,
+      "avg_corridor_density": 4.650000095367432
+    },
+    {
+      "dep_hour": 21,
+      "active_movements": 4,
+      "avg_departure_delay": 121.0,
+      "avg_section_overage": 1.02,
+      "avg_corridor_density": 5.0
+    },
+    {
+      "dep_hour": 22,
+      "active_movements": 3,
+      "avg_departure_delay": 185.67,
+      "avg_section_overage": 4.5,
+      "avg_corridor_density": 4.329999923706055
+    },
+    {
+      "dep_hour": 23,
+      "active_movements": 4,
+      "avg_departure_delay": 260.25,
+      "avg_section_overage": -1.89,
+      "avg_corridor_density": 6.25
+    }
+  ],
+  "train_reliability": [
+    {
+      "train_id": "12614",
+      "train_name": "Wodeyar SF Express",
+      "total_runs": 86,
+      "avg_initial_delay": 13.22,
+      "avg_overage": -0.51
+    },
+    {
+      "train_id": "12785",
+      "train_name": "Ashokapuram SF Express",
+      "total_runs": 92,
+      "avg_initial_delay": 61.15,
+      "avg_overage": -9.5
+    },
+    {
+      "train_id": "16216",
+      "train_name": "Chamundi Express",
+      "total_runs": 92,
+      "avg_initial_delay": 28.16,
+      "avg_overage": -1.44
+    },
+    {
+      "train_id": "16220",
+      "train_name": "Chamarajanagar Express",
+      "total_runs": 88,
+      "avg_initial_delay": 55.65,
+      "avg_overage": -5.03
+    },
+    {
+      "train_id": "16228",
+      "train_name": "Talguppa - Mysuru Express",
+      "total_runs": 91,
+      "avg_initial_delay": 31.26,
+      "avg_overage": -1.54
+    },
+    {
+      "train_id": "16231",
+      "train_name": "Mysuru Express",
+      "total_runs": 91,
+      "avg_initial_delay": 34.55,
+      "avg_overage": -1.88
+    },
+    {
+      "train_id": "16316",
+      "train_name": "Mysuru Express",
+      "total_runs": 77,
+      "avg_initial_delay": 42.4,
+      "avg_overage": -7.55
+    },
+    {
+      "train_id": "56232",
+      "train_name": "SMVT Bengaluru - Mysuru Passenger",
+      "total_runs": 43,
+      "avg_initial_delay": 41.73,
+      "avg_overage": -3.54
+    }
+  ]
+}
