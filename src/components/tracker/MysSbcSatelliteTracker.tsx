@@ -206,6 +206,17 @@ export const SURROUNDING_TRAFFIC: SurroundingTrafficTrain[] = [
 
 import { useLiveTrainFeed } from "@/lib/raileta/useLiveTrainFeed";
 
+// 12-hour AM/PM and 24-hour clock formatting helper
+export function formatClockWithPeriod(clockStr: string): string {
+  if (!clockStr) return "--:--";
+  const [hStr, mStr] = clockStr.split(":");
+  const h = parseInt(hStr || "0", 10);
+  const m = parseInt(mStr || "0", 10);
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
+}
+
 export function MysSbcSatelliteTracker() {
   const [selectedTrainId, setSelectedTrainId] = useState<string>("16215");
   const [viewMode, setViewMode] = useState<"live" | "replay">("live");
@@ -222,6 +233,15 @@ export function MysSbcSatelliteTracker() {
   const rawTrain = useMemo(() => {
     return MYS_SBC_TRAINS.find((t) => t.id === selectedTrainId) || MYS_SBC_TRAINS[0];
   }, [selectedTrainId]);
+
+  // Synchronize target flight departure time when selected train changes
+  React.useEffect(() => {
+    const [arrH, arrM] = rawTrain.scheduledArr.split(":").map(Number);
+    const targetFlightMins = ((arrH || 9) * 60 + (arrM || 25) + 150) % 1440;
+    const fltH = Math.floor(targetFlightMins / 60);
+    const fltM = targetFlightMins % 60;
+    setFlightDepartureTimeStr(`${String(fltH).padStart(2, "0")}:${String(fltM).padStart(2, "0")}`);
+  }, [rawTrain.id, rawTrain.scheduledArr]);
 
   const train = useMemo(() => {
     // If live API feed returned valid data for this train and we are in "live" mode, blend it into the model
@@ -257,9 +277,25 @@ export function MysSbcSatelliteTracker() {
 
   const currentLiveDelay = train.baseDelayMin + delayModifier;
 
-  // Compute section-by-section dynamic delay propagation to SBC
+  // Compute section-by-section dynamic delay propagation to SBC for the currently selected train
   const stopsCalculated = useMemo(() => {
     let runningDelay = currentLiveDelay;
+
+    const [depH, depM] = (rawTrain.scheduledDep || "06:45").split(":").map(Number);
+    const [arrH, arrM] = (rawTrain.scheduledArr || "09:25").split(":").map(Number);
+    const depTotalMins = (depH || 0) * 60 + (depM || 0);
+    const arrTotalMins = (arrH || 0) * 60 + (arrM || 0);
+    const totalDurationMins =
+      arrTotalMins >= depTotalMins
+        ? arrTotalMins - depTotalMins
+        : arrTotalMins + 1440 - depTotalMins;
+
+    // Official booked timetable stops for Chamundi Express (16215)
+    const chamundiStopTimes = [
+      "06:45", "06:55", "07:07", "07:31", "07:49", "08:06",
+      "08:18", "08:33", "08:52", "09:02", "09:25",
+    ];
+
     return MYS_SBC_STOPS.map((stop, idx) => {
       const isPast = idx < train.currentStopIndex;
       const isCurrent = idx === train.currentStopIndex;
@@ -271,26 +307,42 @@ export function MysSbcSatelliteTracker() {
 
       if (isFuture) {
         if (stop.code === "BID") {
-          slackRecovery = 2.5;
+          slackRecovery = 2.0;
           runningDelay = Math.max(0, runningDelay - slackRecovery);
         } else if (stop.code === "KGI") {
-          bottleneckPenalty = 4.5; // Commuter boarding surge
+          bottleneckPenalty = train.type === "Vande Bharat" ? 1.0 : 3.5; // High-priority express vs commuter dwell
           runningDelay += bottleneckPenalty;
         } else if (stop.code === "NYH") {
           slackRecovery = 1.0;
           runningDelay = Math.max(0, runningDelay - slackRecovery);
         } else if (stop.code === "SBC") {
-          bottleneckPenalty = runningDelay > 10 ? 3.5 : 1.0;
+          bottleneckPenalty = runningDelay > 10 ? 2.5 : 0.5;
           runningDelay += bottleneckPenalty;
         }
         sectionPredictedDelay = runningDelay;
       }
 
-      const [hStr, mStr] = stop.scheduledTime.split(":");
-      const schedMins = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
-      const appliedDelay = isPast || (train.currentStopIndex === 10 && idx === 10)
-        ? Math.min(train.baseDelayMin, idx * 1.5)
-        : sectionPredictedDelay;
+      // Calculate booked scheduled time for this stop based on the active train schedule
+      let stopScheduledTime = stop.scheduledTime;
+      let schedMins = 0;
+
+      if (rawTrain.id === "16215" && chamundiStopTimes[idx]) {
+        stopScheduledTime = chamundiStopTimes[idx]!;
+        const [h, m] = stopScheduledTime.split(":").map(Number);
+        schedMins = (h || 0) * 60 + (m || 0);
+      } else {
+        const fraction = stop.km / 138.3;
+        schedMins = Math.round(depTotalMins + fraction * totalDurationMins);
+        const schedH = Math.floor(schedMins / 60) % 24;
+        const schedM = schedMins % 60;
+        stopScheduledTime = `${String(schedH).padStart(2, "0")}:${String(schedM).padStart(2, "0")}`;
+      }
+
+      const appliedDelay =
+        isPast || (train.currentStopIndex === 10 && idx === 10)
+          ? Math.min(train.baseDelayMin, idx * 1.5)
+          : sectionPredictedDelay;
+
       const predictedTotalMins = schedMins + appliedDelay;
       const predHours = Math.floor(predictedTotalMins / 60) % 24;
       const predMinutes = Math.round(predictedTotalMins % 60);
@@ -298,8 +350,9 @@ export function MysSbcSatelliteTracker() {
 
       return {
         ...stop,
+        scheduledTime: stopScheduledTime,
         isPast: train.currentStopIndex === 10 ? true : isPast,
-        isCurrent: train.currentStopIndex === 10 ? (idx === 10) : isCurrent,
+        isCurrent: train.currentStopIndex === 10 ? idx === 10 : isCurrent,
         isFuture: train.currentStopIndex === 10 ? false : isFuture,
         appliedDelay: Math.round(appliedDelay),
         predictedClockStr,
@@ -307,53 +360,58 @@ export function MysSbcSatelliteTracker() {
         bottleneckPenalty,
       };
     });
-  }, [train, currentLiveDelay]);
+  }, [train, rawTrain, currentLiveDelay]);
 
-  const sbcStop = stopsCalculated[stopsCalculated.length - 1];
+  const sbcStop = stopsCalculated[stopsCalculated.length - 1]!;
   const kgiStop = stopsCalculated.find((s) => s.code === "KGI") || sbcStop;
 
   // Traditional vs RailRakshak ETA Comparison
   const traditionalEta = useMemo(() => {
-    const [h, m] = rawTrain.scheduledArr.split(":");
-    const total = parseInt(h, 10) * 60 + parseInt(m, 10) + currentLiveDelay;
+    const [h, m] = rawTrain.scheduledArr.split(":").map(Number);
+    const total = (h || 0) * 60 + (m || 0) + currentLiveDelay;
     const hArr = Math.floor(total / 60) % 24;
     const mArr = total % 60;
     return `${String(hArr).padStart(2, "0")}:${String(mArr).padStart(2, "0")}`;
   }, [rawTrain.scheduledArr, currentLiveDelay]);
 
-  // TreeSHAP Feature Attribution Breakdown for the active section
+  // Dynamic TreeSHAP Feature Attribution Breakdown for the active train
   const shapExplanations = useMemo(() => {
+    const isMorning = rawTrain.id === "16215";
     return [
       {
-        feature: "KGI Suburban Commuter Boarding Surge",
+        feature: isMorning
+          ? "KGI Suburban Commuter Boarding Surge"
+          : "KGI Urban Intermodal Transfer Dwell",
         category: "Passenger Surge",
-        impact: +4.8,
-        description: "Morning rush-hour boarding at Kengeri (08:30-08:50 AM) extends 2-min halt to 6.8 min.",
+        impact: isMorning ? +4.8 : +1.5,
+        description: isMorning
+          ? "Morning rush-hour boarding at Kengeri (08:30-08:50 AM) extends 2-min halt to 6.8 min."
+          : "Afternoon intermodal passenger disembarkation at Kengeri Purple Line Metro junction.",
         type: "delay",
       },
       {
         feature: "Preceding Goods Headway (Bidadi Siding)",
         category: "Track Headway",
-        impact: +3.0,
-        description: "Freight #58219 clearance ahead triggers caution Double Yellow aspect.",
+        impact: +2.0,
+        description: "Automobile freight clearance ahead triggers caution signal aspect.",
         type: "delay",
       },
       {
         feature: "SBC Outer Terminal Reception Holding",
         category: "Platform Allocation",
-        impact: +2.5,
-        description: "Outer signal queue entering KSR Bengaluru Platform 6.",
+        impact: +1.5,
+        description: "Outer signal queue entering KSR Bengaluru Terminal.",
         type: "delay",
       },
       {
         feature: "Double-Track Buffer Slack Absorption",
         category: "Timetable Slack",
-        impact: -18.2,
-        description: "High-speed 110 km/h kinematic running recovers delay on open double-track.",
+        impact: -5.5,
+        description: "High-speed kinematic cruising on the electrified double line recovers mid-route buffer.",
         type: "recovery",
       },
     ];
-  }, []);
+  }, [rawTrain.id]);
 
   // Airport Transfer Calculation
   const airportIntel = useMemo(() => {
@@ -677,7 +735,7 @@ export function MysSbcSatelliteTracker() {
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <div className="font-mono text-3xl font-bold text-slate-300">
-                  {traditionalEta} AM
+                  {formatClockWithPeriod(traditionalEta)}
                 </div>
                 <div className="text-xs text-rose-400 font-mono">
                   (+{currentLiveDelay} min error)
@@ -701,7 +759,7 @@ export function MysSbcSatelliteTracker() {
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <div className="font-mono text-3xl font-black text-emerald-300">
-                  {sbcStop.predictedClockStr} AM
+                  {formatClockWithPeriod(sbcStop.predictedClockStr)}
                 </div>
                 <div className="text-xs text-emerald-400 font-mono font-bold">
                   ({sbcStop.appliedDelay > 0 ? `+${sbcStop.appliedDelay}m actual delay` : "On-Time Arrival"})
@@ -936,14 +994,16 @@ export function MysSbcSatelliteTracker() {
                     onChange={(e) => setFlightDepartureTimeStr(e.target.value)}
                     className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 font-mono"
                   />
-                  <span className="text-slate-400 text-xs font-bold">AM</span>
+                  <span className="text-cyan-400 text-xs font-mono font-bold">
+                    {formatClockWithPeriod(flightDepartureTimeStr).split(" ")[1]}
+                  </span>
                 </div>
               </div>
 
               <div className="rounded-lg border border-slate-800 bg-slate-950 p-3">
                 <div className="text-[10px] text-slate-400 uppercase">Est. KIA Terminal Arrival</div>
                 <div className="mt-1 text-base font-black text-cyan-300">
-                  {airportIntel.airportArrivalClockStr} AM
+                  {formatClockWithPeriod(airportIntel.airportArrivalClockStr)}
                 </div>
                 <div className="text-[10px] text-slate-400">{airportIntel.flightBufferMins}m safety buffer</div>
               </div>
