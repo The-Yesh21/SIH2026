@@ -37,6 +37,8 @@ export interface MysSbcTrain {
   lat: number;
   lng: number;
   heading: string;
+  operationalStatus: "COMPLETED_TODAY" | "ACTIVE_ON_TRACK" | "BOARDING_ORIGIN" | "UPCOMING_EVENING";
+  actualArrivalNotes: string;
 }
 
 export interface CorridorStop {
@@ -68,8 +70,8 @@ export const MYS_SBC_TRAINS: MysSbcTrain[] = [
     name: "Chamundi Express",
     type: "Express",
     locoNumber: "WAP-7 #30482 (RTIS-ISRO Active)",
-    origin: "MYS (06:45)",
-    destination: "SBC (09:25)",
+    origin: "MYS (06:45 AM)",
+    destination: "SBC (09:25 AM)",
     scheduledDep: "06:45",
     scheduledArr: "09:25",
     currentStopIndex: 6, // Ramanagaram
@@ -79,14 +81,16 @@ export const MYS_SBC_TRAINS: MysSbcTrain[] = [
     lat: 12.7214,
     lng: 77.2812,
     heading: "058° ENE",
+    operationalStatus: "COMPLETED_TODAY",
+    actualArrivalNotes: "Morning run completed at 09:32 AM at SBC (Platform 6). Stabled at SBC Yard waiting for return service 16216 (18:25 PM departure).",
   },
   {
     id: "20608",
     name: "Vande Bharat Express",
     type: "Vande Bharat",
     locoNumber: "Trainset #20608 (ISRO MSS Transponder)",
-    origin: "MYS (13:05)",
-    destination: "SBC (14:50)",
+    origin: "MYS (13:05 PM)",
+    destination: "SBC (14:50 PM)",
     scheduledDep: "13:05",
     scheduledArr: "14:50",
     currentStopIndex: 3, // Mandya
@@ -96,40 +100,46 @@ export const MYS_SBC_TRAINS: MysSbcTrain[] = [
     lat: 12.5241,
     lng: 76.8972,
     heading: "054° NE",
+    operationalStatus: "ACTIVE_ON_TRACK",
+    actualArrivalNotes: "Live afternoon service currently in transit between Mandya and Maddur.",
   },
   {
     id: "12008",
     name: "Shatabdi Express",
     type: "Shatabdi",
     locoNumber: "WAP-7 #37012 (RTIS-ISRO Active)",
-    origin: "MYS (14:15)",
-    destination: "SBC (16:15)",
+    origin: "MYS (14:15 PM)",
+    destination: "SBC (16:15 PM)",
     scheduledDep: "14:15",
     scheduledArr: "16:15",
-    currentStopIndex: 4, // Maddur
-    currentProgressPct: 48,
-    speedKmph: 92.4,
-    baseDelayMin: 8,
-    lat: 12.5841,
-    lng: 77.0425,
-    heading: "056° NE",
+    currentStopIndex: 0, // Mysuru
+    currentProgressPct: 0,
+    speedKmph: 0.0,
+    baseDelayMin: 0,
+    lat: 12.3168,
+    lng: 76.6451,
+    heading: "000° N",
+    operationalStatus: "BOARDING_ORIGIN",
+    actualArrivalNotes: "Currently boarding at Mysuru Jn Platform 1. Scheduled departure at 14:15 PM.",
   },
   {
     id: "06560",
     name: "MYS-SBC MEMU Commuter",
     type: "MEMU",
     locoNumber: "MEMU-3 Phase #1104",
-    origin: "MYS (15:30)",
-    destination: "SBC (18:45)",
+    origin: "MYS (15:30 PM)",
+    destination: "SBC (18:45 PM)",
     scheduledDep: "15:30",
     scheduledArr: "18:45",
-    currentStopIndex: 5, // Channapatna
-    currentProgressPct: 59,
-    speedKmph: 54.0,
-    baseDelayMin: 22,
-    lat: 12.6512,
-    lng: 77.2014,
-    heading: "055° NE",
+    currentStopIndex: 0,
+    currentProgressPct: 0,
+    speedKmph: 0.0,
+    baseDelayMin: 0,
+    lat: 12.3168,
+    lng: 76.6451,
+    heading: "000° N",
+    operationalStatus: "UPCOMING_EVENING",
+    actualArrivalNotes: "Scheduled evening commuter service departing at 15:30 PM.",
   },
 ];
 
@@ -345,16 +355,37 @@ export function MysSbcSatelliteTracker() {
                   <span className="font-[family-name:var(--font-mono)] font-bold text-slate-100">
                     {t.id} {t.name}
                   </span>
-                  <Badge variant="outline" className="border-slate-700 text-[10px] text-slate-300">
-                    {t.type}
+                  <Badge
+                    variant="outline"
+                    className={`text-[9px] ${
+                      t.operationalStatus === "COMPLETED_TODAY"
+                        ? "border-emerald-500/40 text-emerald-300 bg-emerald-950/50"
+                        : t.operationalStatus === "ACTIVE_ON_TRACK"
+                        ? "border-amber-500/40 text-amber-300 bg-amber-950/50 animate-pulse"
+                        : "border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    {t.operationalStatus === "COMPLETED_TODAY"
+                      ? "✓ Arrived (09:32 AM)"
+                      : t.operationalStatus === "ACTIVE_ON_TRACK"
+                      ? "🟢 Active on Track"
+                      : t.operationalStatus === "BOARDING_ORIGIN"
+                      ? "🟡 Boarding MYS"
+                      : "Upcoming"}
                   </Badge>
                 </div>
                 <div className="mt-1 flex justify-between text-xs text-slate-400">
-                  <span>Dep: {t.scheduledDep} MYS</span>
-                  <span>Arr: {t.scheduledArr} SBC</span>
+                  <span>Dep: {t.scheduledDep}</span>
+                  <span>Arr: {t.scheduledArr}</span>
                 </div>
               </button>
             ))}
+
+            {train.operationalStatus === "COMPLETED_TODAY" && (
+              <div className="rounded-md border border-sky-900/60 bg-sky-950/30 p-2.5 text-[11px] text-sky-200 leading-relaxed">
+                ℹ️ <strong>Time Context:</strong> Chamundi Express completed its morning run at <strong>09:32 AM</strong> at KSR Bengaluru. The telemetry shown below is the <strong>08:32 AM mid-journey snapshot at Ramanagaram</strong> to analyze downstream delay propagation.
+              </div>
+            )}
 
             {/* Delay Sandbox Slider */}
             <div className="mt-4 rounded-md border border-slate-800 bg-slate-950 p-3">
