@@ -189,13 +189,32 @@ export const SURROUNDING_TRAFFIC: SurroundingTrafficTrain[] = [
 
 export function MysSbcSatelliteTracker() {
   const [selectedTrainId, setSelectedTrainId] = useState<string>("16215");
+  const [viewMode, setViewMode] = useState<"live" | "replay">("live");
   const [delayModifier, setDelayModifier] = useState<number>(0);
   const [flightDepartureTimeStr, setFlightDepartureTimeStr] = useState<string>("11:30");
   const [transitMode, setTransitMode] = useState<"sbc_taxi" | "kgeri_taxi" | "vayu_vajra">("sbc_taxi");
 
-  const train = useMemo(() => {
+  const rawTrain = useMemo(() => {
     return MYS_SBC_TRAINS.find((t) => t.id === selectedTrainId) || MYS_SBC_TRAINS[0];
   }, [selectedTrainId]);
+
+  // If the train is completed today and we are in "live" mode, its live position is at SBC (Terminus, 100%, 0 km/h).
+  // If in "replay" mode, we look at the mid-journey 08:32 AM Ramanagaram snapshot.
+  const train = useMemo(() => {
+    if (rawTrain.operationalStatus === "COMPLETED_TODAY" && viewMode === "live") {
+      return {
+        ...rawTrain,
+        currentStopIndex: 10, // SBC KSR Bengaluru
+        currentProgressPct: 100,
+        speedKmph: 0.0,
+        baseDelayMin: 7, // Arrived +7 min at 09:32 AM
+        lat: 12.9782,
+        lng: 77.5696,
+        heading: "Stationary at Platform 6",
+      };
+    }
+    return rawTrain;
+  }, [rawTrain, viewMode]);
 
   const currentLiveDelay = train.baseDelayMin + delayModifier;
 
@@ -214,19 +233,15 @@ export function MysSbcSatelliteTracker() {
       if (isFuture) {
         // Section Slack & Bottleneck modeling
         if (stop.code === "BID") {
-          // Open section: slight buffer recovery
           slackRecovery = 2;
           runningDelay = Math.max(0, runningDelay - slackRecovery);
         } else if (stop.code === "KGI") {
-          // Suburban boundary: stable
           slackRecovery = 1;
           runningDelay = Math.max(0, runningDelay - slackRecovery);
         } else if (stop.code === "NYH") {
-          // Inner junction approach
           bottleneckPenalty = 1;
           runningDelay += bottleneckPenalty;
         } else if (stop.code === "SBC") {
-          // Terminus platform reception wait if delayed
           bottleneckPenalty = runningDelay > 10 ? 4 : 1;
           runningDelay += bottleneckPenalty;
         }
@@ -236,7 +251,9 @@ export function MysSbcSatelliteTracker() {
       // Convert "06:45" + delay into predicted clock
       const [hStr, mStr] = stop.scheduledTime.split(":");
       const schedMins = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
-      const appliedDelay = isPast ? Math.min(train.baseDelayMin, idx * 2) : sectionPredictedDelay;
+      const appliedDelay = isPast || (train.currentStopIndex === 10 && idx === 10)
+        ? Math.min(train.baseDelayMin, idx * 2)
+        : sectionPredictedDelay;
       const predictedTotalMins = schedMins + appliedDelay;
       const predHours = Math.floor(predictedTotalMins / 60) % 24;
       const predMinutes = predictedTotalMins % 60;
@@ -244,9 +261,9 @@ export function MysSbcSatelliteTracker() {
 
       return {
         ...stop,
-        isPast,
-        isCurrent,
-        isFuture,
+        isPast: train.currentStopIndex === 10 ? true : isPast,
+        isCurrent: train.currentStopIndex === 10 ? (idx === 10) : isCurrent,
+        isFuture: train.currentStopIndex === 10 ? false : isFuture,
         appliedDelay,
         predictedClockStr,
         slackRecovery,
@@ -381,9 +398,40 @@ export function MysSbcSatelliteTracker() {
               </button>
             ))}
 
-            {train.operationalStatus === "COMPLETED_TODAY" && (
-              <div className="rounded-md border border-sky-900/60 bg-sky-950/30 p-2.5 text-[11px] text-sky-200 leading-relaxed">
-                ℹ️ <strong>Time Context:</strong> Chamundi Express completed its morning run at <strong>09:32 AM</strong> at KSR Bengaluru. The telemetry shown below is the <strong>08:32 AM mid-journey snapshot at Ramanagaram</strong> to analyze downstream delay propagation.
+            {rawTrain.operationalStatus === "COMPLETED_TODAY" && (
+              <div className="space-y-2">
+                <div className="flex rounded-md border border-slate-700 bg-slate-950 p-1 text-[11px]">
+                  <button
+                    onClick={() => setViewMode("live")}
+                    className={`flex-1 rounded py-1.5 text-center font-semibold transition-all ${
+                      viewMode === "live"
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    ✓ Live: Arrived SBC (09:32 AM)
+                  </button>
+                  <button
+                    onClick={() => setViewMode("replay")}
+                    className={`flex-1 rounded py-1.5 text-center font-semibold transition-all ${
+                      viewMode === "replay"
+                        ? "bg-amber-600 text-white shadow-sm"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    ⏱️ Replay 08:32 AM Run
+                  </button>
+                </div>
+
+                {viewMode === "live" ? (
+                  <div className="rounded-md border border-emerald-800/60 bg-emerald-950/30 p-2.5 text-[11px] text-emerald-200 leading-relaxed">
+                    ✓ <strong>Trip Completed:</strong> Chamundi Express arrived at <strong>09:32 AM</strong> at KSR Bengaluru (Platform 6). Stabled at SBC Yard until return service <strong>16216</strong> at 18:25 PM.
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-amber-800/60 bg-amber-950/30 p-2.5 text-[11px] text-amber-200 leading-relaxed">
+                    ⏱️ <strong>Replay Active:</strong> Viewing 08:32 AM mid-corridor telemetry at Ramanagaram (+14m delay) to analyze downstream section predictions.
+                  </div>
+                )}
               </div>
             )}
 
@@ -546,7 +594,11 @@ export function MysSbcSatelliteTracker() {
                     <td className="py-2.5 px-2 text-slate-400">{stop.km} km</td>
                     <td className="py-2.5 px-2 text-slate-300">{stop.scheduledTime}</td>
                     <td className="py-2.5 px-3">
-                      {stop.isPast ? (
+                      {stop.code === "SBC" && (stop.isPast || stop.isCurrent) ? (
+                        <span className="text-emerald-300 font-sans text-[11px] font-bold flex items-center gap-1">
+                          <CheckCircle2 className="h-3.5 w-3.5 inline text-emerald-400" /> Arrived at Terminus
+                        </span>
+                      ) : stop.isPast ? (
                         <span className="text-emerald-400 font-sans text-[11px] flex items-center gap-1">
                           <CheckCircle2 className="h-3.5 w-3.5 inline" /> Cleared
                         </span>
