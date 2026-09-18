@@ -20,9 +20,12 @@ import {
   Calendar,
   TrendingUp,
   Waves,
+  Satellite,
+  Radio,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
+import { MysSbcSatelliteTracker } from "@/components/tracker/MysSbcSatelliteTracker";
 import { PipelineNotice } from "@/components/raileta/PipelineNotice";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1183,6 +1186,7 @@ function FullRouteView({ journey }: { journey: typeof journeys[0] }) {
 }
 
 function Dashboard() {
+  const [activeTab, setActiveTab] = useState<"mys_sbc_tracker" | "sbc_mys_replay">("mys_sbc_tracker");
   const [journeyId, setJourneyId] = useState(journeys[0]?.journey_id ?? "");
   const journey = journeys.find((j) => j.journey_id === journeyId) ?? journeys[0];
   const maxIndex = journey ? journey.hops.length : 0;
@@ -1200,41 +1204,77 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Badge
-            variant="outline"
-            className="mb-2 border-accent text-accent-foreground"
+      {/* Top View Mode Switcher */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-secondary/50 p-1">
+          <button
+            onClick={() => setActiveTab("mys_sbc_tracker")}
+            className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              activeTab === "mys_sbc_tracker"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            HISTORICAL JOURNEY REPLAY — REAL DATA
-          </Badge>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-foreground">
-            Bengaluru → Mysuru dynamic ETA
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Pick a real journey and move the train along the corridor. From
-            that point the LightGBM model predicts every remaining section using
-            only information available at that moment; the recorded actuals are
-            shown alongside for comparison.
-          </p>
+            <Satellite className="h-3.5 w-3.5" />
+            Where is the Train? (MYS → SBC + Airport Delay)
+          </button>
+          <button
+            onClick={() => setActiveTab("sbc_mys_replay")}
+            className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              activeTab === "sbc_mys_replay"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <TrainFront className="h-3.5 w-3.5" />
+            SBC → MYS Historical Corridor Replay
+          </button>
         </div>
+
+        <Badge variant="outline" className="border-sky-500/30 text-sky-400 text-xs">
+          🛰️ ISRO RTIS Active Telemetry Layer
+        </Badge>
       </div>
 
-      {/* Journey and Scenario selectors */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <JourneySelector
-          selectedJourneyId={journeyId}
-          onSelect={setJourneyId}
-        />
-        <ScenarioSelector
-          selectedJourneyId={journeyId}
-          onSelect={setJourneyId}
-        />
-      </div>
+      {activeTab === "mys_sbc_tracker" ? (
+        <MysSbcSatelliteTracker />
+      ) : (
+        <>
+          {/* Header */}
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <Badge
+                variant="outline"
+                className="mb-2 border-accent text-accent-foreground"
+              >
+                HISTORICAL JOURNEY REPLAY — REAL DATA
+              </Badge>
+              <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-foreground">
+                Bengaluru → Mysuru dynamic ETA
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Pick a real journey and move the train along the corridor. From
+                that point the LightGBM model predicts every remaining section using
+                only information available at that moment; the recorded actuals are
+                shown alongside for comparison.
+              </p>
+            </div>
+          </div>
 
-      {/* Full route view - complete SBC→MYS corridor */}
-      <FullRouteView journey={journey} />
+          {/* Journey and Scenario selectors */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <JourneySelector
+              selectedJourneyId={journeyId}
+              onSelect={setJourneyId}
+            />
+            <ScenarioSelector
+              selectedJourneyId={journeyId}
+              onSelect={setJourneyId}
+            />
+          </div>
+
+          {/* Full route view - complete SBC→MYS corridor */}
+          <FullRouteView journey={journey} />
 
       {/* Replay visualization */}
       <ReplayMode journey={journey} atIndex={atIndex} result={result} />
@@ -1487,6 +1527,8 @@ function Dashboard() {
         timetable is from eRail. The corridor covers {dataset.stations.length}{" "}
         stations between KSR Bengaluru and Mysuru Jn.
       </p>
+        </>
+      )}
     </div>
   );
 }
