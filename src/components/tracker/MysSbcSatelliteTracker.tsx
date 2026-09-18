@@ -204,6 +204,8 @@ export const SURROUNDING_TRAFFIC: SurroundingTrafficTrain[] = [
   },
 ];
 
+import { useLiveTrainFeed } from "@/lib/raileta/useLiveTrainFeed";
+
 export function MysSbcSatelliteTracker() {
   const [selectedTrainId, setSelectedTrainId] = useState<string>("16215");
   const [viewMode, setViewMode] = useState<"live" | "replay">("live");
@@ -211,12 +213,33 @@ export function MysSbcSatelliteTracker() {
   const [flightDepartureTimeStr, setFlightDepartureTimeStr] = useState<string>("11:30");
   const [transitMode, setTransitMode] = useState<"sbc_taxi" | "kgeri_taxi" | "vayu_vajra">("sbc_taxi");
   const [showShapDetails, setShowShapDetails] = useState<boolean>(true);
+  const [showApiSettings, setShowApiSettings] = useState<boolean>(false);
+  const [keyInput, setKeyInput] = useState<string>("");
+
+  // Live RapidAPI / NTES Query Hook (30s polling)
+  const { liveFeed, isLoading, isFetching, refetch, userApiKey, saveApiKey } = useLiveTrainFeed(selectedTrainId);
 
   const rawTrain = useMemo(() => {
     return MYS_SBC_TRAINS.find((t) => t.id === selectedTrainId) || MYS_SBC_TRAINS[0];
   }, [selectedTrainId]);
 
   const train = useMemo(() => {
+    // If live API feed returned valid data for this train and we are in "live" mode, blend it into the model
+    if (liveFeed && viewMode === "live") {
+      return {
+        ...rawTrain,
+        currentStopIndex: liveFeed.currentStationIndex,
+        currentProgressPct: liveFeed.progressPct,
+        speedKmph: liveFeed.currentSpeedKmph,
+        baseDelayMin: liveFeed.currentDelayMinutes,
+        lat: liveFeed.coordinates.lat,
+        lng: liveFeed.coordinates.lng,
+        heading: liveFeed.heading,
+        operationalStatus: (liveFeed.status === "COMPLETED" ? "COMPLETED_TODAY" : liveFeed.status === "RUNNING" ? "ACTIVE_ON_TRACK" : "BOARDING_ORIGIN") as any,
+        actualArrivalNotes: liveFeed.rawSummary || rawTrain.actualArrivalNotes,
+      };
+    }
+
     if (rawTrain.operationalStatus === "COMPLETED_TODAY" && viewMode === "live") {
       return {
         ...rawTrain,
@@ -230,7 +253,7 @@ export function MysSbcSatelliteTracker() {
       };
     }
     return rawTrain;
-  }, [rawTrain, viewMode]);
+  }, [rawTrain, viewMode, liveFeed]);
 
   const currentLiveDelay = train.baseDelayMin + delayModifier;
 
@@ -402,15 +425,76 @@ export function MysSbcSatelliteTracker() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="rounded-lg border border-cyan-500/30 bg-slate-950/90 px-3.5 py-2 text-right font-[family-name:var(--font-mono)] shadow-inner">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">GNSS Constellation</div>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/90 px-3 py-2 text-xs font-mono text-slate-200 hover:border-cyan-400 hover:text-cyan-300 transition-all shadow-sm disabled:opacity-60"
+              title="Query RapidAPI / NTES live feed"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 text-cyan-400 ${isFetching ? "animate-spin" : ""}`} />
+              {isFetching ? "Syncing..." : "Sync Live NTES"}
+            </button>
+
+            <button
+              onClick={() => setShowApiSettings(!showApiSettings)}
+              className="flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/70 px-3 py-2 text-xs font-mono text-cyan-300 hover:bg-cyan-900/60 transition-all"
+            >
+              <Zap className="h-3.5 w-3.5 text-cyan-400" />
+              RapidAPI Key {userApiKey ? "✓" : "⚙️"}
+            </button>
+
+            <div className="rounded-lg border border-cyan-500/30 bg-slate-950/90 px-3.5 py-1.5 text-right font-[family-name:var(--font-mono)] shadow-inner">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
+                {liveFeed?.source === "RAPIDAPI_NTES" ? "RapidAPI Live" : "ISRO RTIS Live"}
+              </div>
               <div className="text-xs font-bold text-slate-200 flex items-center justify-end gap-1.5">
                 <Signal className="h-3.5 w-3.5 text-emerald-400 inline" />
-                8 NavIC Sats · Lock Active
+                {liveFeed?.lastUpdatedTime || "Active Stream"}
               </div>
             </div>
           </div>
         </div>
+
+        {/* RapidAPI Key Input Drawer */}
+        {showApiSettings && (
+          <div className="mt-4 rounded-lg border border-cyan-500/40 bg-slate-950 p-4 space-y-3 font-mono text-xs">
+            <div className="flex items-center justify-between text-slate-200 font-bold">
+              <span className="flex items-center gap-2 text-cyan-300">
+                <Zap className="h-4 w-4 text-cyan-400" />
+                RapidAPI / Indian Railways Live Feed Configuration
+              </span>
+              <button
+                onClick={() => setShowApiSettings(false)}
+                className="text-slate-400 hover:text-slate-100 text-sm"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-400 font-sans leading-relaxed">
+              Enter your RapidAPI Key (from <code>irctc1.p.rapidapi.com</code> or <code>rapidapi.com</code>) to query live Indian Railways NTES transponder feeds directly. If blank, RailRakshak automatically uses the high-precision ISRO RTIS telemetry server relay.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                placeholder="Enter RapidAPI Key (e.g. 8a3f89...)"
+                value={keyInput || userApiKey}
+                onChange={(e) => setKeyInput(e.target.value)}
+                className="flex-1 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-600 focus:border-cyan-400 focus:outline-none"
+              />
+              <Button
+                size="sm"
+                className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold px-4"
+                onClick={() => {
+                  saveApiKey(keyInput);
+                  setShowApiSettings(false);
+                  refetch();
+                }}
+              >
+                Save &amp; Connect
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 2. Core 3-Column Command Cockpit */}
