@@ -94,6 +94,7 @@ def main() -> None:
                 "fill_values": meta["fill_values"],
                 "train_codes": meta["train_codes"],
                 "section_codes": meta["section_codes"],
+                "train_priorities": meta.get("train_priorities", {}),
                 "parameters": model.get_params(),
                 "best_iteration": model.best_iteration_,
                 "split": {

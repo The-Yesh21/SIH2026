@@ -19,21 +19,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Compass,
-  FastForward,
   Info,
-  ListTree,
   Pause,
   Play,
+  RefreshCcw,
   RotateCcw,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Timer,
-  TrainFront,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
+
+import { Slider } from "@/components/ui/slider";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +38,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import {
   Tooltip as UiTooltip,
   TooltipContent,
@@ -121,13 +113,23 @@ function StatTile({
   label,
   value,
   hint,
+  tone,
 }: {
   label: string;
   value: string;
   hint: string;
+  tone?: "good" | "bad";
 }) {
   return (
-    <div className="rounded-sm border border-border bg-secondary/30 p-3">
+    <div
+      className={`rounded-sm border p-3 ${
+        tone === "good"
+          ? "border-emerald-500/50 bg-emerald-500/5"
+          : tone === "bad"
+            ? "border-red-500/50 bg-red-500/5"
+            : "border-border bg-secondary/30"
+      }`}
+    >
       <div className="text-xs uppercase tracking-wide text-muted-foreground">
         {label}
       </div>
@@ -144,18 +146,26 @@ function SummaryTile({
   arrival,
   delay,
   highlight,
+  tone,
+  errorMinutes,
 }: {
   label: string;
   arrival: Date | null;
   delay: number;
   highlight?: boolean | undefined;
+  tone?: "good" | "bad";
+  errorMinutes?: number | null;
 }) {
   return (
     <div
       className={`rounded-sm border p-3 ${
-        highlight
-          ? "border-primary/50 bg-primary/5"
-          : "border-border bg-secondary/30"
+        tone === "good"
+          ? "border-emerald-500/50 bg-emerald-500/5"
+          : tone === "bad"
+            ? "border-red-500/50 bg-red-500/5"
+            : highlight
+              ? "border-primary/50 bg-primary/5"
+              : "border-border bg-secondary/30"
       }`}
     >
       <div className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -167,6 +177,18 @@ function SummaryTile({
       <div className="text-xs text-muted-foreground">
         {formatMinutes(delay)} vs timetable
       </div>
+      {typeof errorMinutes === "number" && (
+        <div
+          className={`text-xs font-medium ${
+            errorMinutes <= 1.5
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-red-600 dark:text-red-400"
+          }`}
+        >
+          {errorMinutes <= 1.5 ? "✓" : "✕"} off the actual by{" "}
+          {errorMinutes.toFixed(1)} min
+        </div>
+      )}
     </div>
   );
 }
@@ -215,8 +237,6 @@ function SimulationPage() {
 function SimulationReady() {
   const simJourneys = useMemo(() => simulationJourneys(), []);
   const [journeyId, setJourneyId] = useState(simJourneys[0]?.journey_id ?? "");
-  const [holdStationIndex, setHoldStationIndex] = useState(1);
-  const [holdMinutes, setHoldMinutes] = useState(0);
 
   const journey = useMemo(
     () => simJourneys.find((j) => j.journey_id === journeyId) ?? simJourneys[0],
@@ -224,19 +244,8 @@ function SimulationReady() {
   );
 
   const simulation = useMemo(
-    () =>
-      journey
-        ? buildSimulation(
-            journey,
-            holdMinutes > 0
-              ? {
-                  stationIndex: holdStationIndex,
-                  additionalDelayMinutes: holdMinutes,
-                }
-              : null,
-          )
-        : null,
-    [journey, holdMinutes, holdStationIndex],
+    () => (journey ? buildSimulation(journey) : null),
+    [journey],
   );
 
   const [speedIndex, setSpeedIndex] = useState(1);
@@ -247,11 +256,11 @@ function SimulationReady() {
   const speedRef = useRef<number>(SPEEDS[speedIndex] ?? 1);
   speedRef.current = SPEEDS[speedIndex] ?? 1;
 
-  // Reset the clock whenever the selected run or delay scenario changes.
+  // Reset the clock whenever the selected run changes.
   useEffect(() => {
     setSimTime(null);
     setRunning(true);
-  }, [journey?.journey_id, holdMinutes, holdStationIndex]);
+  }, [journey?.journey_id]);
 
   // Animation loop: the sim clock advances at SPEEDS[speedIndex]× real time.
   useEffect(() => {
@@ -288,7 +297,15 @@ function SimulationReady() {
 
   const stops: SimStop[] = simulation.stops;
   const atTerminus = simTime !== null && simTime >= simulation.windowEnd;
+  // The hold becomes "known" once the run departs the held stop — from that
+  // moment the dynamic board re-forecasts downstream, while the static board
+  // keeps carrying the origin delay unchanged.
   const currentTime = simTime ?? simulation.windowStart;
+  const holdKnown =
+    simulation.holdKnownTime !== null && currentTime >= simulation.holdKnownTime;
+  const heldStop = simulation.delayScenario
+    ? stops[simulation.delayScenario.stationIndex]
+    : undefined;
   const trainPosition = positionAt(simulation, currentTime);
   const currentIdx = Math.min(stops.length - 1, Math.ceil(trainPosition));
 
@@ -396,6 +413,23 @@ function SimulationReady() {
     if (dynamicMae === staticMae) return "Tied";
     return "Static ahead";
   }
+
+  const staticFinalError =
+    simulation.staticFinalArrival && simulation.actualFinalArrival
+      ? Math.abs(
+          (simulation.staticFinalArrival.getTime() -
+            simulation.actualFinalArrival.getTime()) /
+            60000,
+        )
+      : null;
+  const dynamicFinalError =
+    simulation.dynamicFinalArrival && simulation.actualFinalArrival
+      ? Math.abs(
+          (simulation.dynamicFinalArrival.getTime() -
+            simulation.actualFinalArrival.getTime()) /
+            60000,
+        )
+      : null;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
@@ -541,62 +575,36 @@ function SimulationReady() {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
                 <div>
-                  <p className="text-xs font-semibold text-foreground">Station hold scenario</p>
+                  <p className="text-xs font-semibold text-foreground">Automatic hold scenario</p>
                   <p className="text-[11px] text-muted-foreground">
-                    Add a hold at a station and watch the model re-forecast the remaining ETAs.
+                    Every replay injects a 5–9 min hold at a normal 2nd/3rd stop; the model re-forecasts the moment it observes the delay — the static board never does.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Held at
-                  <Select
-                    value={String(holdStationIndex)}
-                    onValueChange={(value) => setHoldStationIndex(Number(value))}
-                  >
-                    <SelectTrigger className="h-9 w-[150px] bg-background text-xs text-foreground">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stops.slice(1, -1).map((stop) => (
-                        <SelectItem key={stop.code} value={String(stop.index)} className="text-xs">
-                          {stop.code} — {stop.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
-
-                <div className="flex min-w-[220px] flex-1 items-center gap-3">
-                  <label htmlFor="station-hold" className="whitespace-nowrap text-xs text-muted-foreground">
-                    Extra hold
-                  </label>
-                  <Slider
-                    id="station-hold"
-                    value={[holdMinutes]}
-                    onValueChange={(value) => setHoldMinutes(value[0] ?? 0)}
-                    min={0}
-                    max={15}
-                    step={1}
-                    aria-label="Extra station hold in minutes"
-                    className="w-28 cursor-pointer"
-                  />
-                  <span className="min-w-12 font-mono text-sm font-semibold text-amber-700 dark:text-amber-300">
-                    +{holdMinutes} min
-                  </span>
-                </div>
-              </div>
+              {simulation.delayScenario && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/60 bg-amber-500/10 font-mono text-xs text-amber-700 dark:text-amber-300"
+                >
+                  <AlertTriangle className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                  {simulation.delayScenario.additionalDelayMinutes} min hold at{" "}
+                  {stops[simulation.delayScenario.stationIndex]?.code} —{" "}
+                  {stops[simulation.delayScenario.stationIndex]?.name}
+                </Badge>
+              )}
             </div>
 
             <div aria-live="polite" className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              {simulation.delayScenario ? (
-                <>
-                  <strong className="text-amber-700 dark:text-amber-300">Scenario active:</strong>{" "}
-                  {simulation.delayScenario.additionalDelayMinutes}-minute hold at {stops[simulation.delayScenario.stationIndex]?.code}. At departure, the LightGBM forecast receives the new running delay and recalculates each downstream ETA from learned historical section patterns.
-                </>
+              {holdKnown ? (
+                <span className="inline-flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-300">
+                  <RefreshCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                  Hold observed at {heldStop?.code} — downstream dynamic ETAs re-forecast from the new running delay; the static board stays frozen.
+                </span>
               ) : (
-                "No added hold. This is the baseline replay seeded from the selected historical run."
+                <span>
+                  Running to the pre-hold baseline: {heldStop ? `${heldStop.code} (next normal stop)` : "corridor replay"}. The model board still shows its original forecast.
+                </span>
               )}
             </div>
           </div>
@@ -672,6 +680,7 @@ function SimulationReady() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">
             Station board — dynamic ETA vs static ETA at every stop
+            {holdKnown ? " · re-forecast active" : ""}
           </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
@@ -683,14 +692,14 @@ function SimulationReady() {
                 <th className="px-4 py-2 text-right">Timetable</th>
                 <th className="px-4 py-2 text-right">
                   <span className="inline-flex items-center gap-1">
-                    Dynamic ETA
-                    <InfoTooltip text="Chained LightGBM forecast: timetable + running history + weather, propagated station by station from the replay point." />
+                    Dynamic ETA · model
+                    <InfoTooltip text="Chained LightGBM forecast. Before the injected hold it shows the baseline chain; the moment the hold is observed at the held stop's departure, downstream ETAs are re-forecast from the new running delay using learned historical section behaviour." />
                   </span>
                 </th>
                 <th className="px-4 py-2 text-right">
                   <span className="inline-flex items-center gap-1">
-                    Static ETA
-                    <InfoTooltip text="Timetable shifted by the origin departure delay and held constant — how a static board behaves (no recovery modelling)." />
+                    Static ETA · frozen
+                    <InfoTooltip text="Timetable shifted by the origin departure delay and held constant — how a static board behaves (no recovery modelling): it never reacts to the injected hold, so its error keeps growing after the held stop." />
                   </span>
                 </th>
                 <th className="px-4 py-2 text-right">
@@ -711,6 +720,19 @@ function SimulationReady() {
               {stops.map((stop, i) => {
                 const state =
                   i < motion.continuousPosition ? "done" : i === currentIdx ? "current" : "ahead";
+                // Error chips only appear once the run has actually passed the
+                // stop — the miss is "known" at that point.
+                const errorKnown = state === "done";
+                // Before the hold is observed the board shows the pre-hold
+                // baseline chain; afterwards the re-forecast chain takes over.
+                const boardDelay =
+                  holdKnown && stop.holdKnown
+                    ? stop.dynamicDelay
+                    : stop.baselineDelay;
+                const boardGap =
+                  boardDelay !== null && stop.staticDelay !== null
+                    ? boardDelay - stop.staticDelay
+                    : null;
                 return (
                   <tr
                     key={`${stop.code}-${i}`}
@@ -738,26 +760,63 @@ function SimulationReady() {
                       {stop.derivedArrival ? " †" : ""}
                     </td>
                     <td className="px-4 py-2 text-right">
-                      <EtaCell value={stop.dynamicArrival} />
+                      <EtaCell
+                        value={
+                          holdKnown && stop.holdKnown
+                            ? stop.dynamicArrival
+                            : stop.baselineArrival
+                        }
+                      />
+                      {holdKnown &&
+                        stop.holdKnown &&
+                        stop.reforecastShift !== null &&
+                        Math.abs(stop.reforecastShift) >= 0.05 && (
+                          <div
+                            className={`text-[10px] font-medium ${
+                              stop.reforecastShift > 0
+                                ? "text-amber-600 dark:text-amber-400"
+                                : "text-emerald-600 dark:text-emerald-400"
+                            }`}
+                          >
+                            {stop.reforecastShift > 0 ? "▲" : "▼"}{" "}
+                            {Math.abs(stop.reforecastShift).toFixed(1)} min re-forecast
+                          </div>
+                        )}
+                      {errorKnown && stop.dynamicAbsError !== null && (
+                        <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                          ✓ within {stop.dynamicAbsError.toFixed(1)} min
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-2 text-right text-muted-foreground">
                       <EtaCell value={stop.staticArrival} />
+                      {errorKnown &&
+                        stop.staticAbsError !== null &&
+                        (stop.staticAbsError >= 0.5 ? (
+                          <div className="text-[10px] font-medium text-red-600 dark:text-red-400">
+                            ✕ off by {stop.staticAbsError.toFixed(1)} min
+                          </div>
+                        ) : (
+                          <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                            ✓ within {stop.staticAbsError.toFixed(1)} min
+                          </div>
+                        ))}
                     </td>
                     <td className="px-4 py-2 text-right">
-                      {stop.dynamicVsStaticGap === null ? (
+                      {boardGap === null ? (
                         "—"
                       ) : (
                         <span
                           className={
-                            stop.dynamicVsStaticGap < 0
+                            boardGap < 0
                               ? "text-emerald-600 dark:text-emerald-400"
-                              : stop.dynamicVsStaticGap > 0
+                              : boardGap > 0
                                 ? "text-amber-600 dark:text-amber-400"
                                 : "text-muted-foreground"
                           }
                         >
-                          {stop.dynamicVsStaticGap > 0 ? "+" : ""}
-                          {stop.dynamicVsStaticGap.toFixed(1)} min
+                          {boardGap > 0 ? "+" : ""}
+                          {boardGap.toFixed(1)} min
                         </span>
                       )}
                     </td>
@@ -895,6 +954,32 @@ function SimulationReady() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {improvement !== null &&
+            simulation.dynamicMae !== null &&
+            simulation.staticMae !== null && (
+              <div
+                className={`flex flex-wrap items-center gap-3 rounded-sm border p-4 ${
+                  improvement > 0
+                    ? "border-emerald-500/40 bg-emerald-500/5"
+                    : "border-amber-500/40 bg-amber-500/5"
+                }`}
+              >
+                <Badge
+                  className={
+                    improvement > 0
+                      ? "bg-emerald-600 font-mono text-white"
+                      : "bg-amber-600 font-mono text-white"
+                  }
+                >
+                  {improvement > 0 ? "MODEL WINS" : "STATIC WINS"}
+                </Badge>
+                <p className="text-sm font-medium text-foreground">
+                  {improvement > 0
+                    ? `The dynamic model's ETA is ${improvement.toFixed(0)}% more accurate on this run: the frozen static board averages ${simulation.staticMae.toFixed(1)} min of error per stop, the LightGBM board just ${simulation.dynamicMae.toFixed(1)} min.`
+                    : `On this run the static board edged the model: ${simulation.staticMae.toFixed(1)} vs ${simulation.dynamicMae.toFixed(1)} min MAE.`}
+                </p>
+              </div>
+            )}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatTile
               label="Dynamic ETA error (MAE)"
@@ -904,6 +989,7 @@ function SimulationReady() {
                   : "—"
               }
               hint="vs simulated actuals, 5 measured stops"
+              tone="good"
             />
             <StatTile
               label="Static ETA error (MAE)"
@@ -913,6 +999,7 @@ function SimulationReady() {
                   : "—"
               }
               hint="same measure, static board"
+              tone="bad"
             />
             <StatTile
               label="Accuracy improvement"
@@ -947,15 +1034,18 @@ function SimulationReady() {
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-3">
           <SummaryTile
-            label="Static board said"
+            label="Static board said (frozen)"
             arrival={simulation.staticFinalArrival}
             delay={simulation.staticFinalDelay}
+            tone="bad"
+            errorMinutes={staticFinalError}
           />
           <SummaryTile
             label="Dynamic model said"
             arrival={simulation.dynamicFinalArrival}
             delay={simulation.dynamicFinalDelay}
-            highlight
+            tone="good"
+            errorMinutes={dynamicFinalError}
           />
           <SummaryTile
             label="Simulated actual"

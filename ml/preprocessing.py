@@ -81,21 +81,21 @@ def build_sections(stations: pd.DataFrame) -> pd.DataFrame:
     cfg = CONFIG["cleaning"]
     sections: list[dict] = []
     for journey_id, grp in stations.sort_values(["journey_id", "station_sequence"]).groupby("journey_id"):
-        observed = grp.dropna(subset=["actual_departure"]).copy()
-        rows = grp.to_dict("records")
-        total_km = max((r["route_distance_km"] or 0) for r in rows)
-        for a, b in zip(rows, rows[1:]):
-            if pd.isna(a["actual_departure"]) or pd.isna(b["actual_arrival"]):
-                continue
-            if pd.isna(a["scheduled_departure"]) or pd.isna(b["scheduled_arrival"]):
-                continue
+        observed = grp.dropna(
+            subset=["actual_departure", "actual_arrival", "scheduled_departure", "scheduled_arrival"]
+        ).copy()
+        rows = observed.to_dict("records")
+        total_km = max((r["route_distance_km"] or 0) for r in rows) if rows else 0
+        for seq_idx, (a, b) in enumerate(zip(rows, rows[1:]), start=1):
             actual = (b["actual_arrival"] - a["actual_departure"]).total_seconds() / 60.0
             scheduled = (b["scheduled_arrival"] - a["scheduled_departure"]).total_seconds() / 60.0
             dist = (b["route_distance_km"] or 0) - (a["route_distance_km"] or 0)
+            if actual <= 0 or scheduled <= 0 or dist <= 0:
+                continue
             sections.append(
                 {
                     "journey_id": journey_id,
-                    "train_id": a["train_id"],
+                    "train_id": str(a["train_id"]),
                     "train_name": a["train_name"],
                     "date": a["date"],
                     "section_from": a["station"],
@@ -103,22 +103,21 @@ def build_sections(stations: pd.DataFrame) -> pd.DataFrame:
                     "section_to": b["station"],
                     "section_to_name": b["station_name"],
                     "section_id": f"{a['station']}-{b['station']}",
-                    "station_sequence": a["station_sequence"],
+                    "station_sequence": seq_idx,
                     "section_distance_km": dist,
-                    "remaining_distance_km": total_km - (a["route_distance_km"] or 0),
+                    "remaining_distance_km": max(0.0, total_km - (a["route_distance_km"] or 0)),
                     "scheduled_departure": a["scheduled_departure"],
                     "actual_departure": a["actual_departure"],
                     "scheduled_arrival_next": b["scheduled_arrival"],
                     "actual_arrival_next": b["actual_arrival"],
                     "scheduled_section_travel_time": scheduled,
                     "actual_section_travel_time": actual,
-                    "departure_delay_minutes": a["departure_delay_minutes"],
-                    "arrival_delay_minutes": a["arrival_delay_minutes"],
-                    "next_arrival_delay_minutes": b["arrival_delay_minutes"],
+                    "departure_delay_minutes": float(a["departure_delay_minutes"] or 0.0),
+                    "arrival_delay_minutes": float(a["arrival_delay_minutes"] or 0.0),
+                    "next_arrival_delay_minutes": float(b["arrival_delay_minutes"] or 0.0),
                     "source_url": a["source_url"],
                 }
             )
-        del observed
     df = pd.DataFrame(sections)
     if df.empty:
         return df

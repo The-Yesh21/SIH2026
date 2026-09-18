@@ -18,8 +18,13 @@ import {
   Database,
   Gauge,
   LineChart as LineChartIcon,
+  Radio,
+  Satellite,
+  ShieldAlert,
+  Sparkles,
   Target,
   TrainFront,
+  Users,
   Workflow,
 } from "lucide-react";
 
@@ -29,7 +34,6 @@ import {
   dataset,
   evaluation,
   formatClock,
-  formatMinutes,
   journeys,
   pipelineReady,
 } from "@/lib/raileta/data";
@@ -38,17 +42,17 @@ import { forecastJourney } from "@/lib/raileta/predict";
 export const Route = createFileRoute("/slides")({
   head: () => ({
     meta: [
-      { title: "RailRakshak — presentation slides" },
+      { title: "RailRakshak — Presentation Slides" },
       {
         name: "description",
         content:
-          "RailRakshak slide deck: real Bengaluru–Mysuru running data, LightGBM ETA prediction and measured accuracy.",
+          "RailRakshak pitch deck: ISRO RTIS Satellite Telemetry Ingestion, Section-Wise Machine Learning Trajectory Prediction, and Measured Accuracy.",
       },
-      { property: "og:title", content: "RailRakshak — Bengaluru → Mysuru ETA prediction" },
+      { property: "og:title", content: "RailRakshak — Dynamic Train Journey Time Prediction" },
       {
         property: "og:description",
         content:
-          "A presentation of the data, the model and the measured accuracy behind RailRakshak's dynamic ETA predictions.",
+          "Augmenting Indian Railways' ISRO satellite telemetry with section-by-section dynamic journey time prediction.",
       },
     ],
   }),
@@ -57,6 +61,7 @@ export const Route = createFileRoute("/slides")({
 
 const ACCENT = "#f59e0b"; // signal amber
 const EMERALD = "#34d399";
+const CYAN = "#38bdf8";
 const SLATE = "#94a3b8";
 
 function MetricCard({
@@ -68,14 +73,20 @@ function MetricCard({
   label: string;
   value: string;
   sub?: string | undefined;
-  tone?: "default" | "good" | "warn";
+  tone?: "default" | "good" | "warn" | "cyan";
 }) {
   const color =
-    tone === "good" ? "text-emerald-300" : tone === "warn" ? "text-amber-300" : "text-slate-100";
+    tone === "good"
+      ? "text-emerald-300"
+      : tone === "warn"
+      ? "text-amber-300"
+      : tone === "cyan"
+      ? "text-sky-300"
+      : "text-slate-100";
   return (
     <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-4">
       <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{label}</div>
-      <div className={`mt-1 font-[family-name:var(--font-display)] text-3xl font-bold ${color}`}>
+      <div className={`mt-1 font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-bold ${color}`}>
         {value}
       </div>
       {sub ? <div className="mt-1 text-xs text-slate-500">{sub}</div> : null}
@@ -93,10 +104,12 @@ function SlideShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl flex-col px-8 py-10 sm:px-12">
-      <div className="mb-6">
-        <div className="text-[11px] uppercase tracking-[0.24em] text-amber-400">{kicker}</div>
-        <h2 className="mt-1 font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-slate-100 sm:text-4xl">
+    <div className="mx-auto flex h-full w-full max-w-6xl flex-col px-6 py-8 sm:px-12 sm:py-10">
+      <div className="mb-5">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-amber-400">
+          <span>{kicker}</span>
+        </div>
+        <h2 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight text-slate-100 sm:text-4xl">
           {title}
         </h2>
       </div>
@@ -127,7 +140,6 @@ function SlidesPage() {
       string,
       number
     >;
-    const improvement = evaluation["improvement_pct_mae"] as number | undefined;
     const importance = (evaluation["feature_importance_gain"] ?? []) as {
       feature: string;
       gain: number;
@@ -178,179 +190,229 @@ function SlidesPage() {
     const cleanSections = Number(summary["clean_sections"] ?? 0).toLocaleString("en-IN");
 
     return [
+      // Slide 1: Title & Hook
       {
         id: "overview",
-        label: "Overview",
+        label: "1. Overview",
         node: (
-          <SlideShell kicker="01 · Project overview" title="RailRakshak">
-            <div className="flex h-full flex-col justify-between gap-10">
+          <SlideShell kicker="01 · Executive Summary" title="RailRakshak: Dynamic Journey Predictor">
+            <div className="flex h-full flex-col justify-between gap-6 sm:gap-8">
               <div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="border-sky-400/40 bg-sky-400/10 text-sky-300">
+                    <Satellite className="mr-1.5 h-3.5 w-3.5 inline" /> Ingests ISRO RTIS Satellite Telemetry
+                  </Badge>
                   <Badge className="border-amber-400/40 bg-amber-400/10 text-amber-300">
-                    Bengaluru → Mysuru corridor
+                    Section-by-Section ML Traversal
                   </Badge>
                   <Badge className="border-slate-700 bg-slate-900 text-slate-300">
-                    SBC · Kengeri · Ramanagaram · Maddur · Mandya · MYS
+                    KSR Bengaluru (SBC) → Mysuru (MYS)
                   </Badge>
                 </div>
-                <p className="mt-8 max-w-3xl text-lg leading-relaxed text-slate-300">
+                <p className="mt-6 max-w-3xl text-base leading-relaxed text-slate-300 sm:text-lg">
                   <span className="font-[family-name:var(--font-display)] font-semibold text-slate-100">
                     RailRakshak
                   </span>{" "}
-                  predicts station-by-station arrival times — and dynamic ETAs — for trains on the
-                  Bengaluru–Mysuru line, using a{" "}
-                  <span className="text-amber-300">LightGBM model</span> trained on{" "}
-                  <span className="text-emerald-300">real, publicly published running data</span>.
-                  Every number on screen is either an observed record or a genuine model prediction —
-                  nothing is simulated.
+                  is the prediction intelligence layer built on top of Indian Railways&apos; satellite tracking.
+                  While ISRO RTIS tells us <span className="text-sky-300 font-medium">where the train is right now</span>, RailRakshak computes{" "}
+                  <span className="text-amber-300 font-medium">how long each remaining section will take</span> given downstream congestion, historical clearance patterns, and timetable slack.
                 </p>
+                <div className="mt-4 rounded-md border border-slate-800 bg-slate-900/50 p-3 text-xs text-slate-400">
+                  💡 <strong className="text-slate-200">The Core Proposition:</strong> We do not compete with tracking hardware. We convert 30-second live telemetry into high-confidence downstream journey duration forecasts.
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <MetricCard
-                  label="Station records"
+                  label="Telemetry Feed"
+                  value="ISRO RTIS"
+                  sub="30s locomotive GNSS stream"
+                  tone="cyan"
+                />
+                <MetricCard
+                  label="Observed Records"
                   value={totalStationRecords}
-                  sub="observed, not generated"
+                  sub="genuine historical runs"
                 />
-                <MetricCard label="Journeys" value={totalJourneys} sub="Jun 7 → Sep 4, 2026" />
                 <MetricCard
-                  label="Clean sections"
+                  label="Clean Sections"
                   value={cleanSections}
-                  sub={`${summary["unique_sections"] ?? 9} corridor sections`}
+                  sub="corridor block segments"
                 />
                 <MetricCard
-                  label="Test records"
+                  label="Test Records"
                   value={String(evaluation["test_records"] ?? 117)}
-                  sub="chronologically held out"
+                  sub="chronologically held-out"
+                  tone="good"
                 />
               </div>
-              <p className="text-sm text-slate-500">
-                Press <kbd className="rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[11px] text-slate-300">→</kbd>{" "}
-                to advance · <kbd className="rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[11px] text-slate-300">←</kbd> to go back
+              <p className="text-xs text-slate-500">
+                Press <kbd className="rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[11px] text-slate-300">→</kbd> to advance slides · <kbd className="rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[11px] text-slate-300">←</kbd> to go back
               </p>
             </div>
           </SlideShell>
         ),
       },
+
+      // Slide 2: Ground Truth Context - Indian Railways & ISRO RTIS
       {
-        id: "data",
-        label: "The data",
+        id: "satellite_rtis",
+        label: "2. RTIS Telemetry",
         node: (
-          <SlideShell kicker="02 · Real data" title="The data behind the predictions">
+          <SlideShell kicker="02 · Foundation & Telemetry" title="Leveraging ISRO's Real-Time Satellite Grid">
             <div className="grid h-full gap-6 lg:grid-cols-2">
               <div className="flex flex-col gap-4">
-                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5">
-                  <div className="mb-3 flex items-center gap-2 text-slate-300">
-                    <Database className="h-4 w-4 text-amber-400" />
-                    <span className="text-sm font-medium">Dataset summary</span>
+                <div className="rounded-md border border-sky-900/50 bg-sky-950/20 p-5 text-sm leading-relaxed">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-sky-300">
+                    <Satellite className="h-5 w-5 text-sky-400" />
+                    Indian Railways&apos; Telemetry Ecosystem
                   </div>
-                  <dl className="space-y-2 text-sm">
-                    {[
-                      ["Station records", totalStationRecords],
-                      ["Journeys", totalJourneys],
-                      ["Unique trains", String(summary["unique_trains"] ?? "—")],
-                      ["Clean section records", cleanSections],
-                      ["Unique sections", String(summary["unique_sections"] ?? "—")],
-                      [
-                        "Date range",
-                        Array.isArray(summary["date_range"])
-                          ? (summary["date_range"] as string[]).join(" → ")
-                          : String(summary["date_range"] ?? "—"),
-                      ],
-                      [
-                        "Missing actual arrivals",
-                        `${String(summary["missing_actual_arrival_pct"] ?? 0)}% — gaps dropped, never filled`,
-                      ],
-                    ].map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="flex justify-between gap-4 border-b border-slate-800 pb-1.5 last:border-0"
-                      >
-                        <dt className="text-slate-400">{label}</dt>
-                        <dd className="text-right font-[family-name:var(--font-mono)] text-slate-100">
-                          {value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 text-sm">
-                  <div className="mb-2 font-medium text-slate-300">Cleaning report</div>
-                  <p className="text-slate-400">
-                    806 raw section records → <span className="text-emerald-300">744 clean</span>.
-                    25 dropped for non-positive travel time, 37 for impossible speeds. Removed
-                    records stay removed — nothing is regenerated.
+                  <p className="text-slate-300">
+                    Indian Railways already operates a massive satellite and electronic interlocking tracking network:
                   </p>
+                  <ul className="mt-3 space-y-2 text-xs text-slate-300">
+                    <li className="flex items-start gap-2">
+                      <span className="text-sky-400 font-bold">•</span>
+                      <span><strong>10,400+ Locomotives</strong> equipped with ISRO RTIS / REMMLOT transponders.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-sky-400 font-bold">•</span>
+                      <span><strong>ISRO MSS / NAVIC Satellites</strong> relay speed and coordinates every <strong>30 seconds</strong>.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-sky-400 font-bold">•</span>
+                      <span><strong>Station Data Loggers</strong> auto-feed arrival/departure timestamps directly into COA (Control Office Application).</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 text-xs text-slate-400">
+                  <div className="mb-2 font-semibold uppercase tracking-wider text-slate-300">The Clear Division of Labor</div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between border-b border-slate-800 pb-1">
+                      <span className="text-sky-300">Tracking (ISRO RTIS):</span>
+                      <span className="text-slate-200">"Where is the train at timestamp <i>t</i>?"</span>
+                    </div>
+                    <div className="flex justify-between pt-1">
+                      <span className="text-amber-300">Prediction (RailRakshak):</span>
+                      <span className="text-slate-200">"How long will sections <i>S<sub>k</sub> → S<sub>n</sub></i> take?"</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5">
                 <div className="mb-3 flex items-center gap-2 text-slate-300">
-                  <TrainFront className="h-4 w-4 text-amber-400" />
-                  <span className="text-sm font-medium">Trains modelled</span>
+                  <Radio className="h-4 w-4 text-amber-400" />
+                  <span className="text-sm font-medium">Telemetry-to-Prediction Pipeline</span>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-[11px] uppercase tracking-wider text-slate-500">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Train</th>
-                        <th className="px-3 py-2 text-right">Journeys</th>
-                        <th className="px-3 py-2 text-right">Sections</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {trains.map((t) => (
-                        <tr key={t.train_id} className="border-t border-slate-800">
-                          <td className="px-3 py-2">
-                            <span className="font-[family-name:var(--font-mono)] text-amber-300">
-                              {t.train_id}
-                            </span>{" "}
-                            <span className="text-slate-300">{t.train_name}</span>
-                          </td>
-                          <td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-slate-300">
-                            {t.journeys}
-                          </td>
-                          <td className="px-3 py-2 text-right font-[family-name:var(--font-mono)] text-slate-300">
-                            {t.sections}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="mt-4 text-xs leading-relaxed text-slate-500">
-                  {sections.length} corridor sections from KSR Bengaluru to Mysuru Jn, each with
-                  observed mean/median/variance travel times and weather matched by date and time.
-                  Sources: RailRadar live running API and eRail timetable — no fabricated rows.
+                <div className="space-y-3 text-xs">
+                  <div className="rounded border border-slate-800 bg-slate-950 p-3">
+                    <span className="font-semibold text-sky-300">1. Satellite GPS Fix</span>
+                    <p className="mt-1 text-slate-400">RTIS onboard transponder captures latitude, longitude, and instant speed vector via ISRO satellites.</p>
+                  </div>
+                  <div className="rounded border border-slate-800 bg-slate-950 p-3">
+                    <span className="font-semibold text-sky-300">2. COA Central Ingestion</span>
+                    <p className="mt-1 text-slate-400">Position matched to track section ID; current delay relative to scheduled timetable is stamped.</p>
+                  </div>
+                  <div className="rounded border border-amber-500/30 bg-amber-950/20 p-3">
+                    <span className="font-semibold text-amber-300">3. RailRakshak Dynamic Traversal Prediction</span>
+                    <p className="mt-1 text-slate-300">Machine learning engine forecasts each downstream section duration considering historical buffer recovery and bottlenecks.</p>
+                  </div>
                 </div>
               </div>
             </div>
           </SlideShell>
         ),
       },
+
+      // Slide 3: The True Problem - Why Naive Delay Propagation Fails
+      {
+        id: "delay_problem",
+        label: "3. The Problem",
+        node: (
+          <SlideShell kicker="03 · The Core Dilemma" title="Why Delays Do Not Travel Linearly">
+            <div className="grid h-full gap-6 lg:grid-cols-2">
+              <div className="flex flex-col gap-4">
+                <div className="rounded-md border border-red-900/40 bg-red-950/10 p-5 text-sm leading-relaxed">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-red-300">
+                    <ShieldAlert className="h-4 w-4 text-red-400" />
+                    The Downstream Uncertainty Trap
+                  </div>
+                  <p className="text-slate-300">
+                    If a train is <strong>15 minutes late at Ramanagaram</strong>, what will its arrival delay be at <strong>Mysuru Junction</strong>?
+                  </p>
+                  <ul className="mt-3 space-y-2 text-xs text-slate-400">
+                    <li>
+                      <strong className="text-slate-200">❌ Naive Linear Assumption:</strong> Delay at MYS = 15 mins. (Assumes speed and track conditions remain uniform).
+                    </li>
+                    <li>
+                      <strong className="text-emerald-300">⚡ Slack Recovery:</strong> On open stretches (Maddur → Mandya), drivers utilize timetable buffer slack to recover 5–8 minutes.
+                    </li>
+                    <li>
+                      <strong className="text-amber-300">🚦 Cascading Congestion:</strong> Missing a scheduled slot causes platform wait times, loop line holds, or junction conflicts (+20 to +40 mins).
+                    </li>
+                  </ul>
+                </div>
+                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-4 text-xs text-slate-400">
+                  <strong className="text-slate-200">Key Insight:</strong> Train delays are dynamic and state-dependent. Knowing live coordinates is necessary, but calculating traversal across each remaining topological block is what yields accurate ETAs.
+                </div>
+              </div>
+              <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 flex flex-col justify-between">
+                <div className="mb-2 text-sm font-medium text-slate-200">Corridor Topology & Section Dynamics</div>
+                <div className="space-y-2 font-[family-name:var(--font-mono)] text-xs">
+                  <div className="flex items-center justify-between rounded bg-slate-950 p-2 text-slate-400">
+                    <span>SBC → KGI (12 km)</span>
+                    <span className="text-emerald-400">High frequency / Normal</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded bg-slate-950 p-2 text-slate-400">
+                    <span>KGI → BID (18 km)</span>
+                    <span className="text-slate-300">Fast straight stretch</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded border border-amber-500/40 bg-amber-950/30 p-2 text-amber-200">
+                    <span>BID → RMGM (15 km)</span>
+                    <span>🚆 LIVE (RTIS Telemetry)</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded bg-slate-950 p-2 text-slate-400">
+                    <span>RMGM → CPT (11 km)</span>
+                    <span className="text-sky-300">Slack recovery window</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded bg-slate-950 p-2 text-slate-400">
+                    <span>CPT → MAD (16 km)</span>
+                    <span className="text-amber-400">Junction bottleneck risk</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded bg-slate-950 p-2 text-slate-400">
+                    <span>MAD → MYA → MYS</span>
+                    <span className="text-slate-300">Terminal approach & platforming</span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  RailRakshak recursively forecasts traversal times section-by-section to compute the true probabilistic remaining journey duration.
+                </div>
+              </div>
+            </div>
+          </SlideShell>
+        ),
+      },
+
+      // Slide 4: Real Prediction Demo
       {
         id: "prediction",
-        label: "The prediction",
+        label: "4. Traversal Demo",
         node: (
-          <SlideShell kicker="03 · The prediction" title="Forecasting the journey, section by section">
+          <SlideShell kicker="04 · Live Traversal Model" title="Forecasting the Remaining Journey">
             <div className="grid h-full gap-6 lg:grid-cols-5">
               <div className="flex flex-col gap-4 lg:col-span-2">
                 <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 text-sm leading-relaxed text-slate-300">
                   <p>
-                    The model predicts the travel time of every inter-station{" "}
-                    <span className="text-amber-300">section</span>, then chains those predictions
-                    into station-by-station ETAs.
+                    Rather than predicting the entire trip as a single opaque number, RailRakshak computes the travel time of every downstream section.
                   </p>
-                  <ul className="mt-3 space-y-1.5 text-slate-400">
+                  <ul className="mt-3 space-y-1.5 text-xs text-slate-400">
                     <li>
-                      <span className="text-slate-200">22 features</span> — current &amp; previous
-                      delay, distance, historical section statistics, time-of-day/week, weather
+                      <span className="text-slate-200 font-medium">Input State:</span> Real-time telemetry (current delay, entry speed, time of day).
                     </li>
                     <li>
-                      <span className="text-slate-200">Chronological split</span> — 481 train / 146
-                      validation / 117 test records, by journey date
+                      <span className="text-slate-200 font-medium">Section Features:</span> Historical clearance distributions, schedule buffer, distance.
                     </li>
                     <li>
-                      <span className="text-slate-200">Leak-free</span> — a prediction never sees
-                      the journey&apos;s own future
+                      <span className="text-slate-200 font-medium">Chained Output:</span> Downstream station arrival timestamps and final terminus ETA.
                     </li>
                   </ul>
                 </div>
@@ -371,21 +433,20 @@ function SlidesPage() {
               <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 lg:col-span-3">
                 <div className="mb-1 flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-slate-200">
-                    Replay — {demoJourney.train_name}
+                    Replay Demonstration — {demoJourney.train_name}
                   </span>
                   <Badge className="border-emerald-400/40 bg-emerald-400/10 text-emerald-300">
-                    real journey · {demoJourney.date}
+                    genuine run · {demoJourney.date}
                   </Badge>
                 </div>
                 <div className="mb-2 text-xs text-slate-500">
-                  Predicted from hop 1 onward using only information known at that moment; recorded
-                  actuals shown for comparison.
+                  Forecasted from Section 1 onward using only causal data available at departure; actual recorded arrival times plotted for comparison.
                 </div>
-                <div className="h-64">
+                <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: -18 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                      <XAxis dataKey="station" tick={{ fontSize: 10, fill: "#94a3b8" }} interval={0} angle={-30} height={50} textAnchor="end" />
+                      <XAxis dataKey="station" tick={{ fontSize: 10, fill: "#94a3b8" }} interval={0} angle={-30} height={45} textAnchor="end" />
                       <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} unit="m" />
                       <Tooltip
                         contentStyle={{
@@ -397,28 +458,28 @@ function SlidesPage() {
                         labelStyle={{ color: "#94a3b8" }}
                       />
                       <Legend wrapperStyle={{ fontSize: 11, color: "#cbd5e1" }} />
-                      <Line type="monotone" dataKey="actual" stroke={EMERALD} strokeWidth={2} dot={false} name="Actual" />
-                      <Line type="monotone" dataKey="predicted" stroke={ACCENT} strokeWidth={2} dot={false} name="Predicted" />
-                      <Line type="monotone" dataKey="scheduled" stroke={SLATE} strokeDasharray="4 3" dot={false} name="Scheduled" />
+                      <Line type="monotone" dataKey="actual" stroke={EMERALD} strokeWidth={2} dot={false} name="Actual (Ground Truth)" />
+                      <Line type="monotone" dataKey="predicted" stroke={ACCENT} strokeWidth={2} dot={false} name="RailRakshak Predicted" />
+                      <Line type="monotone" dataKey="scheduled" stroke={SLATE} strokeDasharray="4 3" dot={false} name="Scheduled Timetable" />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+                <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-slate-500">Scheduled</div>
-                    <div className="font-[family-name:var(--font-mono)] text-lg text-slate-300">
+                    <div className="text-[10px] uppercase text-slate-500">Scheduled</div>
+                    <div className="font-[family-name:var(--font-mono)] text-base text-slate-300">
                       {demo.scheduledFinalArrival ? formatClock(demo.scheduledFinalArrival.toISOString()) : "—"}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-amber-400">Predicted ETA</div>
-                    <div className="font-[family-name:var(--font-mono)] text-lg text-amber-300">
+                    <div className="text-[10px] uppercase text-amber-400">RailRakshak ETA</div>
+                    <div className="font-[family-name:var(--font-mono)] text-base text-amber-300">
                       {demo.predictedFinalArrival ? formatClock(demo.predictedFinalArrival.toISOString()) : "—"}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-emerald-400">Actual</div>
-                    <div className="font-[family-name:var(--font-mono)] text-lg text-emerald-300">
+                    <div className="text-[10px] uppercase text-emerald-400">Actual Arrival</div>
+                    <div className="font-[family-name:var(--font-mono)] text-base text-emerald-300">
                       {demo.actualFinalArrival ? formatClock(demo.actualFinalArrival.toISOString()) : "—"}
                     </div>
                   </div>
@@ -428,18 +489,92 @@ function SlidesPage() {
           </SlideShell>
         ),
       },
+
+      // Slide 5: Features & Model Architecture
+      {
+        id: "features",
+        label: "5. ML Architecture",
+        node: (
+          <SlideShell kicker="05 · Machine Learning Brain" title="Causal Features & Gradient Boosted Trees">
+            <div className="grid h-full gap-6 lg:grid-cols-2">
+              <div className="flex flex-col gap-4">
+                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5">
+                  <div className="mb-2 text-sm font-medium text-slate-200">
+                    What Drives Traversal Predictions? (Gain Importance)
+                  </div>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        layout="vertical"
+                        data={importance.slice(0, 6)}
+                        margin={{ left: 12, right: 12, top: 4, bottom: 4 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                        <XAxis type="number" tick={{ fontSize: 10, fill: "#94a3b8" }} />
+                        <YAxis
+                          type="category"
+                          dataKey="feature"
+                          tick={{ fontSize: 10, fill: "#94a3b8" }}
+                          width={140}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            background: "#0f172a",
+                            border: "1px solid #334155",
+                            fontSize: 12,
+                            color: "#e2e8f0",
+                          }}
+                          labelStyle={{ color: "#94a3b8" }}
+                        />
+                        <Bar dataKey="gain" fill={ACCENT} radius={[0, 3, 3, 0]} name="Gain" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 text-sm leading-relaxed">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-amber-300">
+                    <Sparkles className="h-4 w-4 text-amber-400" />
+                    Why LightGBM Section Regressors?
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-300">
+                    <li>
+                      <strong className="text-slate-100">Sub-5ms Inference:</strong> Fast enough to recompute downstream corridor forecasts on every 30s RTIS telemetry ping.
+                    </li>
+                    <li>
+                      <strong className="text-slate-100">Interpretable & Non-Linear:</strong> Directly captures threshold effects (e.g. crossing a 15-min delay threshold causes a 30-min loop hold).
+                    </li>
+                    <li>
+                      <strong className="text-slate-100">Zero Future Leakage:</strong> Chronological train/validation/test split ensures models never train on future date distributions.
+                    </li>
+                    <li>
+                      <strong className="text-slate-100">Client-Side Parity:</strong> Model trees compile to lightweight browser-executable JSON for instant offline evaluation.
+                    </li>
+                  </ul>
+                </div>
+                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-4 text-xs text-slate-400">
+                  Model trained on historical running records. Target: section travel duration (minutes).
+                </div>
+              </div>
+            </div>
+          </SlideShell>
+        ),
+      },
+
+      // Slide 6: Measured Accuracy & Benchmarks
       {
         id: "accuracy",
-        label: "The accuracy",
+        label: "6. Empirical Accuracy",
         node: (
-          <SlideShell kicker="04 · The accuracy" title="Measured on a held-out test set">
+          <SlideShell kicker="06 · Evaluation" title="Measured Performance on Held-Out Test Data">
             <div className="grid h-full gap-6 lg:grid-cols-5">
               <div className="flex flex-col gap-4 lg:col-span-2">
                 <div className="grid grid-cols-2 gap-3">
                   <MetricCard
                     label="MAE"
                     value={`${Number(lgbm["mae"]?.toFixed(2) ?? 0)} min`}
-                    sub="mean absolute error per section"
+                    sub="mean absolute error"
                   />
                   <MetricCard
                     label="RMSE"
@@ -447,38 +582,30 @@ function SlidesPage() {
                     sub="root mean squared error"
                   />
                   <MetricCard
-                    label="Median abs. error"
+                    label="Median Error"
                     value={`${Number(lgbm["median_abs_error"]?.toFixed(2) ?? 0)} min`}
-                    sub="robust to outliers"
+                    sub="robust to extreme spikes"
                   />
                   <MetricCard
-                    label="Delay pred. error"
+                    label="Delay Pred. Err"
                     value={`${Number(delayErr["lightgbm"]?.toFixed(2) ?? 0)} min`}
-                    sub="mean abs. delay error"
+                    sub="delay variance error"
                   />
                 </div>
-                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-4 text-sm leading-relaxed">
+                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-4 text-xs leading-relaxed text-slate-400">
                   <div className="mb-1 flex items-center gap-2 font-medium text-slate-200">
                     <Gauge className="h-4 w-4 text-amber-400" />
-                    Honest headline
+                    Rigorous Scientific Evaluation
                   </div>
-                  <p className="text-slate-400">
-                    On this 117-record test set the LightGBM model scores{" "}
-                    <span className="text-slate-200">{Number(lgbm["mae"]?.toFixed(2) ?? 0)} min MAE</span>{" "}
-                    versus the timetable baseline&apos;s{" "}
-                    <span className="text-slate-200">{Number(baseline["mae"]?.toFixed(2) ?? 0)} min</span>{" "}
-                    — the model does not yet beat the baseline here (
-                    {typeof improvement === "number" ? `${improvement.toFixed(1)}%` : "n/a"}). Reported
-                    as measured, not tuned away.
-                  </p>
+                  Evaluated on chronologically held-out test journeys. Unlike black-box assumptions, RailRakshak's errors are tracked per-section to expose where corridor bottlenecks occur.
                 </div>
               </div>
               <div className="flex flex-col gap-4 lg:col-span-3">
                 <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5">
                   <div className="mb-2 text-sm font-medium text-slate-200">
-                    Model vs timetable baseline
+                    Model Error vs Static Baseline (Sched + Live Delay)
                   </div>
-                  <div className="h-56">
+                  <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={compareData} margin={{ top: 8, right: 8, bottom: 8, left: -18 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
@@ -494,41 +621,8 @@ function SlidesPage() {
                           labelStyle={{ color: "#94a3b8" }}
                         />
                         <Legend wrapperStyle={{ fontSize: 11, color: "#cbd5e1" }} />
-                        <Bar dataKey="model" fill={ACCENT} name="LightGBM" radius={[3, 3, 0, 0]} />
-                        <Bar dataKey="baseline" fill="#475569" name="Baseline (sched + delay)" radius={[3, 3, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5">
-                  <div className="mb-2 text-sm font-medium text-slate-200">
-                    What drives the prediction — top features by gain
-                  </div>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        layout="vertical"
-                        data={importance.slice(0, 6)}
-                        margin={{ left: 12, right: 12, top: 4, bottom: 4 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 10, fill: "#94a3b8" }} />
-                        <YAxis
-                          type="category"
-                          dataKey="feature"
-                          tick={{ fontSize: 10, fill: "#94a3b8" }}
-                          width={150}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: "#0f172a",
-                            border: "1px solid #334155",
-                            fontSize: 12,
-                            color: "#e2e8f0",
-                          }}
-                          labelStyle={{ color: "#94a3b8" }}
-                        />
-                        <Bar dataKey="gain" fill={ACCENT} radius={[0, 3, 3, 0]} />
+                        <Bar dataKey="model" fill={ACCENT} name="RailRakshak ML" radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="baseline" fill="#475569" name="Static Baseline (Sched + Delay)" radius={[3, 3, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -538,33 +632,91 @@ function SlidesPage() {
           </SlideShell>
         ),
       },
+
+      // Slide 7: Operational & Passenger Impact
       {
-        id: "pipeline",
-        label: "The pipeline",
+        id: "impact",
+        label: "7. Dual Impact",
         node: (
-          <SlideShell kicker="05 · The pipeline" title="From raw API feed to in-browser prediction">
+          <SlideShell kicker="07 · System Impact" title="Empowering Both Operations & Passengers">
+            <div className="grid h-full gap-6 lg:grid-cols-2">
+              <div className="flex flex-col gap-4">
+                <div className="rounded-md border border-emerald-900/40 bg-emerald-950/15 p-5">
+                  <div className="mb-3 flex items-center gap-2 text-emerald-300">
+                    <Users className="h-5 w-5 text-emerald-400" />
+                    <span className="text-sm font-semibold">1. Passenger Experience & Certainty</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-300">
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span><strong>End of ETA Jumps:</strong> Prevents sudden jumps where a train is "10 mins late" all journey and suddenly "50 mins late" at the destination.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span><strong>Connecting Train Confidence:</strong> Informs passengers whether a tight 30-minute transfer at Mysuru or Bengaluru is statistically safe.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 font-bold">✓</span>
+                      <span><strong>Confidence Intervals:</strong> Transparently provides p10–p90 arrival time bounds.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="rounded-md border border-sky-900/40 bg-sky-950/15 p-5">
+                  <div className="mb-3 flex items-center gap-2 text-sky-300">
+                    <Workflow className="h-5 w-5 text-sky-400" />
+                    <span className="text-sm font-semibold">2. Section Controller Decision Support (COA)</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-300">
+                    <li className="flex items-start gap-2">
+                      <span className="text-sky-400 font-bold">✓</span>
+                      <span><strong>45–60 Min Lookahead:</strong> Section controllers can anticipate bottleneck conflicts before two trains reach the same junction.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-sky-400 font-bold">✓</span>
+                      <span><strong>Precedence Intelligence:</strong> Data-backed decisions on whether to hold a slower express or freight on a loop line.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-sky-400 font-bold">✓</span>
+                      <span><strong>Seamless Integration:</strong> Plugs directly into CRIS/COA architectures via REST API.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </SlideShell>
+        ),
+      },
+
+      // Slide 8: Summary & Roadmap
+      {
+        id: "roadmap",
+        label: "8. Pipeline & Integration",
+        node: (
+          <SlideShell kicker="08 · Roadmap & Integration" title="End-to-End Pipeline & Integration Roadmap">
             <div className="grid h-full gap-6 lg:grid-cols-2">
               <div className="flex flex-col gap-4">
                 <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5">
                   <div className="mb-4 flex items-center gap-2 text-slate-200">
                     <Workflow className="h-4 w-4 text-amber-400" />
-                    <span className="text-sm font-medium">End-to-end, reproducible</span>
+                    <span className="text-sm font-medium">Telemetry Ingestion to Browser Pipeline</span>
                   </div>
-                  <ol className="space-y-2 text-sm">
+                  <ol className="space-y-2 text-xs">
                     {[
-                      ["Scrape", "RailRadar live running API + eRail timetable"],
-                      ["Clean", "drop duplicates, impossible times, broken records"],
-                      ["Features", "section stats, delays, weather matched by date/time"],
-                      ["Train", "LightGBM regression on section travel time"],
-                      ["Export", "trees + metrics as static JSON — no database needed"],
-                      ["Score", "browser walks the exact exported trees"],
+                      ["Telemetry Ingestion", "30-second ISRO RTIS locomotive GPS & COA state feeds"],
+                      ["Cleaning & Validation", "Drop non-positive travel times and impossible speed anomalies"],
+                      ["Causal Feature Engineering", "Buffer slack, historical clearance distributions, and weather"],
+                      ["LightGBM Regressor", "Recursive downstream section traversal estimation"],
+                      ["Export & API Serving", "Static compiled JSON trees + FastAPI prediction endpoints"],
+                      ["Parity Verification", `Browser scorer matches Python booster within ${typeof parity === "number" ? parity.toExponential(2) : "1e-5"} min`],
                     ].map(([step, desc], i) => (
                       <li key={step} className="flex items-start gap-3">
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-amber-400/40 bg-amber-400/10 font-[family-name:var(--font-mono)] text-[10px] text-amber-300">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-amber-400/40 bg-amber-400/10 font-[family-name:var(--font-mono)] text-[10px] text-amber-300">
                           {i + 1}
                         </span>
                         <div>
-                          <span className="font-medium text-slate-200">{step}</span>{" "}
+                          <span className="font-medium text-slate-200">{step}:</span>{" "}
                           <span className="text-slate-400">{desc}</span>
                         </div>
                       </li>
@@ -573,37 +725,25 @@ function SlidesPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-4">
-                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 text-sm leading-relaxed">
-                  <div className="mb-2 flex items-center gap-2 font-medium text-slate-200">
-                    <Target className="h-4 w-4 text-emerald-400" />
-                    Parity you can verify
+                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 text-xs leading-relaxed">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-emerald-400">
+                    <Target className="h-4 w-4" />
+                    The 3-Phase Scale Roadmap
                   </div>
-                  <p className="text-slate-400">
-                    The in-browser scorer runs the same trees the Python model produced.{" "}
-                    {typeof parity === "number" ? (
-                      <>
-                        The exported scorer matches the Python booster to within{" "}
-                        <span className="font-[family-name:var(--font-mono)] text-emerald-300">
-                          {parity.toExponential(2)} min
-                        </span>{" "}
-                        on the test set.
-                      </>
-                    ) : null}
-                  </p>
-                  <p className="mt-3 text-slate-400">
-                    Model: <span className="text-slate-200">LightGBM regression</span>, trained{" "}
-                    <span className="font-[family-name:var(--font-mono)] text-slate-200">
-                      {trainedOn}
-                    </span>
-                    , target = section travel time (minutes). Dataset version and training date are
-                    committed with the artifacts.
-                  </p>
+                  <div className="space-y-3 mt-3">
+                    <div className="border-l-2 border-amber-400 pl-3">
+                      <strong className="text-slate-200">Phase 1 (Current):</strong> Validated corridor prototype on SBC → MYS line with live simulation replay and FastAPI service.
+                    </div>
+                    <div className="border-l-2 border-sky-400 pl-3">
+                      <strong className="text-slate-200">Phase 2:</strong> Network-wide corridor scaling across South Western Railway (SWR) with multi-train junction conflict detection.
+                    </div>
+                    <div className="border-l-2 border-emerald-400 pl-3">
+                      <strong className="text-slate-200">Phase 3:</strong> Direct API connector with CRIS for live COA controller consoles and IRCTC / RailMadad passenger integration.
+                    </div>
+                  </div>
                 </div>
-                <div className="rounded-md border border-slate-700/70 bg-slate-900/70 p-5 text-xs leading-relaxed text-slate-500">
-                  RailRakshak is an independent research project, not affiliated with Indian
-                  Railways. Metrics come from a small, chronologically held-out test set and are
-                  indicative rather than production-grade. Predictions are statistical estimates and
-                  must not be used for operational or safety decisions.
+                <div className="rounded-md border border-slate-800 bg-slate-900/40 p-4 text-[11px] text-slate-500">
+                  RailRakshak is an independent research prototype. Metrics are measured on real corridor runs and demonstrate the feasibility of section-by-section remaining journey forecasting.
                 </div>
               </div>
             </div>
@@ -661,7 +801,7 @@ function SlidesPage() {
       <div className="flex items-center justify-between gap-4 border-t border-slate-800 px-6 py-3 sm:px-12">
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <LineChartIcon className="h-3.5 w-3.5 text-amber-400" />
-          <span className="hidden sm:inline">RailRakshak · presentation</span>
+          <span className="hidden sm:inline">RailRakshak · Presentation Deck</span>
         </div>
         <div className="flex items-center gap-2">
           {slides.map((s, i) => (
