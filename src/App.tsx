@@ -29,7 +29,7 @@ export function App() {
       const res = resolveTrainAtClockTime(t, currentMins);
       return res.operatingState === "RUNNING_ON_TRACK";
     });
-    return running ? running.id : "22818";
+    return running ? running.id : "12613";
   });
   const [injectedDelay, setInjectedDelay] = useState<number>(0);
   const [environment, setEnvironment] = useState<EnvironmentalConditions>(DEFAULT_ENVIRONMENT);

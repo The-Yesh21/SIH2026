@@ -1,55 +1,10 @@
 import { TrainConfig } from "./types";
 
 /**
- * Authentic Official Indian Railways (SWR / NTES / IRCTC) Master Train Catalog
+ * Authentic Official Indian Railways (SWR / NTES / IRCTC) Master Daily Train Catalog
  * Corridor: Mysuru Junction (MYS) ➔ KSR Bengaluru City (SBC) [138.25 km]
  */
 export const CORRIDOR_ACTIVE_TRAINS: TrainConfig[] = [
-  {
-    id: "22818",
-    name: "Mysuru - Howrah Weekly Superfast Express",
-    type: "SUPERFAST",
-    priorityTier: 2,
-    scheduledDep: "23:55",
-    scheduledArr: "02:05",
-    origin: "MYS (Mysuru Jn)",
-    destination: "SBC (KSR Bengaluru)",
-    locoType: "WAP-7 #30718 (LHB Rake)",
-    coaches: 22,
-    sectionalMpsKmph: 110,
-    nominalDecelerationMps2: 0.65,
-    currentLocationKm: 0.0,
-    currentSpeedKmph: 0.0,
-    initialDelayMin: 2,
-    scheduledStops: ["MYS", "MYA", "SBC"],
-    dwellMinutes: {
-      MYS: 0,
-      MYA: 2,
-      SBC: 0,
-    },
-  },
-  {
-    id: "BOXN-58219",
-    name: "Automobile Cargo Goods Rake (Night Freight)",
-    type: "FREIGHT_BOXN",
-    priorityTier: 4,
-    scheduledDep: "01:00",
-    scheduledArr: "04:30",
-    origin: "MYS Goods Yard",
-    destination: "Whitefield Goods Terminal",
-    locoType: "Twin WAG-9HC #31890",
-    coaches: 45,
-    sectionalMpsKmph: 75,
-    nominalDecelerationMps2: 0.30,
-    currentLocationKm: 0.0,
-    currentSpeedKmph: 0.0,
-    initialDelayMin: 12,
-    scheduledStops: ["MYS", "SBC"],
-    dwellMinutes: {
-      MYS: 0,
-      SBC: 0,
-    },
-  },
   {
     id: "16586",
     name: "MRDW - SMVB Express (Early Morning)",
@@ -323,6 +278,28 @@ export const CORRIDOR_ACTIVE_TRAINS: TrainConfig[] = [
       RMGM: 2,
       BID: 1,
       KGI: 2,
+      SBC: 0,
+    },
+  },
+  {
+    id: "BOXN-58219",
+    name: "Automobile Cargo Goods Rake (Night Freight)",
+    type: "FREIGHT_BOXN",
+    priorityTier: 4,
+    scheduledDep: "01:00",
+    scheduledArr: "04:30",
+    origin: "MYS Goods Yard",
+    destination: "Whitefield Goods Terminal",
+    locoType: "Twin WAG-9HC #31890",
+    coaches: 45,
+    sectionalMpsKmph: 75,
+    nominalDecelerationMps2: 0.30,
+    currentLocationKm: 0.0,
+    currentSpeedKmph: 0.0,
+    initialDelayMin: 12,
+    scheduledStops: ["MYS", "SBC"],
+    dwellMinutes: {
+      MYS: 0,
       SBC: 0,
     },
   },

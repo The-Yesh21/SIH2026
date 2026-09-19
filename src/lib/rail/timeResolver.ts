@@ -38,7 +38,7 @@ export function formatClockMinutes(totalMinutes: number): string {
 }
 
 /**
- * 24-Hour Complete Fleet Catalog for Mysuru - KSR Bengaluru Corridor (Single Source of Truth)
+ * Master 24-Hour Fleet for Mysuru - KSR Bengaluru Corridor
  */
 export const ALL_CORRIDOR_FLEET: TrainConfig[] = CORRIDOR_ACTIVE_TRAINS;
 
@@ -61,24 +61,20 @@ export function resolveTrainAtClockTime(
   let elapsedMinutes = 0;
 
   if (isOvernight) {
-    // Overnight run (e.g., 23:55 ➔ 02:05 or 01:00 ➔ 04:30)
+    // Overnight service
     if (currentClockMinutes >= depMins) {
-      // Midnight portion of departure (23:55 to 23:59)
       operatingState = "RUNNING_ON_TRACK";
       elapsedMinutes = currentClockMinutes - depMins;
     } else if (currentClockMinutes < rawArrMins) {
-      // Early morning portion before arrival (00:00 to 02:05)
       operatingState = "RUNNING_ON_TRACK";
       elapsedMinutes = currentClockMinutes + 1440 - depMins;
-    } else if (currentClockMinutes >= rawArrMins && currentClockMinutes < rawArrMins + 240) {
-      // Post-arrival stabled at destination (02:05 to 06:05)
+    } else if (currentClockMinutes >= rawArrMins && currentClockMinutes < rawArrMins + 180) {
       operatingState = "TRIP_COMPLETED";
     } else {
-      // Upcoming service for later tonight
       operatingState = "NOT_STARTED_YET";
     }
   } else {
-    // Same-day service (e.g., 06:45 ➔ 09:35, 11:30 ➔ 14:00, 16:15 ➔ 18:50)
+    // Same-day service
     if (currentClockMinutes < depMins) {
       operatingState = "NOT_STARTED_YET";
     } else if (currentClockMinutes >= depMins && currentClockMinutes < arrMins) {
@@ -89,7 +85,7 @@ export function resolveTrainAtClockTime(
     }
   }
 
-  // Handle specific state projections
+  // 1. Train has not started its journey yet today
   if (operatingState === "NOT_STARTED_YET") {
     let diffMins = depMins - currentClockMinutes;
     if (diffMins < 0) diffMins += 1440;
@@ -122,6 +118,7 @@ export function resolveTrainAtClockTime(
     };
   }
 
+  // 2. Train has finished its scheduled trip today
   if (operatingState === "TRIP_COMPLETED") {
     return {
       config: {
@@ -145,7 +142,7 @@ export function resolveTrainAtClockTime(
     };
   }
 
-  // Train is actively RUNNING ON TRACK right now!
+  // 3. Train is actively RUNNING ON TRACK right now!
   const progressFraction = Math.min(0.99, Math.max(0.01, elapsedMinutes / Math.max(1, totalTripDuration)));
   const locationKm = Number((progressFraction * 138.25).toFixed(3));
   const progressPercent = Math.round(progressFraction * 100);
@@ -170,6 +167,12 @@ export function resolveTrainAtClockTime(
 
   const speedKmph = allowedSpeed > 100 ? allowedSpeed - 5 : allowedSpeed;
 
+  // Authentic Indian Railways block/section summary formatting
+  const sectionTag = `${prevStn.code}–${nextStn.code} Section`;
+  const locationDesc = distToNext <= 2.5 
+    ? `Approaching ${nextStn.name} (in ${distToNext} km)`
+    : `In ${sectionTag} (KM ${locationKm.toFixed(1)}) • Next: ${nextStn.name} in ${distToNext} km`;
+
   return {
     config: {
       ...train,
@@ -188,6 +191,6 @@ export function resolveTrainAtClockTime(
     nextStationName: nextStn.name,
     distanceToNextKm: distToNext,
     delayMinutes: train.initialDelayMin,
-    liveSummary: `🟢 Live on Track at KM ${locationKm.toFixed(1)} (near ${prevStn.name}) • Speed: ${speedKmph} km/h • Next Station: ${nextStn.name} in ${distToNext} km`,
+    liveSummary: `🟢 Live on Track: ${locationDesc} • Speed: ${speedKmph} km/h`,
   };
 }
