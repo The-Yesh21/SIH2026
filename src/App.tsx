@@ -21,7 +21,16 @@ export function App() {
   });
   const [isRealTimeSynced, setIsRealTimeSynced] = useState<boolean>(true);
 
-  const [selectedTrainId, setSelectedTrainId] = useState<string>("12613");
+  // Find initial running or nearest upcoming train for the current clock
+  const [selectedTrainId, setSelectedTrainId] = useState<string>(() => {
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    const running = ALL_CORRIDOR_FLEET.find((t) => {
+      const res = resolveTrainAtClockTime(t, currentMins);
+      return res.operatingState === "RUNNING_ON_TRACK";
+    });
+    return running ? running.id : "22818";
+  });
   const [injectedDelay, setInjectedDelay] = useState<number>(0);
   const [environment, setEnvironment] = useState<EnvironmentalConditions>(DEFAULT_ENVIRONMENT);
   const [showScenarioBar, setShowScenarioBar] = useState<boolean>(false);
