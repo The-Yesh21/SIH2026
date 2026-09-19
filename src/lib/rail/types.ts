@@ -65,6 +65,8 @@ export interface TrainConfig {
   currentLocationKm: number;       // Distance from MYS (0 to 138.250)
   currentSpeedKmph: number;
   initialDelayMin: number;
+  scheduledStops: string[];        // Array of station codes where this train halts
+  dwellMinutes?: Record<string, number>; // Specific halt dwell durations (e.g. { "MYA": 2 })
 }
 
 export interface DynamicPredictionResult {
@@ -94,6 +96,8 @@ export interface StationForecastRow {
   name: string;
   chainageFromSbcKm: number;
   distanceFromMysKm: number;
+  isScheduledHalt: boolean;
+  haltDwellMin: number;
   bookedTime: string;
   predictedTime: string;
   predictedDelayMin: number;
