@@ -12,9 +12,13 @@ import { DelayIntelligenceDeck } from "./components/DelayIntelligenceDeck";
 import { CorridorPhysicalSpine } from "./components/CorridorPhysicalSpine";
 import { CorridorDelayHotspots } from "./components/CorridorDelayHotspots";
 import { YesterdayTrafficAnalysis } from "./components/YesterdayTrafficAnalysis";
+import { FleetDelayAnalysisDeck } from "./components/FleetDelayAnalysisDeck";
 import { Flame } from "lucide-react";
 
 export function App() {
+  // Navigation View State
+  const [activeTab, setActiveTab] = useState<"COCKPIT" | "ANALYSIS">("COCKPIT");
+
   // Initialize with exact real-world clock time (in minutes from midnight)
   const [activeClockMinutes, setActiveClockMinutes] = useState<number>(() => {
     const now = new Date();
@@ -58,7 +62,7 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#070B14] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950 rail-grid-pattern">
-      {/* 1. Masthead Dispatcher Navigation with Live Real-Time Clock Scrubber */}
+      {/* 1. Masthead Dispatcher Navigation with Live Real-Time Clock Scrubber & View Tabs */}
       <Header
         showScenarioBar={showScenarioBar}
         setShowScenarioBar={setShowScenarioBar}
@@ -68,44 +72,65 @@ export function App() {
         setActiveClockMinutes={setActiveClockMinutes}
         isRealTimeSynced={isRealTimeSynced}
         setIsRealTimeSynced={setIsRealTimeSynced}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
 
       {/* 2. Main Mission Control Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
         
-        {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
-        <TrainSelector
-          selectedTrainId={selectedTrainId}
-          onSelectTrain={(train) => {
-            setSelectedTrainId(train.id);
-            setInjectedDelay(0);
-          }}
-          activeClockMinutes={activeClockMinutes}
-        />
+        {activeTab === "COCKPIT" ? (
+          <>
+            {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
+            <TrainSelector
+              selectedTrainId={selectedTrainId}
+              onSelectTrain={(train) => {
+                setSelectedTrainId(train.id);
+                setInjectedDelay(0);
+              }}
+              activeClockMinutes={activeClockMinutes}
+            />
 
-        {/* Live Train Status & Where-Is-My-Train Dynamic ETA Deck */}
-        <DelayIntelligenceDeck
-          prediction={prediction}
-          selectedTrain={resolvedLive.config}
-          environment={environment}
-          setEnvironment={setEnvironment}
-          injectedDelay={injectedDelay}
-          setInjectedDelay={setInjectedDelay}
-          showScenarioBar={showScenarioBar}
-          activeClockMinutes={activeClockMinutes}
-        />
+            {/* Live Train Status & Where-Is-My-Train Dynamic ETA Deck */}
+            <DelayIntelligenceDeck
+              prediction={prediction}
+              selectedTrain={resolvedLive.config}
+              environment={environment}
+              setEnvironment={setEnvironment}
+              injectedDelay={injectedDelay}
+              setInjectedDelay={setInjectedDelay}
+              showScenarioBar={showScenarioBar}
+              activeClockMinutes={activeClockMinutes}
+            />
 
-        {/* Physical Track Spine & Station-by-Station Live Running Log */}
-        <CorridorPhysicalSpine
-          prediction={prediction}
-          selectedTrain={resolvedLive.config}
-        />
+            {/* Physical Track Spine & Station-by-Station Live Running Log */}
+            <CorridorPhysicalSpine
+              prediction={prediction}
+              selectedTrain={resolvedLive.config}
+            />
+          </>
+        ) : (
+          <>
+            {/* Full Fleet Delay Analysis & All Rails Matrix View */}
+            <FleetDelayAnalysisDeck
+              activeClockMinutes={activeClockMinutes}
+              environment={environment}
+              injectedDelay={injectedDelay}
+              onSelectTrainForCockpit={(trainNo) => {
+                setSelectedTrainId(trainNo);
+                setActiveTab("COCKPIT");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          </>
+        )}
 
         {/* Yesterday's Corridor Traffic & Delay Gap Forensics Deck */}
         <YesterdayTrafficAnalysis
           onSelectTrainForLiveView={(trainNo) => {
             setSelectedTrainId(trainNo);
-            window.scrollTo({ top: 120, behavior: "smooth" });
+            setActiveTab("COCKPIT");
+            window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         />
 

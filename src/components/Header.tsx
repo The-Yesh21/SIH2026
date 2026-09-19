@@ -22,6 +22,8 @@ interface HeaderProps {
   setActiveClockMinutes: (mins: number) => void;
   isRealTimeSynced: boolean;
   setIsRealTimeSynced: (synced: boolean) => void;
+  activeTab: "COCKPIT" | "ANALYSIS";
+  setActiveTab: (tab: "COCKPIT" | "ANALYSIS") => void;
 }
 
 export function Header({
@@ -33,6 +35,8 @@ export function Header({
   setActiveClockMinutes,
   isRealTimeSynced,
   setIsRealTimeSynced,
+  activeTab,
+  setActiveTab,
 }: HeaderProps) {
   // Sync with real-time clock when in real-time mode
   useEffect(() => {
@@ -155,6 +159,33 @@ export function Header({
             )}
           </button>
         </div>
+      </div>
+
+      {/* Primary Section Switcher Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-2 flex items-center gap-2 font-mono text-xs border-t border-rail-800/60">
+        <button
+          onClick={() => setActiveTab("COCKPIT")}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-xl font-bold transition-all duration-200 ${
+            activeTab === "COCKPIT"
+              ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/25 border border-cyan-400"
+              : "text-slate-400 hover:text-slate-200 hover:bg-rail-800/80 border border-transparent"
+          }`}
+        >
+          <Radio className="w-3.5 h-3.5 text-cyan-300" />
+          <span>Live Corridor Cockpit &amp; Track Spine</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("ANALYSIS")}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-xl font-bold transition-all duration-200 ${
+            activeTab === "ANALYSIS"
+              ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/25 border border-cyan-400"
+              : "text-slate-400 hover:text-slate-200 hover:bg-rail-800/80 border border-transparent"
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5 text-cyan-300" />
+          <span>📊 Delay Analysis &amp; All Rails Matrix</span>
+        </button>
       </div>
     </header>
   );
