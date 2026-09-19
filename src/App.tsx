@@ -13,6 +13,7 @@ import { CorridorPhysicalSpine } from "./components/CorridorPhysicalSpine";
 import { CorridorDelayHotspots } from "./components/CorridorDelayHotspots";
 import { YesterdayTrafficAnalysis } from "./components/YesterdayTrafficAnalysis";
 import { FleetDelayAnalysisDeck } from "./components/FleetDelayAnalysisDeck";
+import { StopsAndWeatherIntelligenceDeck } from "./components/StopsAndWeatherIntelligenceDeck";
 import { Flame } from "lucide-react";
 
 export function App() {
@@ -124,6 +125,15 @@ export function App() {
             />
           </>
         )}
+
+        {/* Micro-Climate Weather Sensors & Operational Unscheduled Stops Deck */}
+        <StopsAndWeatherIntelligenceDeck
+          selectedTrain={resolvedLive.config}
+          environment={environment}
+          setEnvironment={setEnvironment}
+          activeClockMinutes={activeClockMinutes}
+          injectedDelay={injectedDelay}
+        />
 
         {/* Yesterday's Corridor Traffic & Delay Gap Forensics Deck */}
         <YesterdayTrafficAnalysis
