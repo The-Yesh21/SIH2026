@@ -80,6 +80,9 @@ export function computeDynamicEta(params: {
     const fraction = station.distanceFromMysKm / 138.250;
     const bookedStationMins = depMins + fraction * scheduledDurationMins;
 
+    const isScheduledHalt = params.train.scheduledStops.includes(station.code);
+    const haltDwell = params.train.dwellMinutes?.[station.code] ?? (isScheduledHalt && station.code !== "MYS" && station.code !== "SBC" ? 1 : 0);
+
     let sectionAllowedSpeed = calculateAllowedVelocity({
       rollingStock: params.train.type,
       currentKm: station.distanceFromMysKm,
@@ -123,9 +126,9 @@ export function computeDynamicEta(params: {
         currentAspect = "RED";
       }
 
-      // (d) Peak Hour Commuter Surge Dwell at Urban Nodes
-      if (station.commuterSurgeProne) {
-        const surgeExtraDwell = (env.commuterSurgeMultiplier - 1.0) * 2.2;
+      // (d) Peak Hour Commuter Surge Dwell (Only affects trains that actually halt!)
+      if (station.commuterSurgeProne && isScheduledHalt) {
+        const surgeExtraDwell = (env.commuterSurgeMultiplier - 1.0) * (haltDwell + 1.2);
         if (surgeExtraDwell > 0) {
           runningDynamicDelay += surgeExtraDwell;
           bottlenecksIncurredMin += surgeExtraDwell;
@@ -160,6 +163,8 @@ export function computeDynamicEta(params: {
       name: station.name,
       chainageFromSbcKm: station.chainageFromSbcKm,
       distanceFromMysKm: station.distanceFromMysKm,
+      isScheduledHalt,
+      haltDwellMin: haltDwell,
       bookedTime: formatClockDisplay(bookedStationMins),
       predictedTime: formatClockDisplay(predictedStationMins),
       predictedDelayMin: Math.max(0, Math.round(appliedDelay)),
