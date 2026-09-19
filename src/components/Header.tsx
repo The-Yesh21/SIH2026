@@ -1,15 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { TrainTrack, Sliders, Radio, Activity, Shield, Sparkles, Clock, Sun, Moon, Sunrise } from "lucide-react";
-
-export type CorridorShift = "MIDDAY" | "MORNING_RUSH" | "NIGHT_WINDOW";
+import {
+  TrainTrack,
+  Sliders,
+  Radio,
+  Clock,
+  Sun,
+  Moon,
+  Sunrise,
+  RotateCcw,
+  Play,
+  Pause,
+} from "lucide-react";
+import { formatClockMinutes } from "../lib/rail/timeResolver";
 
 interface HeaderProps {
   showScenarioBar: boolean;
   setShowScenarioBar: (show: boolean) => void;
   injectedDelay: number;
   weather: string;
-  shift: CorridorShift;
-  setShift: (shift: CorridorShift) => void;
+  activeClockMinutes: number;
+  setActiveClockMinutes: (mins: number) => void;
+  isRealTimeSynced: boolean;
+  setIsRealTimeSynced: (synced: boolean) => void;
 }
 
 export function Header({
@@ -17,47 +29,48 @@ export function Header({
   setShowScenarioBar,
   injectedDelay,
   weather,
-  shift,
-  setShift,
+  activeClockMinutes,
+  setActiveClockMinutes,
+  isRealTimeSynced,
+  setIsRealTimeSynced,
 }: HeaderProps) {
-  const [realClock, setRealClock] = useState<string>("");
-
+  // Sync with real-time clock when in real-time mode
   useEffect(() => {
-    const updateTime = () => {
+    if (!isRealTimeSynced) return;
+
+    const updateClock = () => {
       const now = new Date();
-      setRealClock(
-        now.toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        })
-      );
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      setActiveClockMinutes(currentMins);
     };
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-    return () => clearInterval(timer);
-  }, []);
+
+    updateClock();
+    const interval = setInterval(updateClock, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, [isRealTimeSynced, setActiveClockMinutes]);
 
   const hasActiveDisruptions = injectedDelay > 0 || weather !== "CLEAR";
 
-  const getShiftLabel = () => {
-    switch (shift) {
-      case "MIDDAY":
-        return { name: "Midday Express Run", time: "12:54 PM", icon: Sun, color: "text-amber-400" };
-      case "MORNING_RUSH":
-        return { name: "Morning Commuter Peak", time: "07:30 AM", icon: Sunrise, color: "text-cyan-400" };
-      case "NIGHT_WINDOW":
-        return { name: "Night Maintenance & Freight Block", time: "00:58 AM", icon: Moon, color: "text-indigo-400" };
-    }
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsRealTimeSynced(false);
+    setActiveClockMinutes(Number(e.target.value));
   };
 
-  const currentShiftInfo = getShiftLabel();
-  const ShiftIcon = currentShiftInfo.icon;
+  const handlePresetClick = (mins: number) => {
+    setIsRealTimeSynced(false);
+    setActiveClockMinutes(mins);
+  };
+
+  const handleSyncRealTime = () => {
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    setActiveClockMinutes(currentMins);
+    setIsRealTimeSynced(true);
+  };
 
   return (
     <header className="border-b border-rail-700/80 bg-rail-900/95 backdrop-blur-xl sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
         {/* Left: Branding & Corridor Identity */}
         <div className="flex items-center gap-3.5">
           <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500/20 via-indigo-500/20 to-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-500/10 shrink-0">
@@ -79,55 +92,52 @@ export function Header({
           </div>
         </div>
 
-        {/* Center: Shift & Operating Time Selector */}
-        <div className="flex items-center gap-1 bg-rail-950 p-1 rounded-2xl border border-rail-700 font-mono text-xs">
-          <button
-            onClick={() => setShift("MIDDAY")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
-              shift === "MIDDAY"
-                ? "bg-amber-600/30 text-amber-300 border border-amber-500/40 font-bold shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Sun className="w-3.5 h-3.5 text-amber-400" />
-            <span>Midday (12:54 PM)</span>
-          </button>
+        {/* Center: Dynamic Real-Time Time Scrubber */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-rail-950 p-2 rounded-2xl border border-rail-700 font-mono text-xs">
+          {/* Time Display & Real-Time Sync Toggle */}
+          <div className="flex items-center justify-between sm:justify-start gap-2 px-2">
+            <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-sm bg-rail-900 px-3 py-1 rounded-xl border border-rail-700/80">
+              <Clock className="w-4 h-4 text-cyan-400" />
+              <span>{formatClockMinutes(activeClockMinutes)}</span>
+            </div>
 
-          <button
-            onClick={() => setShift("MORNING_RUSH")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
-              shift === "MORNING_RUSH"
-                ? "bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Sunrise className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Morning (07:30 AM)</span>
-          </button>
-
-          <button
-            onClick={() => setShift("NIGHT_WINDOW")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
-              shift === "NIGHT_WINDOW"
-                ? "bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 font-bold shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Moon className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Night (00:58 AM)</span>
-          </button>
-        </div>
-
-        {/* Right: Telemetry Readout & What-If Button */}
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-          {/* Active Operating Time */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rail-950 border border-rail-700 text-xs font-mono">
-            <ShiftIcon className={`w-3.5 h-3.5 ${currentShiftInfo.color} animate-pulse`} />
-            <span className="text-white font-bold">{currentShiftInfo.time}</span>
-            <span className="text-slate-500 text-[10px]">({currentShiftInfo.name})</span>
+            <button
+              onClick={handleSyncRealTime}
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all ${
+                isRealTimeSynced
+                  ? "bg-emerald-600/30 border-emerald-500 text-emerald-300 shadow-sm"
+                  : "bg-rail-900 border-rail-700 text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              {isRealTimeSynced ? "🟢 Real-Time Clock (Now)" : "Sync Real-Time"}
+            </button>
           </div>
 
-          {/* Tactical What-If Disruption Simulator Toggle */}
+          {/* Quick Scrub Presets */}
+          <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-rail-800 pt-2 sm:pt-0 sm:pl-2.5">
+            {[
+              { label: "Night (01:25 AM)", mins: 85 },
+              { label: "Morning (07:30 AM)", mins: 450 },
+              { label: "Midday (12:54 PM)", mins: 774 },
+              { label: "Evening (19:00 PM)", mins: 1140 },
+            ].map((p) => (
+              <button
+                key={p.label}
+                onClick={() => handlePresetClick(p.mins)}
+                className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap ${
+                  !isRealTimeSynced && Math.abs(activeClockMinutes - p.mins) < 30
+                    ? "bg-cyan-600 text-white font-bold shadow-sm"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-rail-900"
+                }`}
+              >
+                {p.label.split(" ")[0]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: What-If Button */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowScenarioBar(!showScenarioBar)}
             className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${

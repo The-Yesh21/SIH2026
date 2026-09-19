@@ -4,6 +4,7 @@ import {
   DynamicPredictionResult,
 } from "../lib/rail/types";
 import { EnvironmentalConditions, DEFAULT_ENVIRONMENT } from "../lib/rail/restrictions";
+import { resolveTrainAtClockTime, formatClockMinutes } from "../lib/rail/timeResolver";
 import {
   Clock,
   Sparkles,
@@ -24,6 +25,7 @@ import {
   Satellite,
   Navigation,
   Gauge,
+  CheckCircle2,
 } from "lucide-react";
 
 interface DelayIntelligenceDeckProps {
@@ -34,6 +36,7 @@ interface DelayIntelligenceDeckProps {
   injectedDelay: number;
   setInjectedDelay: (delay: number) => void;
   showScenarioBar: boolean;
+  activeClockMinutes: number;
 }
 
 export function DelayIntelligenceDeck({
@@ -44,60 +47,15 @@ export function DelayIntelligenceDeck({
   injectedDelay,
   setInjectedDelay,
   showScenarioBar,
+  activeClockMinutes,
 }: DelayIntelligenceDeckProps) {
+  const resolved = resolveTrainAtClockTime(selectedTrain, activeClockMinutes);
   const totalDynamicDelayMin = Math.round(prediction.railrakshakDynamicDelayMin);
   const isDelayed = totalDynamicDelayMin > 0;
-  const progressPercent = Math.min(
-    100,
-    Math.round((selectedTrain.currentLocationKm / 138.25) * 100)
-  );
-
-  // Compute live location description based on real clock & train position
-  const getLiveLocationStatus = () => {
-    if (selectedTrain.currentLocationKm >= 138.25) {
-      return {
-        banner: `Arrived at KSR Bengaluru City (SBC) Platform 5 • Trip Completed`,
-        sub: `Terminated on time after traversing 138.25 km`,
-        tag: "Arrived SBC",
-        color: "bg-emerald-500 text-slate-950",
-      };
-    }
-    if (selectedTrain.currentLocationKm <= 0.0) {
-      return {
-        banner: `Stationed at Mysuru Junction (MYS) Platform 1 • Boarding Passengers`,
-        sub: `Scheduled Departure at ${selectedTrain.scheduledDep} • Loco & Rake Tested`,
-        tag: "Boarding at MYS",
-        color: "bg-indigo-500 text-white",
-      };
-    }
-    if (selectedTrain.currentLocationKm >= 82.8 && selectedTrain.currentLocationKm <= 93.8) {
-      return {
-        banner: `Live at KM ${selectedTrain.currentLocationKm.toFixed(1)} (Channapatna ➔ Ramanagaram section)`,
-        sub: `Cruising at ${selectedTrain.currentSpeedKmph} km/h • Next Halt: Ramanagaram (RMGM) in ${(93.86 - selectedTrain.currentLocationKm).toFixed(1)} km`,
-        tag: "On Track",
-        color: "bg-cyan-500 text-slate-950",
-      };
-    }
-    if (selectedTrain.currentLocationKm >= 108.6 && selectedTrain.type === "FREIGHT_BOXN") {
-      return {
-        banner: `Stabled at Bidadi Junction (BID) Loop Line 3`,
-        sub: `Held for precedence clearance to allow Vande Bharat / Superfast express overtakes`,
-        tag: "Loop Stabled",
-        color: "bg-amber-500 text-slate-950",
-      };
-    }
-    return {
-      banner: `Live at KM ${selectedTrain.currentLocationKm.toFixed(1)} from Mysuru`,
-      sub: `Running at ${selectedTrain.currentSpeedKmph} km/h on double-electrified line`,
-      tag: "In Transit",
-      color: "bg-cyan-500 text-slate-950",
-    };
-  };
-
-  const liveLoc = getLiveLocationStatus();
+  const progressPercent = resolved.progressPercent;
 
   // Calculated approximate GPS coordinates for current position
-  const frac = Math.min(1, Math.max(0, selectedTrain.currentLocationKm / 138.25));
+  const frac = Math.min(1, Math.max(0, resolved.currentLocationKm / 138.25));
   const curLat = (12.3168 + (12.9784 - 12.3168) * frac).toFixed(4);
   const curLng = (76.6499 + (77.5696 - 76.6499) * frac).toFixed(4);
 
@@ -232,15 +190,15 @@ export function DelayIntelligenceDeck({
         {/* Live Train Status Callout Bar (Where-Is-My-Train Style) */}
         <div className="bg-rail-950 p-4 rounded-2xl border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-xs">
           <div className="flex items-start sm:items-center gap-3">
-            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 ${liveLoc.color}`}>
-              {liveLoc.tag}
+            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 border ${resolved.badgeClass}`}>
+              {resolved.stateLabel.split(" ")[0]} {resolved.stateLabel.split(" ")[1] || ""}
             </span>
             <div>
-              <div className="font-bold text-white text-sm">
-                {liveLoc.banner}
+              <div className="font-bold text-white text-sm font-sans">
+                {resolved.liveSummary}
               </div>
-              <div className="text-slate-400 text-[11px] mt-0.5">
-                {liveLoc.sub}
+              <div className="text-slate-400 text-[11px] mt-0.5 font-mono">
+                Current Time: <strong className="text-cyan-300">{formatClockMinutes(activeClockMinutes)}</strong> · Scheduled Dep: {selectedTrain.scheduledDep} ➔ Arr: {selectedTrain.scheduledArr}
               </div>
             </div>
           </div>
@@ -285,7 +243,7 @@ export function DelayIntelligenceDeck({
               <div className="flex items-center justify-between text-xs font-mono">
                 <span className="text-slate-400">Route Traversed:</span>
                 <span className="font-bold text-cyan-400">
-                  {selectedTrain.currentLocationKm.toFixed(1)} km / 138.25 km ({progressPercent}%)
+                  {resolved.currentLocationKm.toFixed(1)} km / 138.25 km ({progressPercent}%)
                 </span>
               </div>
               

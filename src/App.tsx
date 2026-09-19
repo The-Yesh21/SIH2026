@@ -1,85 +1,94 @@
 import React, { useState, useMemo } from "react";
 import { TrainConfig } from "./lib/rail/types";
-import { CORRIDOR_ACTIVE_TRAINS } from "./lib/rail/trains";
 import { DEFAULT_ENVIRONMENT, EnvironmentalConditions } from "./lib/rail/restrictions";
 import { computeDynamicEta } from "./lib/rail/dynamicEta";
-import { Header, CorridorShift } from "./components/Header";
+import {
+  ALL_CORRIDOR_FLEET,
+  resolveTrainAtClockTime,
+} from "./lib/rail/timeResolver";
+import { Header } from "./components/Header";
 import { TrainSelector } from "./components/TrainSelector";
 import { DelayIntelligenceDeck } from "./components/DelayIntelligenceDeck";
 import { CorridorPhysicalSpine } from "./components/CorridorPhysicalSpine";
 import { CorridorDelayHotspots } from "./components/CorridorDelayHotspots";
-import { Flame, Layers } from "lucide-react";
+import { Flame } from "lucide-react";
 
 export function App() {
-  const [shift, setShift] = useState<CorridorShift>("MIDDAY");
-  const [selectedTrain, setSelectedTrain] = useState<TrainConfig>(CORRIDOR_ACTIVE_TRAINS[0]);
+  // Initialize with exact real-world clock time (in minutes from midnight)
+  const [activeClockMinutes, setActiveClockMinutes] = useState<number>(() => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  });
+  const [isRealTimeSynced, setIsRealTimeSynced] = useState<boolean>(true);
+
+  const [selectedTrainId, setSelectedTrainId] = useState<string>("12613");
   const [injectedDelay, setInjectedDelay] = useState<number>(0);
   const [environment, setEnvironment] = useState<EnvironmentalConditions>(DEFAULT_ENVIRONMENT);
   const [showScenarioBar, setShowScenarioBar] = useState<boolean>(false);
   const [showHotspots, setShowHotspots] = useState<boolean>(false);
 
-  // Auto-switch primary active train when shift changes
-  const handleShiftChange = (newShift: CorridorShift) => {
-    setShift(newShift);
-    if (newShift === "MIDDAY") {
-      setSelectedTrain(CORRIDOR_ACTIVE_TRAINS[0]); // #12613 Wodeyar SF
-    } else if (newShift === "MORNING_RUSH") {
-      const chamundi = CORRIDOR_ACTIVE_TRAINS.find((t) => t.id === "16215");
-      if (chamundi) setSelectedTrain(chamundi);
-    } else if (newShift === "NIGHT_WINDOW") {
-      const freight = CORRIDOR_ACTIVE_TRAINS.find((t) => t.id === "BOXN-58219");
-      if (freight) setSelectedTrain(freight);
-    }
-  };
+  // Find base train config from full 24-hour fleet
+  const baseTrain =
+    ALL_CORRIDOR_FLEET.find((t) => t.id === selectedTrainId) ||
+    ALL_CORRIDOR_FLEET[0];
 
-  // Compute Dynamic Multi-Factor ETA based on current train position
+  // Dynamically resolve train location, speed, and state at the active clock time
+  const resolvedLive = useMemo(() => {
+    return resolveTrainAtClockTime(baseTrain, activeClockMinutes);
+  }, [baseTrain, activeClockMinutes]);
+
+  // Compute Dynamic Multi-Factor ETA based on resolved live state
   const prediction = useMemo(() => {
     return computeDynamicEta({
-      train: selectedTrain,
+      train: resolvedLive.config,
       userInjectedDelayMin: injectedDelay,
       environment,
     });
-  }, [selectedTrain, injectedDelay, environment]);
+  }, [resolvedLive.config, injectedDelay, environment]);
 
   return (
     <div className="min-h-screen bg-[#070B14] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950 rail-grid-pattern">
-      {/* 1. Masthead Dispatcher Navigation with Shift Selector */}
+      {/* 1. Masthead Dispatcher Navigation with Live Real-Time Clock Scrubber */}
       <Header
         showScenarioBar={showScenarioBar}
         setShowScenarioBar={setShowScenarioBar}
         injectedDelay={injectedDelay}
         weather={environment.weather}
-        shift={shift}
-        setShift={handleShiftChange}
+        activeClockMinutes={activeClockMinutes}
+        setActiveClockMinutes={setActiveClockMinutes}
+        isRealTimeSynced={isRealTimeSynced}
+        setIsRealTimeSynced={setIsRealTimeSynced}
       />
 
       {/* 2. Main Mission Control Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-7">
         
-        {/* Train Command Deck with Inline Search */}
+        {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
         <TrainSelector
-          selectedTrainId={selectedTrain.id}
+          selectedTrainId={selectedTrainId}
           onSelectTrain={(train) => {
-            setSelectedTrain(train);
+            setSelectedTrainId(train.id);
             setInjectedDelay(0);
           }}
+          activeClockMinutes={activeClockMinutes}
         />
 
         {/* Live Train Status & Where-Is-My-Train Dynamic ETA Deck */}
         <DelayIntelligenceDeck
           prediction={prediction}
-          selectedTrain={selectedTrain}
+          selectedTrain={resolvedLive.config}
           environment={environment}
           setEnvironment={setEnvironment}
           injectedDelay={injectedDelay}
           setInjectedDelay={setInjectedDelay}
           showScenarioBar={showScenarioBar}
+          activeClockMinutes={activeClockMinutes}
         />
 
         {/* Physical Track Spine & Station-by-Station Live Running Log */}
         <CorridorPhysicalSpine
           prediction={prediction}
-          selectedTrain={selectedTrain}
+          selectedTrain={resolvedLive.config}
         />
 
         {/* Delay Hotspot Analysis Section (Collapsible) */}
@@ -114,7 +123,7 @@ export function App() {
 
       {/* Footer Branding & Disclaimer */}
       <footer className="border-t border-rail-800 bg-rail-950/80 py-4 px-4 sm:px-6 text-center text-xs font-mono text-slate-500">
-        RailRakshak v2.0 · SWR Mysore–Bangalore Division Precision Dispatching &amp; Live NavIC RTIS Telemetry Engine
+        RailRakshak v2.0 · SWR Mysore–Bangalore Division 24-Hour Real-Time Clock Synchronization &amp; Dynamic Live Status Engine
       </footer>
     </div>
   );

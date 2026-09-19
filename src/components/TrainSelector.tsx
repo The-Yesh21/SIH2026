@@ -1,28 +1,38 @@
 import React, { useState } from "react";
 import { TrainConfig } from "../lib/rail/types";
-import { CORRIDOR_ACTIVE_TRAINS } from "../lib/rail/trains";
-import { Zap, Navigation, Clock, ShieldAlert, Search } from "lucide-react";
+import {
+  ALL_CORRIDOR_FLEET,
+  resolveTrainAtClockTime,
+  ResolvedLiveTrain,
+} from "../lib/rail/timeResolver";
+import { Zap, Navigation, Clock, ShieldAlert, Search, CheckCircle2, PlayCircle } from "lucide-react";
 
 interface TrainSelectorProps {
   selectedTrainId: string;
   onSelectTrain: (train: TrainConfig) => void;
+  activeClockMinutes: number;
 }
 
 export function TrainSelector({
   selectedTrainId,
   onSelectTrain,
+  activeClockMinutes,
 }: TrainSelectorProps) {
   const [searchInput, setSearchInput] = useState<string>("");
 
+  const resolvedFleet: ResolvedLiveTrain[] = ALL_CORRIDOR_FLEET.map((train) =>
+    resolveTrainAtClockTime(train, activeClockMinutes)
+  );
+
   const handleSearchChange = (val: string) => {
     setSearchInput(val);
-    const matched = CORRIDOR_ACTIVE_TRAINS.find(
+    const matched = resolvedFleet.find(
       (t) =>
-        t.id.toLowerCase().includes(val.toLowerCase()) ||
-        t.name.toLowerCase().includes(val.toLowerCase())
+        t.config.id.toLowerCase().includes(val.toLowerCase()) ||
+        t.config.name.toLowerCase().includes(val.toLowerCase())
     );
     if (matched) {
-      onSelectTrain(matched);
+      onSelectTrain(matched.config);
     }
   };
 
@@ -31,7 +41,7 @@ export function TrainSelector({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
         <h2 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-cyan-400" />
-          Corridor Active Services &amp; Live Train Lookup
+          24-Hour Corridor Fleet Status &amp; Live Train Lookup
         </h2>
 
         {/* Inline Train Number Search Input */}
@@ -48,70 +58,32 @@ export function TrainSelector({
       </div>
 
       {/* Grid of Train Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {CORRIDOR_ACTIVE_TRAINS.map((train) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        {resolvedFleet.map((resolved) => {
+          const train = resolved.config;
           const isSelected = selectedTrainId === train.id;
 
-          const getRakeTheme = () => {
-            switch (train.type) {
-              case "VANDE_BHARAT":
+          const getStatusBadge = () => {
+            switch (resolved.operatingState) {
+              case "RUNNING_ON_TRACK":
                 return {
-                  badge: "bg-blue-950/80 text-blue-300 border-blue-500/50",
-                  tag: "Trainset EMU",
-                  accent: "from-blue-600/30 to-cyan-500/20",
-                  border: isSelected
-                    ? "border-cyan-400 shadow-cyan-500/20"
-                    : "border-rail-700/80 hover:border-cyan-600/50",
+                  text: `🟢 RUNNING (KM ${resolved.currentLocationKm.toFixed(0)})`,
+                  style: "bg-emerald-950/90 text-emerald-300 border-emerald-400 font-bold animate-pulse",
                 };
-              case "SHATABDI":
+              case "TRIP_COMPLETED":
                 return {
-                  badge: "bg-amber-950/80 text-amber-300 border-amber-500/50",
-                  tag: "WAP-7 Premier",
-                  accent: "from-amber-600/30 to-yellow-500/20",
-                  border: isSelected
-                    ? "border-amber-400 shadow-amber-500/20"
-                    : "border-rail-700/80 hover:border-amber-600/50",
+                  text: "🏁 ARRIVED (At SBC)",
+                  style: "bg-slate-900/90 text-slate-400 border-slate-700",
                 };
-              case "SUPERFAST":
+              case "NOT_STARTED_YET":
                 return {
-                  badge: "bg-purple-950/80 text-purple-300 border-purple-500/50",
-                  tag: "LHB Superfast",
-                  accent: "from-purple-600/30 to-indigo-500/20",
-                  border: isSelected
-                    ? "border-purple-400 shadow-purple-500/20"
-                    : "border-rail-700/80 hover:border-purple-600/50",
-                };
-              case "EXPRESS":
-                return {
-                  badge: "bg-emerald-950/80 text-emerald-300 border-emerald-500/50",
-                  tag: "Express",
-                  accent: "from-emerald-600/30 to-teal-500/20",
-                  border: isSelected
-                    ? "border-emerald-400 shadow-emerald-500/20"
-                    : "border-rail-700/80 hover:border-emerald-600/50",
-                };
-              case "MEMU":
-                return {
-                  badge: "bg-orange-950/80 text-orange-300 border-orange-500/50",
-                  tag: "All-Stop EMU",
-                  accent: "from-orange-600/30 to-amber-500/20",
-                  border: isSelected
-                    ? "border-orange-400 shadow-orange-500/20"
-                    : "border-rail-700/80 hover:border-orange-600/50",
-                };
-              case "FREIGHT_BOXN":
-                return {
-                  badge: "bg-slate-900 text-slate-300 border-slate-600",
-                  tag: "Cargo Rake",
-                  accent: "from-slate-700/30 to-slate-800/20",
-                  border: isSelected
-                    ? "border-slate-300 shadow-slate-500/20"
-                    : "border-rail-700/80 hover:border-slate-500",
+                  text: `🕒 UPCOMING (${train.scheduledDep})`,
+                  style: "bg-indigo-950/90 text-indigo-300 border-indigo-600/40",
                 };
             }
           };
 
-          const theme = getRakeTheme();
+          const status = getStatusBadge();
 
           return (
             <button
@@ -122,43 +94,50 @@ export function TrainSelector({
               }}
               className={`group text-left p-3.5 rounded-2xl border transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
                 isSelected
-                  ? `bg-gradient-to-b ${theme.accent} bg-rail-850 shadow-xl ${theme.border} ring-1 ring-white/10 scale-[1.02]`
-                  : `bg-rail-850/80 hover:bg-rail-800/90 ${theme.border}`
+                  ? "bg-rail-800 border-cyan-400 shadow-xl ring-2 ring-cyan-400/40 scale-[1.02]"
+                  : "bg-rail-850/80 hover:bg-rail-800/90 border-rail-700/80"
               }`}
             >
-              {/* Header: Number & Tag */}
+              {/* Header: Number & Live Operating State */}
               <div className="flex items-center justify-between gap-1">
                 <span className="text-xs font-mono font-bold text-white tracking-wide">
                   #{train.id}
                 </span>
                 <span
-                  className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${theme.badge}`}
+                  className={`text-[9px] font-mono px-2 py-0.5 rounded-full border tracking-wide ${status.style}`}
                 >
-                  {theme.tag}
+                  {status.text}
                 </span>
               </div>
 
               {/* Train Name */}
               <div className="my-2">
-                <div className="font-bold text-sm text-slate-100 group-hover:text-white line-clamp-1">
+                <div className="font-bold text-sm text-slate-100 group-hover:text-white line-clamp-1 font-sans">
                   {train.name}
                 </div>
                 <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
                   <span>
                     {train.scheduledDep} ➔ {train.scheduledArr}
                   </span>
+                  <span className="text-cyan-400 font-semibold">
+                    {train.scheduledStops.length === 2 ? "Non-Stop" : `${train.scheduledStops.length} Stops`}
+                  </span>
                 </div>
               </div>
 
-              {/* Footer: Halts & Speed */}
+              {/* Footer: Live Telemetry Indicator */}
               <div className="pt-2 border-t border-rail-700/60 flex items-center justify-between text-[11px] font-mono">
                 <span className="text-slate-400">
-                  {train.scheduledStops.length === 2
-                    ? "⚡ Non-Stop"
-                    : `🛑 ${train.scheduledStops.length} Halts`}
+                  {resolved.operatingState === "RUNNING_ON_TRACK" ? (
+                    <span className="text-emerald-400 font-bold">{resolved.currentSpeedKmph} km/h</span>
+                  ) : resolved.operatingState === "TRIP_COMPLETED" ? (
+                    <span className="text-slate-400">Trip Finished</span>
+                  ) : (
+                    <span className="text-indigo-300">At Mysuru (MYS)</span>
+                  )}
                 </span>
-                <span className="text-cyan-400 font-semibold">
-                  {train.sectionalMpsKmph} km/h
+                <span className="text-slate-500 text-[10px]">
+                  {train.type.replace("_", " ")}
                 </span>
               </div>
             </button>
