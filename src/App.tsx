@@ -11,6 +11,7 @@ import { TrainSelector } from "./components/TrainSelector";
 import { DelayIntelligenceDeck } from "./components/DelayIntelligenceDeck";
 import { CorridorPhysicalSpine } from "./components/CorridorPhysicalSpine";
 import { CorridorDelayHotspots } from "./components/CorridorDelayHotspots";
+import { YesterdayTrafficAnalysis } from "./components/YesterdayTrafficAnalysis";
 import { Flame } from "lucide-react";
 
 export function App() {
@@ -70,7 +71,7 @@ export function App() {
       />
 
       {/* 2. Main Mission Control Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-7">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
         
         {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
         <TrainSelector
@@ -100,6 +101,14 @@ export function App() {
           selectedTrain={resolvedLive.config}
         />
 
+        {/* Yesterday's Corridor Traffic & Delay Gap Forensics Deck */}
+        <YesterdayTrafficAnalysis
+          onSelectTrainForLiveView={(trainNo) => {
+            setSelectedTrainId(trainNo);
+            window.scrollTo({ top: 120, behavior: "smooth" });
+          }}
+        />
+
         {/* Delay Hotspot Analysis Section (Collapsible) */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -110,8 +119,8 @@ export function App() {
               <Flame className="w-4 h-4 text-rose-400" />
               <span>
                 {showHotspots
-                  ? "Hide Delay Generation Hotspots"
-                  : "🔥 View Where Most Delays Are Created (Hotspot Analytics)"}
+                  ? "Hide Detailed Hotspot Calculations"
+                  : "🔥 View Infrastructure Bottleneck Technical Specifications"}
               </span>
             </button>
             <span className="text-xs text-slate-500 font-mono hidden sm:inline">
