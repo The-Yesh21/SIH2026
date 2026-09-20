@@ -4,12 +4,6 @@ import {
   Sliders,
   Radio,
   Clock,
-  Sun,
-  Moon,
-  Sunrise,
-  RotateCcw,
-  Play,
-  Pause,
 } from "lucide-react";
 import { formatClockMinutes } from "../lib/rail/timeResolver";
 
@@ -55,11 +49,6 @@ export function Header({
 
   const hasActiveDisruptions = injectedDelay > 0 || weather !== "CLEAR";
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsRealTimeSynced(false);
-    setActiveClockMinutes(Number(e.target.value));
-  };
-
   const handlePresetClick = (mins: number) => {
     setIsRealTimeSynced(false);
     setActiveClockMinutes(mins);
@@ -73,70 +62,69 @@ export function Header({
   };
 
   return (
-    <header className="border-b border-rail-700/80 bg-rail-900/95 backdrop-blur-xl sticky top-0 z-50">
+    <header className="bg-ink/95 backdrop-blur-md border-b border-graphite sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
         {/* Left: Branding & Corridor Identity */}
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500/20 via-indigo-500/20 to-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-500/10 shrink-0">
+          <div className="h-11 w-11 flex items-center justify-center text-chalk shrink-0">
             <TrainTrack className="h-6 w-6 stroke-[2.2]" />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-extrabold tracking-tight text-white font-sans">
+              <h1 className="text-lg font-heading font-bold text-chalk">
                 RailRakshak
               </h1>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-950/90 text-cyan-300 border border-cyan-500/40 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                Live COA-AI
-              </span>
             </div>
-            <p className="text-xs text-slate-400 font-medium">
-              SWR Corridor · <strong className="text-slate-200">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km
+            <p className="text-sm font-body text-steel">
+              SWR Corridor · <strong className="text-chalk">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km
             </p>
           </div>
         </div>
 
         {/* Center: Dynamic Real-Time Time Scrubber */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-rail-950 p-2 rounded-2xl border border-rail-700 font-mono text-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-surface p-2 rounded-lg border border-graphite font-data text-xs">
           {/* Time Display & Real-Time Sync Toggle */}
           <div className="flex items-center justify-between sm:justify-start gap-2 px-2">
-            <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-sm bg-rail-900 px-3 py-1 rounded-xl border border-rail-700/80">
-              <Clock className="w-4 h-4 text-cyan-400" />
+            <div className="flex items-center gap-1.5 text-chalk font-data font-semibold text-sm">
+              <Clock className="w-4 h-4" />
               <span>{formatClockMinutes(activeClockMinutes)}</span>
             </div>
 
             <button
               onClick={handleSyncRealTime}
-              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all ${
+              className={`px-2.5 py-1 rounded-md text-[11px] font-bold border transition-all ${
                 isRealTimeSynced
-                  ? "bg-emerald-600/30 border-emerald-500 text-emerald-300 shadow-sm"
-                  : "bg-rail-900 border-rail-700 text-slate-400 hover:text-slate-200"
+                  ? "bg-signal-green-muted border-signal-green text-signal-green"
+                  : "bg-surface-raised border-graphite text-steel"
               }`}
             >
-              {isRealTimeSynced ? "🟢 Real-Time Clock (Now)" : "Sync Real-Time"}
+              {isRealTimeSynced ? "Real-Time Clock (Now)" : "Sync Real-Time"}
             </button>
           </div>
 
           {/* Quick Scrub Presets */}
-          <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-rail-800 pt-2 sm:pt-0 sm:pl-2.5">
+          <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-graphite pt-2 sm:pt-0 sm:pl-2.5">
             {[
               { label: "Night (01:25 AM)", mins: 85 },
               { label: "Morning (07:30 AM)", mins: 450 },
               { label: "Midday (12:54 PM)", mins: 774 },
               { label: "Evening (19:00 PM)", mins: 1140 },
-            ].map((p) => (
-              <button
-                key={p.label}
-                onClick={() => handlePresetClick(p.mins)}
-                className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all whitespace-nowrap ${
-                  !isRealTimeSynced && Math.abs(activeClockMinutes - p.mins) < 30
-                    ? "bg-cyan-600 text-white font-bold shadow-sm"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-rail-900"
-                }`}
-              >
-                {p.label.split(" ")[0]}
-              </button>
-            ))}
+            ].map((p) => {
+              const isActive = !isRealTimeSynced && Math.abs(activeClockMinutes - p.mins) < 30;
+              return (
+                <button
+                  key={p.label}
+                  onClick={() => handlePresetClick(p.mins)}
+                  className={`px-2 py-1 rounded-md transition-all whitespace-nowrap ${
+                    isActive
+                      ? "bg-surface-overlay text-chalk font-semibold"
+                      : "text-steel hover:text-chalk hover:bg-surface-raised"
+                  }`}
+                >
+                  {p.label.split(" ")[0]}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -144,47 +132,42 @@ export function Header({
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowScenarioBar(!showScenarioBar)}
-            className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${
+            className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 ${
               showScenarioBar
-                ? "bg-cyan-600 border-cyan-400 text-white shadow-lg shadow-cyan-500/25 ring-1 ring-cyan-400"
-                : hasActiveDisruptions
-                ? "bg-amber-500/20 border-amber-500/50 text-amber-300 hover:bg-amber-500/30"
-                : "bg-rail-800 hover:bg-rail-750 border-rail-700 text-slate-200 hover:border-slate-500"
+                ? "bg-signal-amber-muted border-signal-amber text-signal-amber"
+                : "bg-surface-raised hover:bg-surface-overlay text-chalk-dim border-graphite"
             }`}
           >
             <Sliders className="w-3.5 h-3.5 transition-transform group-hover:rotate-45" />
             <span>{showScenarioBar ? "Close Simulator" : "What-If Simulator"}</span>
-            {hasActiveDisruptions && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            )}
           </button>
         </div>
       </div>
 
       {/* Primary Section Switcher Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-2 flex items-center gap-2 font-mono text-xs border-t border-rail-800/60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2">
         <button
           onClick={() => setActiveTab("COCKPIT")}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-xl font-bold transition-all duration-200 ${
+          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 ${
             activeTab === "COCKPIT"
-              ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/25 border border-cyan-400"
-              : "text-slate-400 hover:text-slate-200 hover:bg-rail-800/80 border border-transparent"
+              ? "text-chalk border-b-2 border-chalk"
+              : "text-steel hover:text-chalk border-b-2 border-transparent"
           }`}
         >
-          <Radio className="w-3.5 h-3.5 text-cyan-300" />
-          <span>Live Corridor Cockpit &amp; Track Spine</span>
+          <Radio className="w-4 h-4" />
+          <span>Corridor Intelligence & Delay Prediction</span>
         </button>
 
         <button
           onClick={() => setActiveTab("ANALYSIS")}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-xl font-bold transition-all duration-200 ${
+          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 ${
             activeTab === "ANALYSIS"
-              ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/25 border border-cyan-400"
-              : "text-slate-400 hover:text-slate-200 hover:bg-rail-800/80 border border-transparent"
+              ? "text-chalk border-b-2 border-chalk"
+              : "text-steel hover:text-chalk border-b-2 border-transparent"
           }`}
         >
-          <Sliders className="w-3.5 h-3.5 text-cyan-300" />
-          <span>📊 Delay Analysis &amp; All Rails Matrix</span>
+          <Sliders className="w-4 h-4" />
+          <span>Delay Analysis & All Rails Matrix</span>
         </button>
       </div>
     </header>

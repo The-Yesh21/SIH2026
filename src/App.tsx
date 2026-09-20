@@ -62,7 +62,7 @@ export function App() {
   }, [resolvedLive.config, injectedDelay, environment]);
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950 rail-grid-pattern">
+    <div className="min-h-screen bg-ink text-chalk flex flex-col font-body selection:bg-signal-green/30 selection:text-chalk panel-grid">
       {/* 1. Masthead Dispatcher Navigation with Live Real-Time Clock Scrubber & View Tabs */}
       <Header
         showScenarioBar={showScenarioBar}
@@ -149,22 +149,22 @@ export function App() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setShowHotspots(!showHotspots)}
-              className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-rail-850 hover:bg-rail-800 border border-rail-700 text-xs font-mono font-bold text-amber-300 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-surface-raised hover:bg-surface-overlay border border-graphite text-xs font-data font-semibold text-signal-amber transition-colors"
             >
-              <Flame className="w-4 h-4 text-rose-400" />
+              <Flame className="w-4 h-4 text-signal-red" />
               <span>
                 {showHotspots
                   ? "Hide Detailed Hotspot Calculations"
-                  : "🔥 View Infrastructure Bottleneck Technical Specifications"}
+                  : "View Infrastructure Bottleneck Technical Specifications"}
               </span>
             </button>
-            <span className="text-xs text-slate-500 font-mono hidden sm:inline">
+            <span className="text-xs text-steel font-data hidden sm:inline">
               SWR Mysore–Bangalore Division
             </span>
           </div>
 
           {showHotspots && (
-            <div className="animate-slide-down">
+            <div className="animate-fade-in">
               <CorridorDelayHotspots
                 environment={environment}
                 injectedDelay={injectedDelay}
@@ -175,8 +175,8 @@ export function App() {
       </main>
 
       {/* Footer Branding & Disclaimer */}
-      <footer className="border-t border-rail-800 bg-rail-950/80 py-4 px-4 sm:px-6 text-center text-xs font-mono text-slate-500">
-        RailRakshak v2.0 · SWR Mysore–Bangalore Division 24-Hour Real-Time Clock Synchronization &amp; Dynamic Live Status Engine
+      <footer className="border-t border-graphite bg-ink py-4 px-6 text-center text-xs font-data text-steel">
+        RailRakshak v2.0 · SWR Mysore–Bangalore Division · Corridor Delay Intelligence &amp; Infrastructure Factor Prediction Engine
       </footer>
     </div>
   );

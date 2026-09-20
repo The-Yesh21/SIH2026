@@ -44,142 +44,105 @@ export function YesterdayTrafficAnalysis({
   const getCategoryBadge = (cat: DelayGapCategory) => {
     switch (cat) {
       case "HEADWAY_WAKE":
-        return {
-          label: "Headway Wake Gap",
-          style: "bg-amber-950/80 text-amber-300 border-amber-500/40",
-        };
+        return { label: "Headway Wake Gap", style: "text-signal-amber" };
       case "SBC_THROAT_INTERLOCKING":
-        return {
-          label: "SBC Throat Interlocking",
-          style: "bg-rose-950/80 text-rose-300 border-rose-500/40",
-        };
+        return { label: "SBC Throat Interlocking", style: "text-signal-red" };
       case "DWELL_TIME_OVERRUN":
-        return {
-          label: "Dwell Time Surge",
-          style: "bg-orange-950/80 text-orange-300 border-orange-500/40",
-        };
+        return { label: "Dwell Time Surge", style: "text-signal-amber" };
       case "PSR_SPEED_RESTRICTION":
-        return {
-          label: "PSR Speed Drag",
-          style: "bg-yellow-950/80 text-yellow-300 border-yellow-500/40",
-        };
+        return { label: "PSR Speed Drag", style: "text-signal-amber" };
       case "LOOP_LINE_STABLING":
-        return {
-          label: "Loop Siding Detention",
-          style: "bg-purple-950/80 text-purple-300 border-purple-500/40",
-        };
+        return { label: "Loop Siding Detention", style: "text-steel-light" };
       case "RAKE_TURNAROUND":
-        return {
-          label: "Yard Turnaround Delay",
-          style: "bg-blue-950/80 text-blue-300 border-blue-500/40",
-        };
+        return { label: "Yard Turnaround Delay", style: "text-steel-light" };
     }
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 animate-fade-in selection:bg-signal-green/30 selection:text-chalk">
       {/* 1. Header & Context Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-rail-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-graphite pb-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-              <Activity className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-                Yesterday Corridor Traffic &amp; Delay Gap Forensics
-              </h2>
-              <p className="text-xs text-slate-400 font-mono">
-                {summary.reportDate} · Comprehensive 138.25 km Fleet Log Analysis &amp; Bottleneck Attribution
-              </p>
-            </div>
-          </div>
+          <h2 className="text-lg font-heading font-semibold text-chalk">
+            Yesterday Corridor Traffic &amp; Delay Gap Forensics
+          </h2>
+          <p className="text-xs text-steel font-body mt-1">
+            {summary.reportDate} · Comprehensive 138.25 km Fleet Log Analysis &amp; Bottleneck Attribution
+          </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="px-3 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            +{summary.recoverableMinutesWithAiDispatch}m Recoverable via AI
+        <div className="flex items-center text-xs font-body">
+          <span className="px-3 py-1.5 rounded-lg bg-surface-raised border border-graphite text-signal-green font-medium">
+            +<span className="font-data">{summary.recoverableMinutesWithAiDispatch}</span>m Recoverable via AI
           </span>
         </div>
       </div>
 
       {/* 2. Key Forensic Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="bg-rail-900/90 border border-rail-750 p-4 rounded-2xl flex flex-col justify-between">
-          <span className="text-[11px] font-mono text-slate-400 uppercase font-bold flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" /> Fleet Punctuality
-          </span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-surface border border-graphite rounded-xl p-4 flex flex-col justify-between">
+          <span className="text-xs font-body text-steel">Fleet Punctuality</span>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-white">
+            <span className="text-2xl font-data font-bold text-chalk">
               {summary.averageFleetPunctualityPercent}%
             </span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-steel font-body">
               ({summary.onTimeServicesCount}/{summary.totalServicesOperated} on-time)
             </span>
           </div>
-          <span className="text-[10px] text-slate-500 mt-2 font-mono">
+          <span className="text-xs text-steel mt-2 font-body">
             SWR corridor punctuality standard: &gt;85%
           </span>
         </div>
 
-        <div className="bg-rail-900/90 border border-rail-750 p-4 rounded-2xl flex flex-col justify-between">
-          <span className="text-[11px] font-mono text-slate-400 uppercase font-bold flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-rose-400" /> Total Delay Lost
-          </span>
+        <div className="bg-surface border border-graphite rounded-xl p-4 flex flex-col justify-between">
+          <span className="text-xs font-body text-steel">Total Delay Lost</span>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-rose-400">
+            <span className="text-2xl font-data font-bold text-signal-red">
               {summary.totalCorridorDelayMinutesLost}m
             </span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-steel font-body">
               across 10 rakes
             </span>
           </div>
-          <span className="text-[10px] text-slate-500 mt-2 font-mono">
+          <span className="text-xs text-steel mt-2 font-body">
             Average delay per delayed rake: 23.6 min
           </span>
         </div>
 
-        <div className="bg-rail-900/90 border border-rail-750 p-4 rounded-2xl flex flex-col justify-between">
-          <span className="text-[11px] font-mono text-slate-400 uppercase font-bold flex items-center gap-1.5">
-            <AlertOctagon className="w-4 h-4 text-amber-400" /> #1 Choke Point
-          </span>
+        <div className="bg-surface border border-graphite rounded-xl p-4 flex flex-col justify-between">
+          <span className="text-xs font-body text-steel">#1 Choke Point</span>
           <div className="mt-2">
-            <div className="text-sm font-bold text-slate-200 line-clamp-1 font-sans">
+            <div className="text-sm font-heading font-semibold text-chalk line-clamp-1">
               SBC Outer Throat Interlocking
             </div>
-            <div className="text-xs font-mono text-amber-400 mt-0.5">
-              48 min loss (Nayandahalli–SBC)
+            <div className="text-xs font-body text-signal-amber mt-0.5">
+              <span className="font-data">48</span> min loss (Nayandahalli–SBC)
             </div>
           </div>
-          <span className="text-[10px] text-slate-500 mt-2 font-mono">
+          <span className="text-xs text-steel mt-2 font-body">
             Platform allocation &amp; shunting conflicts
           </span>
         </div>
 
-        <div className="bg-rail-900/90 border border-rail-750 p-4 rounded-2xl flex flex-col justify-between">
-          <span className="text-[11px] font-mono text-slate-400 uppercase font-bold flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-orange-400" /> Top Delay Category
-          </span>
+        <div className="bg-surface border border-graphite rounded-xl p-4 flex flex-col justify-between">
+          <span className="text-xs font-body text-steel">Top Delay Category</span>
           <div className="mt-2">
-            <div className="text-sm font-bold text-slate-200 line-clamp-1 font-sans">
+            <div className="text-sm font-heading font-semibold text-chalk line-clamp-1">
               Commuter Dwells &amp; Wake
             </div>
-            <div className="text-xs font-mono text-orange-400 mt-0.5">
-              53 min cumulative loss
+            <div className="text-xs font-body text-signal-amber mt-0.5">
+              <span className="font-data">53</span> min cumulative loss
             </div>
           </div>
-          <span className="text-[10px] text-slate-500 mt-2 font-mono">
+          <span className="text-xs text-steel mt-2 font-body">
             Mandya &amp; Kengeri passenger surges
           </span>
         </div>
       </div>
 
       {/* 3. Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-rail-950 p-2.5 rounded-2xl border border-rail-800 text-xs font-mono">
-        <div className="flex items-center gap-2 text-slate-400 px-2 font-semibold">
-          <Filter className="w-3.5 h-3.5 text-cyan-400" /> Filter Gaps:
-        </div>
+      <div className="flex flex-wrap items-center gap-3 bg-surface-raised p-2 border border-graphite rounded-lg">
         <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: "ALL", label: `All Services (${YESTERDAY_FLEET_RUN_DATA.length})` },
@@ -195,10 +158,10 @@ export function YesterdayTrafficAnalysis({
               <button
                 key={btn.id}
                 onClick={() => setSelectedCategoryFilter(btn.id)}
-                className={`px-3 py-1 rounded-xl text-[11px] font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-md text-sm font-body transition-all ${
                   isAct
-                    ? "bg-cyan-600/30 text-cyan-300 border border-cyan-400 font-bold shadow-sm"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-rail-900 border border-transparent"
+                    ? "bg-surface-overlay text-chalk font-semibold border-b-2 border-chalk"
+                    : "bg-surface-raised hover:bg-surface-overlay text-steel hover:text-chalk"
                 }`}
               >
                 {btn.label}
@@ -217,75 +180,71 @@ export function YesterdayTrafficAnalysis({
           return (
             <div
               key={run.trainNumber}
-              className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-                isExpanded
-                  ? "bg-rail-850/95 border-cyan-500/50 shadow-xl ring-1 ring-cyan-500/30"
-                  : "bg-rail-900/80 hover:bg-rail-850/80 border-rail-800"
+              className={`bg-surface border rounded-xl overflow-hidden transition-colors ${
+                isExpanded ? "border-chalk/30" : "border-graphite"
               }`}
             >
               {/* Card Header Row */}
               <div
                 onClick={() => setExpandedTrainNo(isExpanded ? null : run.trainNumber)}
-                className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 cursor-pointer select-none"
+                className="p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 cursor-pointer select-none"
               >
                 {/* Left: Train Identity & Punctuality */}
-                <div className="flex items-start sm:items-center gap-3.5">
-                  <div className="px-3 py-1 rounded-xl bg-rail-950 border border-rail-700 font-mono font-bold text-xs text-cyan-300 shrink-0">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="font-data text-sm text-chalk shrink-0">
                     #{run.trainNumber}
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-bold text-white font-sans">
+                      <h3 className="text-base font-heading font-semibold text-chalk">
                         {run.trainName}
                       </h3>
-                      <span className="text-xs text-slate-400 font-mono">
+                      <span className="text-xs text-steel font-body">
                         ({run.serviceType})
                       </span>
                     </div>
-                    <div className="text-xs text-slate-400 font-mono mt-0.5 flex items-center gap-2">
-                      <span>Scheduled: {run.scheduledDep} ➔ {run.scheduledArr}</span>
+                    <div className="text-xs text-steel font-body mt-0.5 flex items-center gap-2">
+                      <span>Scheduled: <span className="font-data">{run.scheduledDep}</span> ➔ <span className="font-data">{run.scheduledArr}</span></span>
                       <span>·</span>
-                      <span className="text-slate-300">
-                        Actual Run: <strong className="text-white">{run.actualDep} ➔ {run.actualArr}</strong>
+                      <span className="text-chalk-dim">
+                        Actual: <span className="font-data text-chalk">{run.actualDep}</span> ➔ <span className="font-data text-chalk">{run.actualArr}</span>
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Delay Metric, Gap Tag & Expand Chevron */}
-                <div className="flex flex-wrap items-center justify-between lg:justify-end gap-3.5 pt-3 lg:pt-0 border-t lg:border-t-0 border-rail-800">
+                <div className="flex flex-wrap items-center justify-between lg:justify-end gap-4 pt-3 lg:pt-0 border-t lg:border-t-0 border-graphite">
                   {/* Gap Category Badge */}
-                  <span
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${badge.style}`}
-                  >
+                  <span className={`text-xs font-body font-medium ${badge.style}`}>
                     {badge.label}
                   </span>
 
                   {/* Net Delay Status */}
                   <div className="text-right">
                     <div
-                      className={`text-sm font-mono font-extrabold ${
+                      className={`text-sm font-data font-semibold ${
                         run.totalDelayMin === 0
-                          ? "text-emerald-400"
+                          ? "text-signal-green"
                           : run.totalDelayMin < 10
-                          ? "text-amber-400"
-                          : "text-rose-400"
+                          ? "text-signal-amber"
+                          : "text-signal-red"
                       }`}
                     >
                       {run.totalDelayMin === 0
                         ? "On Time"
                         : `+${run.totalDelayMin} min Late`}
                     </div>
-                    <div className="text-[11px] text-slate-500 font-mono">
-                      {run.punctualityScorePercent}% Score
+                    <div className="text-xs text-steel font-body">
+                      <span className="font-data">{run.punctualityScorePercent}</span>% Score
                     </div>
                   </div>
 
-                  <button className="p-1 rounded-lg bg-rail-800 text-slate-400 hover:text-white">
+                  <button className="text-steel hover:text-chalk">
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4" />
+                      <ChevronUp className="w-5 h-5" />
                     ) : (
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown className="w-5 h-5" />
                     )}
                   </button>
                 </div>
@@ -293,49 +252,47 @@ export function YesterdayTrafficAnalysis({
 
               {/* Collapsible Deep-Dive Details */}
               {isExpanded && (
-                <div className="px-4 sm:px-6 pb-6 pt-2 border-t border-rail-800/80 space-y-5 bg-rail-950/60">
+                <div className="p-5 border-t border-graphite bg-surface-raised space-y-5">
                   
                   {/* Primary Root Cause Callout */}
-                  <div className="p-4 rounded-2xl bg-rail-900/90 border border-rail-750 space-y-2">
+                  <div className="p-4 rounded-lg bg-surface border border-graphite space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-bold text-amber-300 uppercase flex items-center gap-1.5">
-                        <AlertTriangle className="w-4 h-4 text-amber-400" />
-                        Identified Delay Gap: {run.primaryGapTitle}
+                      <span className="text-sm font-body font-medium text-signal-amber">
+                        Delay Gap: {run.primaryGapTitle}
                       </span>
-                      <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-xs font-body text-steel-light">
                         {run.bottleneckHotspot}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    <p className="text-sm text-chalk-dim font-body leading-relaxed">
                       {run.primaryGapDescription}
                     </p>
                   </div>
 
                   {/* Sectional Delay Waterfall */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-mono uppercase text-slate-400 font-bold">
-                      Station-by-Station Delay Waterfall (Where Minutes Were Lost)
+                    <h4 className="text-sm font-heading font-semibold text-chalk">
+                      Station-by-Station Delay Waterfall
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {run.sectionalBreakdown.map((sec, idx) => (
                         <div
                           key={idx}
-                          className="bg-rail-900 p-3 rounded-xl border border-rail-800 flex flex-col justify-between space-y-2 text-xs"
+                          className="bg-surface p-3 rounded-lg border border-graphite flex flex-col justify-between space-y-2"
                         >
-                          <div className="flex items-center justify-between font-mono">
-                            <span className="font-bold text-slate-200">
+                          <div className="flex items-center justify-between">
+                            <span className="font-body font-medium text-chalk text-sm">
                               {sec.sectionName}
                             </span>
-                            <span className="px-2 py-0.5 rounded-md font-bold text-rose-400 bg-rose-950/50 border border-rose-500/30">
+                            <span className="font-data font-semibold text-signal-red text-sm">
                               +{sec.delayIncurredMin}m
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-400 font-sans line-clamp-2">
+                          <p className="text-xs text-steel font-body line-clamp-2">
                             {sec.rootCause}
                           </p>
-                          <div className="text-[10px] text-slate-500 font-mono">
-                            Chainage: {sec.chainageKm} km
+                          <div className="text-xs text-steel-light font-body">
+                            Chainage: <span className="font-data">{sec.chainageKm}</span> km
                           </div>
                         </div>
                       ))}
@@ -343,13 +300,12 @@ export function YesterdayTrafficAnalysis({
                   </div>
 
                   {/* AI Dispatcher Actionable Recommendation */}
-                  <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-xs">
+                  <div className="p-4 rounded-lg bg-surface border-l-3 border-signal-green flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="space-y-1">
-                      <div className="font-bold text-cyan-300 flex items-center gap-1.5">
-                        <Zap className="w-4 h-4 text-cyan-400" />
+                      <div className="font-body font-medium text-chalk text-sm">
                         AI Dispatcher Dynamic Fix for Today:
                       </div>
-                      <p className="text-slate-200 font-sans text-xs">
+                      <p className="text-chalk-dim font-body text-sm">
                         {run.aiDispatcherRecommendation}
                       </p>
                     </div>
@@ -357,10 +313,9 @@ export function YesterdayTrafficAnalysis({
                     {onSelectTrainForLiveView && (
                       <button
                         onClick={() => onSelectTrainForLiveView(run.trainNumber)}
-                        className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shrink-0 flex items-center gap-1.5 shadow-md shadow-cyan-500/20 transition-all"
+                        className="bg-surface-overlay hover:bg-graphite-light text-chalk font-body text-xs font-medium rounded-lg px-3 py-1.5 border border-graphite shrink-0 transition-colors"
                       >
-                        <span>Live Track Train #{run.trainNumber}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        Live Track #{run.trainNumber}
                       </button>
                     )}
                   </div>

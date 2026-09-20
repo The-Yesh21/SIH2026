@@ -5,28 +5,7 @@ import {
 } from "../lib/rail/types";
 import { EnvironmentalConditions, DEFAULT_ENVIRONMENT } from "../lib/rail/restrictions";
 import { resolveTrainAtClockTime, formatClockMinutes } from "../lib/rail/timeResolver";
-import {
-  Clock,
-  Sparkles,
-  AlertTriangle,
-  Radio,
-  ShieldAlert,
-  Sliders,
-  CloudSun,
-  CloudRain,
-  CloudFog,
-  TrendingDown,
-  TrendingUp,
-  RotateCcw,
-  Layers,
-  Wrench,
-  Users,
-  MapPin,
-  Satellite,
-  Navigation,
-  Gauge,
-  CheckCircle2,
-} from "lucide-react";
+import { MapPin } from "lucide-react";
 
 interface DelayIntelligenceDeckProps {
   prediction: DynamicPredictionResult;
@@ -54,46 +33,39 @@ export function DelayIntelligenceDeck({
   const isDelayed = totalDynamicDelayMin > 0;
   const progressPercent = resolved.progressPercent;
 
-  // Calculated approximate GPS coordinates for current position
-  const frac = Math.min(1, Math.max(0, resolved.currentLocationKm / 138.25));
-  const curLat = (12.3168 + (12.9784 - 12.3168) * frac).toFixed(4);
-  const curLng = (76.6499 + (77.5696 - 76.6499) * frac).toFixed(4);
 
   return (
     <section className="space-y-6">
-      {/* 1. Tactical What-If Disruption Simulator (Smooth Slide Down) */}
+      {/* 1. Tactical What-If Disruption Simulator */}
       {showScenarioBar && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-rail-850 border border-cyan-500/40 shadow-2xl space-y-5 animate-slide-down">
+        <div className="bg-surface border border-graphite rounded-xl p-5 space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-cyan-400" />
-              Tactical Disruption &amp; Scenario Simulator (What-If Engine)
+            <h3 className="text-sm font-heading font-semibold text-chalk">
+              Tactical disruption & scenario simulator
             </h3>
             <button
               onClick={() => {
                 setInjectedDelay(0);
                 setEnvironment(DEFAULT_ENVIRONMENT);
               }}
-              className="flex items-center gap-1 text-xs text-slate-400 hover:text-cyan-300 transition-colors font-mono"
+              className="text-xs font-body text-steel hover:text-chalk transition-colors"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Reset All Scenarios
+              Reset scenarios
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Weather selector */}
-            <div className="bg-rail-950 p-4 rounded-2xl border border-rail-700 space-y-2.5">
-              <label className="text-slate-300 font-semibold block">
-                Atmospheric &amp; Track Weather
+            <div className="space-y-2.5">
+              <label className="font-body text-sm text-chalk-dim block">
+                Atmospheric & track weather
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: "CLEAR", label: "Clear Track", icon: CloudSun },
-                  { id: "HEAVY_MONSOON", label: "Monsoon (60k)", icon: CloudRain },
-                  { id: "DENSE_FOG", label: "Fog (30k)", icon: CloudFog },
+                  { id: "CLEAR", label: "Clear track" },
+                  { id: "HEAVY_MONSOON", label: "Monsoon (60k)" },
+                  { id: "DENSE_FOG", label: "Fog (30k)" },
                 ].map((w) => {
-                  const Icon = w.icon;
                   const isAct = environment.weather === w.id;
                   return (
                     <button
@@ -104,14 +76,13 @@ export function DelayIntelligenceDeck({
                           weather: w.id as any,
                         }))
                       }
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all duration-200 ${
+                      className={`flex flex-col items-center justify-center py-2 px-1.5 rounded-lg border text-center transition-all duration-200 ${
                         isAct
-                          ? "bg-cyan-600/25 border-cyan-400 text-cyan-200 font-bold shadow-md shadow-cyan-500/20"
-                          : "bg-rail-900 border-rail-700/80 text-slate-400 hover:text-slate-200"
+                          ? "bg-surface-overlay border-chalk/40 text-chalk font-semibold"
+                          : "bg-surface-raised border-graphite text-chalk-dim hover:bg-surface-overlay"
                       }`}
                     >
-                      <Icon className="w-4 h-4 mb-1" />
-                      <span className="text-[11px] font-medium">{w.label}</span>
+                      <span className="text-xs font-body">{w.label}</span>
                     </button>
                   );
                 })}
@@ -119,13 +90,13 @@ export function DelayIntelligenceDeck({
             </div>
 
             {/* Delay Injection */}
-            <div className="bg-rail-950 p-4 rounded-2xl border border-rail-700 space-y-2.5">
+            <div className="space-y-2.5">
               <div className="flex justify-between items-center">
-                <label className="text-slate-300 font-semibold">
-                  Inject Line Incident Delay
+                <label className="font-body text-sm text-chalk-dim">
+                  Inject line incident delay
                 </label>
-                <span className="font-mono font-bold text-amber-400 text-sm">
-                  +{injectedDelay} min
+                <span className="font-data text-sm text-signal-amber">
+                  +{injectedDelay}m
                 </span>
               </div>
               <input
@@ -135,17 +106,17 @@ export function DelayIntelligenceDeck({
                 step="5"
                 value={injectedDelay}
                 onChange={(e) => setInjectedDelay(Number(e.target.value))}
-                className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-rail-800 rounded-lg"
+                className="w-full accent-signal-amber cursor-pointer h-1.5 bg-graphite rounded-lg"
               />
-              <p className="text-[11px] text-slate-400 font-sans">
+              <p className="text-xs text-steel font-body">
                 Simulate cattle runover, unexpected crossing detention, or locomotive throttle slip.
               </p>
             </div>
 
             {/* Commuter Rush Surge */}
-            <div className="bg-rail-950 p-4 rounded-2xl border border-rail-700 space-y-2.5">
-              <label className="text-slate-300 font-semibold block">
-                Suburban Commuter Rush Hour
+            <div className="space-y-2.5">
+              <label className="font-body text-sm text-chalk-dim block">
+                Suburban commuter rush hour
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -155,10 +126,10 @@ export function DelayIntelligenceDeck({
                       commuterSurgeMultiplier: 1.0,
                     }))
                   }
-                  className={`py-2 px-3 rounded-xl border text-center font-medium transition-all ${
+                  className={`py-2 px-3 rounded-lg border text-center text-xs transition-all ${
                     environment.commuterSurgeMultiplier === 1.0
-                      ? "bg-cyan-600/25 border-cyan-400 text-cyan-200 font-bold shadow-md shadow-cyan-500/20"
-                      : "bg-rail-900 border-rail-700 text-slate-400 hover:text-slate-200"
+                      ? "bg-surface-overlay border-chalk/40 text-chalk font-semibold"
+                      : "bg-surface-raised border-graphite text-chalk-dim hover:bg-surface-overlay"
                   }`}
                 >
                   Off-Peak
@@ -170,13 +141,13 @@ export function DelayIntelligenceDeck({
                       commuterSurgeMultiplier: 1.8,
                     }))
                   }
-                  className={`py-2 px-3 rounded-xl border text-center font-medium transition-all ${
+                  className={`py-2 px-3 rounded-lg border text-center text-xs transition-all ${
                     environment.commuterSurgeMultiplier > 1.0
-                      ? "bg-rose-600/25 border-rose-400 text-rose-200 font-bold shadow-md shadow-rose-500/20"
-                      : "bg-rail-900 border-rail-700 text-slate-400 hover:text-slate-200"
+                      ? "bg-surface-overlay border-chalk/40 text-chalk font-semibold"
+                      : "bg-surface-raised border-graphite text-chalk-dim hover:bg-surface-overlay"
                   }`}
                 >
-                  Peak Rush Hour
+                  Peak rush hour
                 </button>
               </div>
             </div>
@@ -184,33 +155,34 @@ export function DelayIntelligenceDeck({
         </div>
       )}
 
-      {/* 2. Hero Live Status & Where Is My Train Telemetry Deck */}
-      <div className="rounded-3xl border border-rail-700/80 bg-gradient-to-b from-rail-850 to-rail-900 p-6 sm:p-7 shadow-2xl backdrop-blur-xl space-y-5">
+      {/* 2. Predicted Delay Intelligence Panel */}
+      <div className="bg-surface border border-graphite rounded-xl p-5 space-y-5">
         
-        {/* Live Train Status Callout Bar (Where-Is-My-Train Style) */}
-        <div className="bg-rail-950 p-4 rounded-2xl border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-xs">
+        {/* Train Status & Delay Factor Callout Bar */}
+        <div className={`bg-surface-raised border-l-3 ${isDelayed ? 'border-signal-amber' : 'border-signal-green'} p-4 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`}>
           <div className="flex items-start sm:items-center gap-3">
-            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 border ${resolved.badgeClass}`}>
-              {resolved.stateLabel.split(" ")[0]} {resolved.stateLabel.split(" ")[1] || ""}
+            <span className="text-xs font-body font-semibold text-chalk">
+              {resolved.stateLabel}
             </span>
             <div>
-              <div className="font-bold text-white text-sm font-sans">
+              <div className="font-body font-medium text-chalk text-sm">
                 {resolved.liveSummary}
               </div>
-              <div className="text-slate-400 text-[11px] mt-0.5 font-mono">
-                Current Time: <strong className="text-cyan-300">{formatClockMinutes(activeClockMinutes)}</strong> · Scheduled Dep: {selectedTrain.scheduledDep} ➔ Arr: {selectedTrain.scheduledArr}
+              <div className="text-steel text-xs mt-0.5 font-body">
+                Simulation Time: <strong className="font-data text-chalk-dim">{formatClockMinutes(activeClockMinutes)}</strong> · Scheduled Dep: <span className="font-data">{selectedTrain.scheduledDep}</span> ➔ Arr: <span className="font-data">{selectedTrain.scheduledArr}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-rail-800">
-            <span className="flex items-center gap-1 text-cyan-300">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-steel shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-graphite">
+            <span className="flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" />
-              {curLat}° N, {curLng}° E
+              <span className="font-data">KM {resolved.currentLocationKm.toFixed(1)}</span>
+              <span className="font-body text-steel">of 138.25 km</span>
             </span>
             <span>·</span>
-            <span className="text-emerald-400 flex items-center gap-1 font-semibold">
-              <Satellite className="w-3.5 h-3.5" /> NavIC Active
+            <span className="font-body text-steel-light">
+              {isDelayed ? `${totalDynamicDelayMin} delay factors accumulated` : 'No delay factors active'}
             </span>
           </div>
         </div>
@@ -220,103 +192,90 @@ export function DelayIntelligenceDeck({
           
           {/* Left Column: Train Info & Live Progress */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="px-3 py-1 rounded-xl text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                Train #{selectedTrain.id}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="font-body text-sm text-steel">
+                Train <span className="font-data text-chalk-dim">{selectedTrain.id}</span>
               </span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight font-sans">
+              <h2 className="text-xl font-heading font-bold text-chalk">
                 {selectedTrain.name}
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-950 text-indigo-300 border border-indigo-700/50">
+              <span className="text-xs font-body text-steel">
                 {selectedTrain.scheduledStops.length === 2
-                  ? "Non-Stop Express"
-                  : `${selectedTrain.scheduledStops.length} Scheduled Halts`}
+                  ? "Non-stop express"
+                  : `${selectedTrain.scheduledStops.length} scheduled halts`}
               </span>
             </div>
 
-            <p className="text-xs text-slate-400 font-mono">
-              <strong className="text-slate-200">Traction / Loco:</strong> {selectedTrain.locoType} ({selectedTrain.coaches} coaches) · Sanctioned MPS: <span className="text-cyan-400 font-bold">{selectedTrain.sectionalMpsKmph} km/h</span>
+            <p className="text-xs font-body text-steel">
+              Traction / Loco: {selectedTrain.locoType} ({selectedTrain.coaches} coaches) · Sanctioned MPS: <span className="font-data text-chalk-dim">{selectedTrain.sectionalMpsKmph} km/h</span>
             </p>
 
             {/* Journey Progress Track Bar */}
-            <div className="bg-rail-950/80 p-4 rounded-2xl border border-rail-700/80 space-y-2.5">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-400">Route Traversed:</span>
-                <span className="font-bold text-cyan-400">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-body">
+                <span className="text-steel">Route traversed</span>
+                <span className="font-data text-chalk-dim">
                   {resolved.currentLocationKm.toFixed(1)} km / 138.25 km ({progressPercent}%)
                 </span>
               </div>
               
               {/* Visual Track Bar */}
-              <div className="w-full h-2.5 bg-rail-800 rounded-full overflow-hidden p-0.5 border border-rail-700">
+              <div className="w-full h-1.5 bg-graphite rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-400 transition-all duration-500 rounded-full shadow-lg shadow-cyan-500/50"
+                  className={`h-full transition-all duration-500 rounded-full ${isDelayed ? 'bg-signal-amber' : 'bg-signal-green'}`}
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                <span>Mysuru Jn (Dep {selectedTrain.scheduledDep})</span>
-                <span>KSR Bengaluru (Arr {selectedTrain.scheduledArr})</span>
+              <div className="flex items-center justify-between text-xs font-body text-steel">
+                <span>Mysuru Jn (Dep <span className="font-data">{selectedTrain.scheduledDep}</span>)</span>
+                <span>KSR Bengaluru (Arr <span className="font-data">{selectedTrain.scheduledArr}</span>)</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Booked vs Dynamic Smart ETA */}
+          {/* Right Column: Timetable vs Predicted ETA */}
           <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Booked / Timetable */}
-            <div className="bg-rail-950/90 p-5 rounded-2xl border border-rail-700 flex flex-col justify-between">
+            <div className="bg-surface-raised border border-graphite rounded-xl p-5 flex flex-col justify-between">
               <div>
-                <div className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-slate-400" /> Booked Timetable ETA
+                <div className="text-xs font-body text-steel">
+                  Timetable ETA (baseline)
                 </div>
-                <div className="text-2xl sm:text-3xl font-mono font-bold text-slate-200 mt-3">
+                <div className="text-3xl font-data font-bold text-chalk mt-3">
                   {selectedTrain.scheduledArr}
                 </div>
               </div>
-              <div className="text-xs text-slate-400 mt-3 font-sans">
-                Official SWR Scheduled Arrival at SBC
+              <div className="text-xs text-steel mt-3 font-body">
+                SWR scheduled arrival without delay factors
               </div>
             </div>
 
-            {/* Dynamic Predicted Arrival */}
-            <div
-              className={`p-5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden ${
-                isDelayed
-                  ? "bg-amber-950/25 border-amber-500/50 text-amber-200 shadow-xl shadow-amber-950/30"
-                  : "bg-emerald-950/25 border-emerald-500/50 text-emerald-200 shadow-xl shadow-emerald-950/30"
-              }`}
-            >
+            {/* Predicted Arrival — accounting for infrastructure factors */}
+            <div className={`bg-surface-raised border border-graphite rounded-xl p-5 flex flex-col justify-between border-l-3 ${isDelayed ? 'border-l-signal-amber' : 'border-l-signal-green'}`}>
               <div>
-                <div className="text-xs font-mono uppercase tracking-wider font-bold flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-white">
-                    <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
-                    Dynamic Smart ETA
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold ${
-                      isDelayed
-                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                        : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                    }`}
-                  >
-                    {isDelayed ? `+${totalDynamicDelayMin}m Late` : "On Time"}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-body text-steel">
+                    Predicted ETA (with delay factors)
+                  </div>
+                  <div className={`font-data text-xs ${isDelayed ? 'text-signal-amber' : 'text-signal-green'}`}>
+                    {isDelayed ? `+${totalDynamicDelayMin}m late` : "On time"}
+                  </div>
                 </div>
-                <div className="text-2xl sm:text-3xl font-mono font-extrabold text-white mt-3 tracking-tight">
+                <div className="text-3xl font-data font-bold text-chalk mt-3">
                   {prediction.railrakshakDynamicEta}
                 </div>
               </div>
 
-              <div className="text-xs text-slate-300 mt-3 font-sans space-y-1">
-                <div className="flex items-center justify-between font-mono">
-                  <span className="text-emerald-400">⚡ Slack Recovered:</span>
-                  <span className="font-bold text-emerald-300">-{prediction.slackRecoveredMin.toFixed(1)}m</span>
+              <div className="text-xs text-steel mt-3 font-body space-y-1">
+                <div className="flex items-center justify-between">
+                  <span>Slack recovered</span>
+                  <span className="font-data text-signal-green">-{prediction.slackRecoveredMin.toFixed(1)}m</span>
                 </div>
                 {prediction.bottlenecksIncurredMin > 0 && (
-                  <div className="flex items-center justify-between font-mono">
-                    <span className="text-amber-400">⚠️ Bottlenecks Incurred:</span>
-                    <span className="font-bold text-amber-300">+{prediction.bottlenecksIncurredMin.toFixed(1)}m</span>
+                  <div className="flex items-center justify-between">
+                    <span>Bottlenecks incurred</span>
+                    <span className="font-data text-signal-amber">+{prediction.bottlenecksIncurredMin.toFixed(1)}m</span>
                   </div>
                 )}
               </div>
@@ -325,76 +284,45 @@ export function DelayIntelligenceDeck({
         </div>
       </div>
 
-      {/* 3. Plain-English Root Cause Attribution Cards */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-2">
-          <Layers className="w-4 h-4 text-cyan-400" />
-          Route Delay Physics &amp; Recovery Factor Breakdown
+      {/* 3. Infrastructure Delay Factor Attribution */}
+      <div className="space-y-6">
+        <h3 className="text-base font-heading font-semibold text-chalk">
+          Infrastructure delay factors along route (historical pattern)
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Factor 1: Speed Restrictions */}
-          <div className="bg-rail-850/80 border border-rail-700/80 rounded-2xl p-4 sm:p-5 space-y-2 hover:border-slate-600 transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5 font-sans">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
-                Track Curvature PSRs
-              </span>
-              <span className="text-xs font-mono font-bold text-amber-400">
+        <div className="bg-surface-raised rounded-xl p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 gap-y-3">
+            {/* Factor 1 */}
+            <div className="flex justify-between items-baseline border-b border-graphite pb-2 md:border-b-0 md:pb-0">
+              <span className="font-body text-sm text-chalk-dim">Track curvature PSRs</span>
+              <span className="font-data text-sm text-signal-amber">
                 +{prediction.speedRestrictionPenaltyMin.toFixed(1)}m
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-sans leading-relaxed">
-              Cauvery River bridge curves (95 km/h), Mandya yard (85 km/h) and Ramanagaram cuttings enforce speed drops.
-            </p>
-          </div>
 
-          {/* Factor 2: Signaling & Headway */}
-          <div className="bg-rail-850/80 border border-rail-700/80 rounded-2xl p-4 sm:p-5 space-y-2 hover:border-slate-600 transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5 font-sans">
-                <Radio className="w-4 h-4 text-cyan-400" />
-                4-Aspect Signaling
-              </span>
-              <span className="text-xs font-mono font-bold text-cyan-400">
+            {/* Factor 2 */}
+            <div className="flex justify-between items-baseline border-b border-graphite pb-2 md:border-b-0 md:pb-0">
+              <span className="font-body text-sm text-chalk-dim">4-aspect signaling</span>
+              <span className="font-data text-sm text-signal-amber">
                 +{prediction.signalHaltsPenaltyMin.toFixed(1)}m
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-sans leading-relaxed">
-              Automatic block signaling maintains safe headway spacing behind leading trains with 120m overlap buffer.
-            </p>
-          </div>
 
-          {/* Factor 3: Commuter Dwells & LC Gates */}
-          <div className="bg-rail-850/80 border border-rail-700/80 rounded-2xl p-4 sm:p-5 space-y-2 hover:border-slate-600 transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5 font-sans">
-                <Users className="w-4 h-4 text-rose-400" />
-                Dwells &amp; LC Gates
-              </span>
-              <span className="text-xs font-mono font-bold text-rose-400">
+            {/* Factor 3 */}
+            <div className="flex justify-between items-baseline border-b border-graphite pb-2 md:border-b-0 md:pb-0">
+              <span className="font-body text-sm text-chalk-dim">Dwells & LC gates</span>
+              <span className="font-data text-sm text-signal-amber">
                 +{((prediction.bottlenecksIncurredMin - prediction.speedRestrictionPenaltyMin - prediction.signalHaltsPenaltyMin) > 0 ? (prediction.bottlenecksIncurredMin - prediction.speedRestrictionPenaltyMin - prediction.signalHaltsPenaltyMin).toFixed(1) : "0.0")}m
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-sans leading-relaxed">
-              Passenger boarding surge at suburban hubs (Bidadi, Kengeri) and interlocked level crossing road holds.
-            </p>
-          </div>
 
-          {/* Factor 4: Buffer Slack Recovery */}
-          <div className="bg-rail-850/80 border border-rail-700/80 rounded-2xl p-4 sm:p-5 space-y-2 hover:border-slate-600 transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5 font-sans">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                Buffer Slack Recovery
-              </span>
-              <span className="text-xs font-mono font-bold text-emerald-400">
+            {/* Factor 4 */}
+            <div className="flex justify-between items-baseline">
+              <span className="font-body text-sm text-chalk-dim">Buffer slack recovery</span>
+              <span className="font-data text-sm text-signal-green">
                 -{prediction.slackRecoveredMin.toFixed(1)}m
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-sans leading-relaxed">
-              130 km/h straight track sections allow high-power electric traction to make up time between halts.
-            </p>
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import {
   resolveTrainAtClockTime,
   ResolvedLiveTrain,
 } from "../lib/rail/timeResolver";
-import { Zap, Navigation, Clock, ShieldAlert, Search, CheckCircle2, PlayCircle } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface TrainSelectorProps {
   selectedTrainId: string;
@@ -39,20 +39,19 @@ export function TrainSelector({
   return (
     <section className="space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-bold flex items-center gap-2">
-          <Zap className="w-3.5 h-3.5 text-cyan-400" />
-          24-Hour Corridor Fleet Status &amp; Live Train Lookup
+        <h2 className="text-base font-heading font-semibold text-chalk">
+          Corridor fleet & delay factor analysis
         </h2>
 
         {/* Inline Train Number Search Input */}
         <div className="relative w-full sm:w-72">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-steel absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search by Train # (e.g. 12613, 20608)..."
-            className="w-full bg-rail-950 border border-rail-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 shadow-inner"
+            className="w-full bg-surface border border-graphite rounded-lg pl-9 pr-3 py-2 text-sm text-chalk font-body placeholder:text-steel focus:outline-none focus:border-chalk-dim"
           />
         </div>
       </div>
@@ -63,27 +62,29 @@ export function TrainSelector({
           const train = resolved.config;
           const isSelected = selectedTrainId === train.id;
 
-          const getStatusBadge = () => {
+          const renderStatusBadge = () => {
             switch (resolved.operatingState) {
               case "RUNNING_ON_TRACK":
-                return {
-                  text: `🟢 RUNNING (KM ${resolved.currentLocationKm.toFixed(0)})`,
-                  style: "bg-emerald-950/90 text-emerald-300 border-emerald-400 font-bold animate-pulse",
-                };
+                return (
+                  <span className="flex items-center gap-1.5 text-signal-green font-data text-xs">
+                    <span className="signal-pip-green" />
+                    RUNNING (KM {resolved.currentLocationKm.toFixed(0)})
+                  </span>
+                );
               case "TRIP_COMPLETED":
-                return {
-                  text: "🏁 ARRIVED (At SBC)",
-                  style: "bg-slate-900/90 text-slate-400 border-slate-700",
-                };
+                return (
+                  <span className="text-steel font-data text-xs">
+                    ARRIVED (At SBC)
+                  </span>
+                );
               case "NOT_STARTED_YET":
-                return {
-                  text: `🕒 UPCOMING (${train.scheduledDep})`,
-                  style: "bg-indigo-950/90 text-indigo-300 border-indigo-600/40",
-                };
+                return (
+                  <span className="text-steel-light font-data text-xs">
+                    UPCOMING ({train.scheduledDep})
+                  </span>
+                );
             }
           };
-
-          const status = getStatusBadge();
 
           return (
             <button
@@ -92,51 +93,47 @@ export function TrainSelector({
                 onSelectTrain(train);
                 setSearchInput(train.id);
               }}
-              className={`group text-left p-3.5 rounded-2xl border transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
+              className={`group text-left p-4 rounded-xl border transition-colors relative overflow-hidden flex flex-col justify-between ${
                 isSelected
-                  ? "bg-rail-800 border-cyan-400 shadow-xl ring-2 ring-cyan-400/40 scale-[1.02]"
-                  : "bg-rail-850/80 hover:bg-rail-800/90 border-rail-700/80"
+                  ? "bg-surface-raised border-chalk/40"
+                  : "bg-surface hover:bg-surface-raised border-graphite"
               }`}
             >
               {/* Header: Number & Live Operating State */}
               <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-mono font-bold text-white tracking-wide">
+                <span className="font-data font-semibold text-chalk text-sm">
                   #{train.id}
                 </span>
-                <span
-                  className={`text-[9px] font-mono px-2 py-0.5 rounded-full border tracking-wide ${status.style}`}
-                >
-                  {status.text}
-                </span>
+                {renderStatusBadge()}
               </div>
 
               {/* Train Name */}
               <div className="my-2">
-                <div className="font-bold text-sm text-slate-100 group-hover:text-white line-clamp-1 font-sans">
+                <div className="font-heading font-semibold text-sm text-chalk line-clamp-1">
                   {train.name}
                 </div>
-                <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
-                  <span>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="font-data text-xs text-steel">
                     {train.scheduledDep} ➔ {train.scheduledArr}
                   </span>
-                  <span className="text-cyan-400 font-semibold">
+                  <span className="font-body text-xs text-steel-light">
                     {train.scheduledStops.length === 2 ? "Non-Stop" : `${train.scheduledStops.length} Stops`}
                   </span>
                 </div>
               </div>
 
-              {/* Footer: Live Telemetry Indicator */}
-              <div className="pt-2 border-t border-rail-700/60 flex items-center justify-between text-[11px] font-mono">
-                <span className="text-slate-400">
+              {/* Footer: Predicted State */}
+              <div className="pt-2 border-t border-graphite flex items-center justify-between">
+                <span>
                   {resolved.operatingState === "RUNNING_ON_TRACK" ? (
-                    <span className="text-emerald-400 font-bold">{resolved.currentSpeedKmph} km/h</span>
+                    <span className="font-data text-xs text-signal-green">{resolved.currentSpeedKmph} km/h</span>
                   ) : resolved.operatingState === "TRIP_COMPLETED" ? (
-                    <span className="text-slate-400">Trip Finished</span>
+                    <span className="font-data text-xs text-steel">Trip Finished</span>
                   ) : (
-                    <span className="text-indigo-300">At Mysuru (MYS)</span>
+                    <span className="font-data text-xs text-steel">At Mysuru (MYS)</span>
                   )}
                 </span>
-                <span className="text-slate-500 text-[10px]">
+                <span className="font-body text-xs text-steel">
                   {train.type.replace("_", " ")}
                 </span>
               </div>

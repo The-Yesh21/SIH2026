@@ -66,53 +66,46 @@ export function StopsAndWeatherIntelligenceDeck({
   const getWeatherIcon = (w: string) => {
     switch (w) {
       case "HEAVY_MONSOON":
-        return <CloudRain className="w-5 h-5 text-cyan-400" />;
+        return <CloudRain className="w-5 h-5 text-chalk" />;
       case "DENSE_FOG":
-        return <CloudFog className="w-5 h-5 text-indigo-400" />;
+        return <CloudFog className="w-5 h-5 text-chalk" />;
       case "LIGHT_RAIN":
-        return <Cloud className="w-5 h-5 text-blue-400" />;
+        return <Cloud className="w-5 h-5 text-chalk" />;
       case "CLEAR":
       default:
-        return <CloudSun className="w-5 h-5 text-amber-400" />;
+        return <CloudSun className="w-5 h-5 text-chalk" />;
     }
   };
 
   return (
-    <section className="rounded-3xl border border-rail-700/80 bg-gradient-to-b from-rail-850 to-rail-900 p-6 sm:p-7 shadow-2xl space-y-6">
+    <section className="bg-surface border border-graphite rounded-xl p-5 space-y-5 animate-fade-in selection:bg-signal-green/30 selection:text-chalk">
       {/* 1. Header & Section Selector Tabs */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-rail-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-graphite pb-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-              <Thermometer className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-                Corridor Weather &amp; Operational Unscheduled Stops Intelligence
-              </h2>
-              <p className="text-xs text-slate-400 font-mono">
-                Micro-climate sensors across 5 sectors &amp; 17-station delay factor detention profiling
-              </p>
-            </div>
-          </div>
+          <h2 className="text-lg font-heading font-semibold text-chalk">
+            Corridor Weather &amp; Operational Unscheduled Stops Intelligence
+          </h2>
+          <p className="text-xs text-steel font-body mt-1">
+            Micro-climate sensors across 5 sectors &amp; 17-station delay factor detention profiling
+          </p>
         </div>
 
         {/* Sub Tabs */}
-        <div className="flex items-center gap-1.5 bg-rail-950 p-1.5 rounded-2xl border border-rail-800 text-xs font-mono">
+        <div className="flex flex-wrap items-center gap-1.5 bg-surface-raised rounded-lg p-2 border border-graphite">
           {[
-            { id: "WEATHER", label: "🌤️ Micro-Climate Sensors" },
-            { id: "STOPS", label: "🛑 Operational Stops & Gaps" },
-            { id: "TRAIN_PREDICTION", label: `🎯 Train #${selectedTrain.id} Forecast` },
+            { id: "WEATHER", label: "Micro-Climate Sensors" },
+            { id: "STOPS", label: "Operational Stops & Gaps" },
+            { id: "TRAIN_PREDICTION", label: `Train #${selectedTrain.id} Forecast` },
           ].map((tab) => {
             const isAct = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-md text-sm font-body transition-all ${
                   isAct
-                    ? "bg-cyan-600 text-white font-bold shadow-md shadow-cyan-500/20"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-rail-900"
+                    ? "bg-surface-overlay text-chalk font-semibold border-b-2 border-chalk"
+                    : "bg-surface-raised hover:bg-surface-overlay text-steel hover:text-chalk"
                 }`}
               >
                 {tab.label}
@@ -126,19 +119,17 @@ export function StopsAndWeatherIntelligenceDeck({
       {activeTab === "WEATHER" && (
         <div className="space-y-5 animate-fade-in">
           {/* Quick Weather Disruption Switcher */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-rail-950 p-3.5 rounded-2xl border border-rail-800 text-xs font-mono">
-            <span className="text-slate-300 font-bold flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-cyan-400" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-surface-raised rounded-lg p-2 border border-graphite text-sm font-body">
+            <span className="text-chalk font-medium px-2">
               Simulate Track Weather Condition:
             </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {[
-                { id: "CLEAR", label: "Clear Track (130k)", icon: CloudSun },
-                { id: "LIGHT_RAIN", label: "Light Rain (90k)", icon: Cloud },
-                { id: "HEAVY_MONSOON", label: "Monsoon (60k)", icon: CloudRain },
-                { id: "DENSE_FOG", label: "Winter Fog (30k)", icon: CloudFog },
+                { id: "CLEAR", label: "Clear Track (130k)" },
+                { id: "LIGHT_RAIN", label: "Light Rain (90k)" },
+                { id: "HEAVY_MONSOON", label: "Monsoon (60k)" },
+                { id: "DENSE_FOG", label: "Winter Fog (30k)" },
               ].map((w) => {
-                const Icon = w.icon;
                 const isAct = environment.weather === w.id;
                 return (
                   <button
@@ -149,14 +140,13 @@ export function StopsAndWeatherIntelligenceDeck({
                         weather: w.id as any,
                       }))
                     }
-                    className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border text-center transition-all ${
+                    className={`px-3 py-1.5 rounded-md text-sm font-body transition-all ${
                       isAct
-                        ? "bg-cyan-600/30 border-cyan-400 text-cyan-200 font-bold shadow-sm"
-                        : "bg-rail-900 border-rail-750 text-slate-400 hover:text-slate-200"
+                        ? "bg-surface-overlay text-chalk font-semibold border-b-2 border-chalk"
+                        : "bg-surface-raised hover:bg-surface-overlay text-steel hover:text-chalk"
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{w.label.split(" ")[0]}</span>
+                    {w.label.split(" ")[0]}
                   </button>
                 );
               })}
@@ -168,70 +158,62 @@ export function StopsAndWeatherIntelligenceDeck({
             {weatherZones.map((zone) => (
               <div
                 key={zone.zoneId}
-                className="bg-rail-900/90 border border-rail-750 rounded-2xl p-5 space-y-4 flex flex-col justify-between hover:border-cyan-500/40 transition-colors"
+                className="bg-surface-raised border border-graphite rounded-xl p-4 space-y-4 flex flex-col justify-between"
               >
                 {/* Header */}
                 <div>
-                  <div className="flex items-center justify-between font-mono text-xs">
-                    <span className="px-2 py-0.5 rounded-md bg-rail-950 border border-rail-700 text-cyan-300 font-bold">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-heading font-semibold text-chalk">
                       {zone.zoneId}
                     </span>
-                    <span className="text-slate-400">{zone.chainageKm}</span>
+                    <span className="text-xs font-data text-steel">{zone.chainageKm}</span>
                   </div>
-                  <h3 className="font-bold text-sm text-white font-sans mt-2">
+                  <h3 className="font-medium text-sm text-chalk mt-2 font-body">
                     {zone.zoneName}
                   </h3>
-                  <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                  <div className="text-xs text-steel-light font-body mt-0.5">
                     Nodes: {zone.stationsCovered.join(" ➔ ")}
                   </div>
                 </div>
 
                 {/* Telemetry Sensor Grid */}
-                <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-rail-950/80 p-3 rounded-xl border border-rail-800">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Thermometer className="w-3.5 h-3.5 text-rose-400" /> Air:
-                    </span>
-                    <strong>{zone.ambientTempC}°C</strong>
+                <div className="grid grid-cols-2 gap-3 bg-surface p-3 rounded-lg border border-graphite">
+                  <div className="flex items-center justify-between">
+                    <span className="text-steel text-sm font-body">Air:</span>
+                    <strong className="text-chalk font-data text-sm">{zone.ambientTempC}°C</strong>
                   </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Flame className="w-3.5 h-3.5 text-amber-400" /> Rail:
-                    </span>
-                    <strong className="text-amber-300">{zone.railTempC}°C</strong>
+                  <div className="flex items-center justify-between">
+                    <span className="text-steel text-sm font-body">Rail:</span>
+                    <strong className="text-chalk font-data text-sm">{zone.railTempC}°C</strong>
                   </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Droplets className="w-3.5 h-3.5 text-cyan-400" /> Hum:
-                    </span>
-                    <strong>{zone.humidityPercent}%</strong>
+                  <div className="flex items-center justify-between">
+                    <span className="text-steel text-sm font-body">Hum:</span>
+                    <strong className="text-chalk font-data text-sm">{zone.humidityPercent}%</strong>
                   </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span className="text-slate-400 flex items-center gap-1">
-                      <Wind className="w-3.5 h-3.5 text-indigo-400" /> Wind:
-                    </span>
-                    <strong>{zone.windSpeedKmph}k {zone.windDirection}</strong>
+                  <div className="flex items-center justify-between">
+                    <span className="text-steel text-sm font-body">Wind:</span>
+                    <strong className="text-chalk font-data text-sm">{zone.windSpeedKmph}k {zone.windDirection}</strong>
                   </div>
                 </div>
 
                 {/* Speed Limit & Braking Factor */}
-                <div className="space-y-2 text-xs font-mono">
+                <div className="space-y-2 text-sm font-body">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Max Sectional MPS:</span>
-                    <span className="font-bold text-cyan-400">{zone.speedCeilingKmph} km/h</span>
+                    <span className="text-steel">Max Sectional MPS:</span>
+                    <span className="font-semibold text-chalk font-data">{zone.speedCeilingKmph} km/h</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Braking Distance Mult:</span>
-                    <span className="font-bold text-amber-400">{zone.brakingDistanceMultiplier}x normal</span>
+                    <span className="text-steel">Braking Distance Mult:</span>
+                    <span className="font-semibold text-chalk font-data">{zone.brakingDistanceMultiplier}x normal</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Adhesion Coeff:</span>
-                    <span className="font-bold text-emerald-400">{zone.adhesionCoefficient} μ</span>
+                    <span className="text-steel">Adhesion Coeff:</span>
+                    <span className="font-semibold text-chalk font-data">{zone.adhesionCoefficient} μ</span>
                   </div>
 
                   {zone.activeCautionOrder && (
-                    <div className="p-2 rounded-lg bg-amber-950/60 border border-amber-500/40 text-[11px] text-amber-300">
-                      ⚠️ {zone.activeCautionOrder}
+                    <div className="mt-2 text-xs text-signal-amber font-body">
+                      {zone.activeCautionOrder}
                     </div>
                   )}
                 </div>
@@ -245,10 +227,7 @@ export function StopsAndWeatherIntelligenceDeck({
       {activeTab === "STOPS" && (
         <div className="space-y-4 animate-fade-in">
           {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-rail-950 p-2.5 rounded-2xl border border-rail-800 text-xs font-mono">
-            <div className="flex items-center gap-2 text-slate-400 px-2 font-semibold">
-              <Filter className="w-3.5 h-3.5 text-cyan-400" /> Filter Stops:
-            </div>
+          <div className="flex flex-wrap items-center gap-3 bg-surface-raised rounded-lg p-2 border border-graphite">
             <div className="flex flex-wrap items-center gap-1.5">
               {[
                 { id: "ALL", label: `All 17 Corridor Nodes` },
@@ -259,10 +238,10 @@ export function StopsAndWeatherIntelligenceDeck({
                 <button
                   key={b.id}
                   onClick={() => setStopFilter(b.id)}
-                  className={`px-3 py-1 rounded-xl text-[11px] font-medium transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-body transition-all ${
                     stopFilter === b.id
-                      ? "bg-cyan-600/30 text-cyan-300 border border-cyan-400 font-bold"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-rail-900"
+                      ? "bg-surface-overlay text-chalk font-semibold border-b-2 border-chalk"
+                      : "bg-surface-raised hover:bg-surface-overlay text-steel hover:text-chalk"
                   }`}
                 >
                   {b.label}
@@ -276,65 +255,59 @@ export function StopsAndWeatherIntelligenceDeck({
             {filteredStops.map((stop) => (
               <div
                 key={stop.stationCode}
-                className="bg-rail-900/90 border border-rail-750 p-4 sm:p-5 rounded-2xl space-y-3"
+                className="bg-surface border border-graphite p-4 rounded-xl space-y-3"
               >
                 {/* Top Row: Station Code, Name & Stop Type Badge */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 rounded-xl bg-rail-950 border border-rail-700 text-cyan-300 font-mono font-bold text-xs">
+                    <span className="text-sm font-heading font-semibold text-chalk">
                       {stop.stationCode}
                     </span>
                     <div>
-                      <h3 className="font-bold text-sm text-white font-sans">
+                      <h3 className="font-medium text-sm text-chalk font-body">
                         {stop.stationName}
                       </h3>
-                      <span className="text-xs text-slate-400 font-mono">
-                        KM {stop.chainageFromMysKm.toFixed(1)} from Mysuru · Asset: {stop.infrastructureAsset}
+                      <span className="text-xs text-steel font-body">
+                        KM <span className="font-data">{stop.chainageFromMysKm.toFixed(1)}</span> from Mysuru · Asset: {stop.infrastructureAsset}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${
-                        stop.isScheduledCommercial
-                          ? "bg-indigo-950/80 text-indigo-300 border-indigo-500/40"
-                          : "bg-purple-950/80 text-purple-300 border-purple-500/40"
-                      }`}
-                    >
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs font-body text-steel-light">
                       {stop.isScheduledCommercial ? "Scheduled Commercial Halt" : "Operational / Loop Siding Stop"}
                     </span>
 
                     <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${
+                      className={`text-xs font-body font-medium ${
                         stop.riskTier === "CRITICAL"
-                          ? "bg-rose-950 text-rose-300 border-rose-500 animate-pulse"
+                          ? "text-signal-red"
                           : stop.riskTier === "HIGH"
-                          ? "bg-amber-950 text-amber-300 border-amber-500"
-                          : "bg-slate-900 text-slate-400 border-slate-700"
+                          ? "text-signal-amber"
+                          : "text-steel"
                       }`}
                     >
-                      {stop.riskTier} RISK ({stop.historicalDetentionLikelihoodPercent}% Prob)
+                      {stop.riskTier} RISK (<span className="font-data">{stop.historicalDetentionLikelihoodPercent}</span>% Prob)
                     </span>
                   </div>
                 </div>
 
                 {/* Primary Delay Factors & Secondary Triggers */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="bg-rail-950 p-3 rounded-xl border border-rail-800 space-y-1">
-                    <span className="font-mono text-amber-400 font-bold uppercase text-[11px]">
-                      ⚠️ Primary Delay Factor:
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="bg-surface-raised p-3 rounded-lg border border-graphite space-y-1">
+                    <span className="font-body text-steel font-medium text-xs">
+                      Primary Delay Factor
                     </span>
-                    <p className="text-slate-300 font-sans">
+                    <p className="text-chalk-dim font-body">
                       {stop.primaryDelayFactor}
                     </p>
                   </div>
 
-                  <div className="bg-rail-950 p-3 rounded-xl border border-rail-800 space-y-1">
-                    <span className="font-mono text-cyan-400 font-bold uppercase text-[11px]">
-                      ⚡ AI Dispatcher Mitigation Protocol:
+                  <div className="bg-surface-raised p-3 rounded-lg border border-graphite space-y-1">
+                    <span className="font-body text-steel font-medium text-xs">
+                      AI Dispatcher Mitigation Protocol
                     </span>
-                    <p className="text-slate-300 font-sans">
+                    <p className="text-chalk-dim font-body">
                       {stop.mitigationProtocol}
                     </p>
                   </div>
@@ -348,62 +321,61 @@ export function StopsAndWeatherIntelligenceDeck({
       {/* TAB 3: Train-Specific Unscheduled Stop Forecast */}
       {activeTab === "TRAIN_PREDICTION" && (
         <div className="space-y-4 animate-fade-in">
-          <div className="bg-rail-950 p-4 rounded-2xl border border-cyan-500/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-xs">
+          <div className="bg-surface-raised p-4 rounded-xl border border-graphite flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-body text-sm">
             <div>
-              <span className="text-slate-400">Target Service:</span>{" "}
-              <strong className="text-white text-sm">#{selectedTrain.id} {selectedTrain.name}</strong>
-              <div className="text-[11px] text-cyan-300 mt-0.5">
-                Current Injected Delay: +{injectedDelay} min · Weather Mode: {environment.weather}
+              <span className="text-steel">Target Service:</span>{" "}
+              <strong className="text-chalk">#{selectedTrain.id} {selectedTrain.name}</strong>
+              <div className="text-xs text-steel-light mt-0.5">
+                Current Injected Delay: +<span className="font-data">{injectedDelay}</span> min · Weather Mode: {environment.weather}
               </div>
             </div>
-            <span className="px-3 py-1 rounded-xl bg-cyan-600/30 text-cyan-300 border border-cyan-400 font-bold">
+            <span className="font-medium text-chalk">
               {trainPredictions.length} Potential Delay Stop(s) Forecasted
             </span>
           </div>
 
           {trainPredictions.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-rail-900 text-center font-mono text-xs text-slate-400">
-              ✅ No severe unscheduled operational stops predicted under current track conditions.
+            <div className="p-8 rounded-xl bg-surface border border-graphite text-center font-body text-sm text-steel">
+              No severe unscheduled operational stops predicted under current track conditions.
             </div>
           ) : (
             <div className="space-y-3">
               {trainPredictions.map((pred, idx) => (
                 <div
                   key={idx}
-                  className="bg-rail-900 border border-rail-750 p-5 rounded-2xl space-y-3"
+                  className="bg-surface border border-graphite p-5 rounded-xl space-y-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-xl bg-rail-950 border border-rose-500/40 text-rose-300 font-mono font-bold text-xs">
+                      <span className="text-sm font-heading font-semibold text-chalk">
                         {pred.stationCode}
                       </span>
                       <div>
-                        <h4 className="font-bold text-sm text-white font-sans">
-                          {pred.stationName} (KM {pred.chainageKm})
+                        <h4 className="font-medium text-sm text-chalk font-body">
+                          {pred.stationName} (KM <span className="font-data">{pred.chainageKm}</span>)
                         </h4>
-                        <span className="text-xs text-slate-400 font-mono">
+                        <span className="text-xs text-steel font-body">
                           Category: {pred.delayFactorCategory.replace("_", " ")}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-1 rounded-lg bg-rose-950/80 text-rose-300 border border-rose-500/40 text-xs font-mono font-bold">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-data font-semibold text-signal-red">
                         +{pred.estimatedDelayIncurredMin} min Estimated Loss
                       </span>
-                      <span className="px-2.5 py-1 rounded-lg bg-amber-950/80 text-amber-300 border border-amber-500/40 text-xs font-mono font-bold">
+                      <span className="text-sm font-data font-medium text-signal-amber">
                         {pred.probabilityPercent}% Probability
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-300 font-sans">
+                  <p className="text-sm text-chalk-dim font-body">
                     {pred.predictedStopReason}
                   </p>
 
-                  <div className="pt-2 border-t border-rail-800 text-xs font-mono text-cyan-300 flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                    <span><strong>Dispatcher Action:</strong> {pred.recommendedDispatcherAction}</span>
+                  <div className="pt-2 border-t border-graphite text-sm font-body text-chalk flex items-center gap-1.5">
+                    <span className="font-semibold">Dispatcher Action:</span> {pred.recommendedDispatcherAction}
                   </div>
                 </div>
               ))}
