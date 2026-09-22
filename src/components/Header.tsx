@@ -16,8 +16,8 @@ interface HeaderProps {
   setActiveClockMinutes: (mins: number) => void;
   isRealTimeSynced: boolean;
   setIsRealTimeSynced: (synced: boolean) => void;
-  activeTab: "COCKPIT" | "ANALYSIS";
-  setActiveTab: (tab: "COCKPIT" | "ANALYSIS") => void;
+  activeTab: "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS";
+  setActiveTab: (tab: "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS") => void;
 }
 
 export function Header({
@@ -145,29 +145,41 @@ export function Header({
       </div>
 
       {/* Primary Section Switcher Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab("COCKPIT")}
-          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 ${
+          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
             activeTab === "COCKPIT"
-              ? "text-chalk border-b-2 border-chalk"
+              ? "text-chalk border-b-2 border-chalk font-bold"
               : "text-steel hover:text-chalk border-b-2 border-transparent"
           }`}
         >
-          <Radio className="w-4 h-4" />
-          <span>Corridor Intelligence & Delay Prediction</span>
+          <Radio className="w-4 h-4 text-signal-green" />
+          <span>Corridor Dynamic Cockpit</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("PAIN_FACTORS")}
+          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+            activeTab === "PAIN_FACTORS"
+              ? "text-signal-amber border-b-2 border-signal-amber font-bold"
+              : "text-steel hover:text-signal-amber border-b-2 border-transparent"
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-signal-red animate-pulse" />
+          <span>Pain Factors &amp; Recovery Confidence</span>
         </button>
 
         <button
           onClick={() => setActiveTab("ANALYSIS")}
-          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 ${
+          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
             activeTab === "ANALYSIS"
-              ? "text-chalk border-b-2 border-chalk"
+              ? "text-chalk border-b-2 border-chalk font-bold"
               : "text-steel hover:text-chalk border-b-2 border-transparent"
           }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>Delay Analysis & All Rails Matrix</span>
+          <span>Fleet Delay Matrix &amp; Forensics</span>
         </button>
       </div>
     </header>

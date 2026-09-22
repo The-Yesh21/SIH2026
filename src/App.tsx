@@ -14,11 +14,12 @@ import { CorridorDelayHotspots } from "./components/CorridorDelayHotspots";
 import { YesterdayTrafficAnalysis } from "./components/YesterdayTrafficAnalysis";
 import { FleetDelayAnalysisDeck } from "./components/FleetDelayAnalysisDeck";
 import { StopsAndWeatherIntelligenceDeck } from "./components/StopsAndWeatherIntelligenceDeck";
+import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceDeck";
 import { Flame } from "lucide-react";
 
 export function App() {
   // Navigation View State
-  const [activeTab, setActiveTab] = useState<"COCKPIT" | "ANALYSIS">("COCKPIT");
+  const [activeTab, setActiveTab] = useState<"COCKPIT" | "PAIN_FACTORS" | "ANALYSIS">("COCKPIT");
 
   // Initialize with exact real-world clock time (in minutes from midnight)
   const [activeClockMinutes, setActiveClockMinutes] = useState<number>(() => {
@@ -104,10 +105,46 @@ export function App() {
               activeClockMinutes={activeClockMinutes}
             />
 
+            {/* Dedicated Pain Factor Attribution & Kinematic Recovery Deck */}
+            <PainFactorIntelligenceDeck
+              selectedTrain={resolvedLive.config}
+              environment={environment}
+              injectedDelay={injectedDelay}
+              activeClockMinutes={activeClockMinutes}
+              onSelectTrain={(trainId) => {
+                setSelectedTrainId(trainId);
+                setInjectedDelay(0);
+              }}
+            />
+
             {/* Physical Track Spine & Station-by-Station Live Running Log */}
             <CorridorPhysicalSpine
               prediction={prediction}
               selectedTrain={resolvedLive.config}
+            />
+          </>
+        ) : activeTab === "PAIN_FACTORS" ? (
+          <>
+            {/* Train Command Deck for Quick Selection */}
+            <TrainSelector
+              selectedTrainId={selectedTrainId}
+              onSelectTrain={(train) => {
+                setSelectedTrainId(train.id);
+                setInjectedDelay(0);
+              }}
+              activeClockMinutes={activeClockMinutes}
+            />
+
+            {/* Dedicated Standalone Pain Factors & Recovery Confidence Deck */}
+            <PainFactorIntelligenceDeck
+              selectedTrain={resolvedLive.config}
+              environment={environment}
+              injectedDelay={injectedDelay}
+              activeClockMinutes={activeClockMinutes}
+              onSelectTrain={(trainId) => {
+                setSelectedTrainId(trainId);
+                setInjectedDelay(0);
+              }}
             />
           </>
         ) : (
