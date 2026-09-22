@@ -23,6 +23,8 @@ import {
   Zap,
   Radio,
   ArrowRight,
+  ArrowDown,
+  Train,
 } from "lucide-react";
 
 interface CorridorPhysicalSpineProps {
@@ -157,7 +159,7 @@ export function CorridorPhysicalSpine({
                 }`}
               >
                 {isTrainHere ? (
-                  <Navigation2 className="w-4 h-4 fill-current" />
+                  <Train className="w-4 h-4 text-ink stroke-[2.4]" />
                 ) : isHalt ? (
                   <StopCircle className="w-4 h-4" />
                 ) : isPassed ? (
