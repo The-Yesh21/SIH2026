@@ -84,7 +84,18 @@ export interface DynamicPredictionResult {
 }
 
 export interface ShapAttributionFactor {
-  category: "Speed Restrictions" | "Signaling & Headway" | "Precedence & Loop" | "LC Gate & Incident" | "Commuter Surge" | "Weather & Visibility" | "Timetable Buffer Slack";
+  category:
+    | "Speed Restrictions"
+    | "Signaling & Headway"
+    | "Precedence & Loop"
+    | "LC Gate & Incident"
+    | "Commuter Surge"
+    | "Weather & Visibility"
+    | "Traction & OHE Power"
+    | "Terminal Outer Choke"
+    | "Mechanical & WILD Safety"
+    | "Watering & Sanitation"
+    | "Timetable Buffer Slack";
   name: string;
   impactMinutes: number; // Positive = Delay increase, Negative = Recovery
   type: "delay" | "recovery";

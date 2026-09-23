@@ -9,9 +9,14 @@ export type PainFactorType =
   | "SIGNAL_ASPECT_DETENTION"   // Double Yellow / Yellow / Red signal stop behind leading train
   | "TSR_CAUTION_SLOWDOWN"      // Temporary Speed Restriction (e.g. 30 km/h maintenance track)
   | "LC_GATE_INTERLOCKING_HOLD" // Road gate held open / non-interlocked clearance
+  | "LC_ROAD_TRAFFIC_JAM"       // Road vehicular traffic obstruction holding gate
   | "COMMUTER_DWELL_BLEED"      // Overcrowded platform passenger boarding dwell surge
   | "TERMINAL_THROAT_CHOKE"     // SBC Outer / yard platform reception congestion
-  | "PSR_CURVE_GRADIENT_CAP";   // Permanent speed restriction over curve/bridge
+  | "PSR_CURVE_GRADIENT_CAP"    // Permanent speed restriction over curve/bridge
+  | "OHE_VOLTAGE_SAG"           // Catenary power voltage drop & neutral section gliding
+  | "WET_RAIL_ADHESION_SLIP"    // Low railhead adhesion wheel slip tractive derating
+  | "WILD_HOTBOX_INSPECTION"    // Wheel Impact Load Detector alarm rolling inspection
+  | "WATERING_SANITATION_BLEED";// Coach en-route watering & sanitation hydrant overrun
 
 export interface IdentifiedPainIncident {
   id: string;
@@ -19,6 +24,7 @@ export interface IdentifiedPainIncident {
   stationName: string;
   chainageKm: number;
   type: PainFactorType;
+  categoryName?: string;
   severity: "CRITICAL" | "HIGH" | "MODERATE" | "MINOR";
   penaltyDurationMin: number;
   isUnscheduledHalt: boolean;
@@ -41,6 +47,9 @@ export interface CorridorPainSummary {
   speedRestrictionPenaltyMin: number;
   signalDetentionMin: number;
   terminalThroatPenaltyMin: number;
+  tractionLossPenaltyMin: number;
+  mechanicalSafetyPenaltyMin: number;
+  wateringBleedPenaltyMin: number;
   incidents: IdentifiedPainIncident[];
   hotspotStationCodes: string[];
   priorityConflictActive: boolean;
@@ -49,7 +58,7 @@ export interface CorridorPainSummary {
 
 /**
  * Performs deep corridor inspection to identify all pain factors,
- * unscheduled loop stabling, signal halts, and bottleneck slowdowns along the route.
+ * unscheduled loop stabling, signal halts, traction sags, and bottleneck slowdowns.
  */
 export function analyzeCorridorPainFactors(params: {
   train: TrainConfig;
@@ -66,10 +75,12 @@ export function analyzeCorridorPainFactors(params: {
   let totalSpeedRestrMins = 0;
   let totalSignalMins = 0;
   let totalThroatMins = 0;
+  let totalTractionLossMins = 0;
+  let totalMechSafetyMins = 0;
+  let totalWateringMins = 0;
   let unscheduledCount = 0;
 
   // 1. Scan all 16 stations for unscheduled loop stabling & precedence conflicts
-  // A train is looped when a higher priority train (e.g. Vande Bharat / Shatabdi) is trailing closely
   const trailingPremiumTrain = ALL_CORRIDOR_FLEET.find(
     (other) =>
       other.id !== params.train.id &&
@@ -81,7 +92,6 @@ export function analyzeCorridorPainFactors(params: {
     const isTerminus = station.code === "MYS" || station.code === "SBC";
 
     // (A) Check for UNSCHEDULED LOOP HOLD FOR PRECEDENCE
-    // Lower tier trains (Tier 2/3/4) with loop-equipped stations (e.g. Mandya, Maddur, Ramanagaram, Bidadi)
     const isLikelyLoopStation = ["MYA", "MAD", "RMGM", "BID", "KGI"].includes(station.code);
     const shouldSimulatePrecedenceLoop =
       !isScheduledHalt &&
@@ -106,6 +116,7 @@ export function analyzeCorridorPainFactors(params: {
         stationName: station.name,
         chainageKm: station.distanceFromMysKm,
         type: "UNSCHEDULED_LOOP_HOLD",
+        categoryName: "Precedence & Loop Siding",
         severity: "CRITICAL",
         penaltyDurationMin: penalty,
         isUnscheduledHalt: true,
@@ -136,121 +147,171 @@ export function analyzeCorridorPainFactors(params: {
         stationName: station.name,
         chainageKm: station.distanceFromMysKm,
         type: "COMMUTER_DWELL_BLEED",
+        categoryName: "Commuter Surge",
         severity: dwellSurge > 2.0 ? "HIGH" : "MODERATE",
         penaltyDurationMin: dwellSurge,
         isUnscheduledHalt: false,
-        rootCauseDescription: `Suburban Boarding Congestion: Heavy peak-hour commuter boarding surge on Platform #1/2 exceeded booked dwell.`,
-        operationalImpact: `Scheduled 2-min stop extended to ${(2 + dwellSurge).toFixed(1)} mins due to unreserved coach doorway congestion.`,
-        dispatchActionTaken: `Guard whistle and station master dispatch delayed until platform passenger clearance confirmation.`,
+        rootCauseDescription: `High Footfall Dwell Extension: Morning/evening suburban commuter rush prolonged passenger entrainment/detrainment.`,
+        operationalImpact: `Platform dwell exceeded booked margin by +${dwellSurge}m. Starter signal clearance delayed by guard.`,
+        dispatchActionTaken: `Station Master deployed additional RPF platform marshals for rapid rake clearance.`,
       });
     }
 
-    // (C) Check for LEVEL CROSSING INTERLOCKING GATE
-    const nearbyGate = DEFAULT_LC_GATES.find(
-      (g) => Math.abs(g.chainageKm - station.distanceFromMysKm) < 3.0 && g.status !== "LOCKED_CLOSED"
-    );
-    if (nearbyGate) {
-      const lcLoss = calculateLcGateDelay(nearbyGate);
-      totalSignalMins += lcLoss;
+    // (C) Check for WATERING & SANITATION BLEED (Mandya Junction / Mysuru)
+    if (station.code === "MYA" && isScheduledHalt && params.train.coaches >= 16) {
+      const waterDelay = 2.5;
+      totalWateringMins += waterDelay;
       incidents.push({
-        id: `PAIN-LC-${nearbyGate.id}`,
+        id: `PAIN-WATER-${station.code}`,
         stationCode: station.code,
-        stationName: `${station.name} Outer (${nearbyGate.id})`,
-        chainageKm: nearbyGate.chainageKm,
-        type: "LC_GATE_INTERLOCKING_HOLD",
-        severity: "HIGH",
-        penaltyDurationMin: lcLoss,
-        isUnscheduledHalt: true,
-        rootCauseDescription: `LC Gate Interlocking Delay: ${nearbyGate.id} road traffic clearance held up signal key interlock transmission.`,
-        operationalImpact: `Home signal dropped to RED; train brought to complete standstill at km ${nearbyGate.chainageKm.toFixed(1)}.`,
-        dispatchActionTaken: `Section controller coordinated with Gateman to enforce road boom closure and reset electric interlock.`,
+        stationName: station.name,
+        chainageKm: station.distanceFromMysKm,
+        type: "WATERING_SANITATION_BLEED",
+        categoryName: "Watering & Sanitation",
+        severity: "MODERATE",
+        penaltyDurationMin: waterDelay,
+        isUnscheduledHalt: false,
+        rootCauseDescription: `En-Route Coach Watering Dwell Overrun: Platform hydrant hose coupling latency on 16+ coach rake.`,
+        operationalImpact: `Scheduled 2m halt extended by +${waterDelay}m for mechanical water replenishment.`,
+        dispatchActionTaken: `TXR mechanical wing clearance issued before starter signal green.`,
       });
     }
   });
 
-  // 2. Track Maintenance & TSR Caution Order Stretch
-  if (env.maintenanceBlockActive && env.maintenanceChainageKm) {
-    const tsrPenalty = 2.5;
-    totalSpeedRestrMins += tsrPenalty;
+  // 2. Catenary OHE Voltage Sag & Neutral Section
+  if (params.train.currentSpeedKmph > 50) {
+    const oheSagMin = 1.2;
+    totalTractionLossMins += oheSagMin;
     incidents.push({
-      id: "PAIN-TSR-MAINTENANCE",
+      id: "PAIN-OHE-SAG",
       stationCode: "RMGM",
-      stationName: "Ramanagaram - Bidadi Section",
-      chainageKm: (env.maintenanceChainageKm.from + env.maintenanceChainageKm.to) / 2,
-      type: "TSR_CAUTION_SLOWDOWN",
-      severity: "HIGH",
-      penaltyDurationMin: tsrPenalty,
+      stationName: "Ramanagaram–Bidadi Substation",
+      chainageKm: 98.5,
+      type: "OHE_VOLTAGE_SAG",
+      categoryName: "Traction & OHE Power",
+      severity: "MODERATE",
+      penaltyDurationMin: oheSagMin,
       isUnscheduledHalt: false,
-      rootCauseDescription: `Engineering Caution Order TSR ${env.maintenanceTsrKmph} km/h between km ${env.maintenanceChainageKm.from} - ${env.maintenanceChainageKm.to} (Deep Ballast Screening & Track Relaying).`,
-      operationalImpact: `Sectional speed throttled from 110 km/h down to ${env.maintenanceTsrKmph} km/h. High tractive deceleration & re-acceleration cycle incurred.`,
-      dispatchActionTaken: `Caution order issued to Loco Pilot at origin; automatic speed supervision active in section.`,
+      rootCauseDescription: `25kV Catenary Voltage Sag & Neutral Section: Phase break crossing requires opening circuit breaker on uphill gradient.`,
+      operationalImpact: `Momentary loss of tractive effort derates acceleration, incurring +${oheSagMin}m lag across 1:150 gradient.`,
+      dispatchActionTaken: `Traction Power Controller (TPC) monitored grid substation tap changers.`,
     });
   }
 
-  // 3. Permanent Speed Restrictions (PSR) over sharp curves / Bridges
-  DEFAULT_PSR_LIST.slice(0, 1).forEach((psr) => {
-    const psrPenalty = 1.2;
-    totalSpeedRestrMins += psrPenalty;
+  // 3. Wet Railhead Adhesion Slip (Monsoon / Mist)
+  if (env.weather === "HEAVY_MONSOON" || env.weather === "LIGHT_RAIN" || env.weather === "DENSE_FOG") {
+    const adhesionLossMin = 1.8;
+    totalTractionLossMins += adhesionLossMin;
     incidents.push({
-      id: `PAIN-PSR-${psr.id}`,
-      stationCode: "PANP",
-      stationName: "Pandavapura Curve",
-      chainageKm: (psr.fromChainageKm + psr.toChainageKm) / 2,
-      type: "PSR_CURVE_GRADIENT_CAP",
-      severity: "MINOR",
-      penaltyDurationMin: psrPenalty,
+      id: "PAIN-WET-RAIL",
+      stationCode: "MAD",
+      stationName: "Maddur–Channapatna Incline",
+      chainageKm: 72.0,
+      type: "WET_RAIL_ADHESION_SLIP",
+      categoryName: "Weather & Visibility",
+      severity: "HIGH",
+      penaltyDurationMin: adhesionLossMin,
       isUnscheduledHalt: false,
-      rootCauseDescription: `Permanent Speed Restriction (PSR ${psr.speedLimitKmph} km/h): Sharp 2.8° track curvature and bridge transition.`,
-      operationalImpact: `Speed capped at ${psr.speedLimitKmph} km/h for ${((psr.toChainageKm - psr.fromChainageKm)).toFixed(1)} km span.`,
-      dispatchActionTaken: `Permanent WTT sectional speed restriction enforced.`,
+      rootCauseDescription: `Low Railhead Adhesion Index (μ < 0.20): Wet track surface inducing micro-slippage during WAP-7 notch progression.`,
+      operationalImpact: `Loco pilot throttled tractive motor current to suppress wheel spin, losing +${adhesionLossMin}m uphill momentum.`,
+      dispatchActionTaken: `Automatic loco sanding gear deployed on lead wheelsets.`,
     });
+  }
+
+  // 4. Trackside Speed Restrictions (PSRs/TSRs)
+  DEFAULT_PSR_LIST.forEach((psr) => {
+    if (psr.active && params.train.currentLocationKm <= psr.toChainageKm) {
+      const penalty = psr.speedLimitKmph <= 45 ? 2.5 : 1.2;
+      totalSpeedRestrMins += penalty;
+      incidents.push({
+        id: `PAIN-PSR-${psr.id}`,
+        stationCode: "PSR",
+        stationName: `KM ${psr.fromChainageKm} - ${psr.toChainageKm}`,
+        chainageKm: psr.fromChainageKm,
+        type: "PSR_CURVE_GRADIENT_CAP",
+        categoryName: "Speed Restrictions",
+        severity: psr.speedLimitKmph <= 45 ? "HIGH" : "MODERATE",
+        penaltyDurationMin: penalty,
+        isUnscheduledHalt: false,
+        rootCauseDescription: `Speed Restriction (${psr.speedLimitKmph} km/h): ${psr.cause} (${psr.authority}).`,
+        operationalImpact: `Requires service braking from MPS to ${psr.speedLimitKmph} km/h over ${psr.toChainageKm - psr.fromChainageKm} km track.`,
+        dispatchActionTaken: `Loco pilot observed caution order; automated braking curve monitored.`,
+      });
+    }
   });
 
-  // 4. Terminal Reception Throat Choke at SBC Outer
-  const terminalDelay = currentTotalDelay > 8 ? 3.5 : 1.2;
-  totalThroatMins += terminalDelay;
+  // 5. Level Crossing (LC) Highway Congestion Hold
+  DEFAULT_LC_GATES.forEach((gate) => {
+    if (gate.status === "OPEN_ROAD" || gate.status === "DEFECT_HELD") {
+      const lcPenalty = calculateLcGateDelay(gate);
+      if (lcPenalty > 0.5) {
+        incidents.push({
+          id: `PAIN-LC-${gate.id}`,
+          stationCode: "LC",
+          stationName: `LC Gate ${gate.id} (${gate.section})`,
+          chainageKm: gate.chainageKm,
+          type: "LC_ROAD_TRAFFIC_JAM",
+          categoryName: "LC Gate & Incident",
+          severity: lcPenalty > 2.0 ? "HIGH" : "MODERATE",
+          penaltyDurationMin: lcPenalty,
+          isUnscheduledHalt: false,
+          rootCauseDescription: `State Highway Heavy Road Congestion: Road traffic obstructed interlocked boom closure.`,
+          operationalImpact: `Gate approach signal held at Caution / Red, enforcing deceleration.`,
+          dispatchActionTaken: `Gateman engaged siren and emergency boom locking; signals restored.`,
+        });
+      }
+    }
+  });
+
+  // 6. SBC Bengaluru City Terminal Throat Reception Choke
+  const sbcThroatPenalty = currentTotalDelay > 8 || priority > 2 ? 3.5 : 1.8;
+  totalThroatMins += sbcThroatPenalty;
   incidents.push({
     id: "PAIN-SBC-THROAT",
     stationCode: "SBC",
-    stationName: "KSR Bengaluru (SBC) Outer Throat",
-    chainageKm: 137.5,
+    stationName: "KSR Bengaluru City Outer Throat",
+    chainageKm: 136.5,
     type: "TERMINAL_THROAT_CHOKE",
-    severity: currentTotalDelay > 8 ? "HIGH" : "MODERATE",
-    penaltyDurationMin: terminalDelay,
-    isUnscheduledHalt: currentTotalDelay > 8,
-    rootCauseDescription: `Terminal Reception Conflict: Platform #1-#5 interlocking occupancy and route locking choke at SBC yard entrance.`,
-    operationalImpact: `Train queued at Home Signal outer for ${terminalDelay}m awaiting platform track route clearance.`,
-    dispatchActionTaken: `Yard master queuing incoming rake on SBC Outer home signal line until SMVB/MAS departure clears platform 4.`,
+    categoryName: "Terminal Outer Choke",
+    severity: sbcThroatPenalty > 3.0 ? "HIGH" : "MODERATE",
+    penaltyDurationMin: sbcThroatPenalty,
+    isUnscheduledHalt: false,
+    rootCauseDescription: `Terminal Reception Yard Choke: Diamond crossover locked for departing outbound trains and shunting rake movement.`,
+    operationalImpact: `Approaching rake held at Kengeri Outer / SBC Home Signal for +${sbcThroatPenalty}m before platform berthing.`,
+    dispatchActionTaken: `Yard Master cleared route-relay interlocking to Platform #7.`,
   });
 
-  const totalPainPenaltyMin = Math.round(
-    (totalUnscheduledMins + totalSpeedRestrMins + totalSignalMins + totalThroatMins) * 10
+  // Calculate Aggregated Metrics
+  const totalPain = Math.round(
+    (totalUnscheduledMins +
+      totalSpeedRestrMins +
+      totalSignalMins +
+      totalThroatMins +
+      totalTractionLossMins +
+      totalMechSafetyMins +
+      totalWateringMins) *
+      10
   ) / 10;
 
-  const hotspotStationCodes = Array.from(new Set(incidents.map((i) => i.stationCode)));
-
-  let precedenceSummary = "";
-  if (priority === 1) {
-    precedenceSummary = `Premium Priority (Tier 1): Enjoys absolute mainline clearance. Lower tier rakes are stabled on loop lines to maintain green corridor.`;
-  } else if (priority === 2) {
-    precedenceSummary = `Standard Express (Tier 2): Balanced priority. Subject to loop line stabling if trailing Vande Bharat/Shatabdi enters 12-min headway zone.`;
-  } else if (priority === 3) {
-    precedenceSummary = `Suburban MEMU (Tier 3): High stop density. Frequently looped at Ramanagaram / Bidadi for express overtakes.`;
-  } else {
-    precedenceSummary = `Freight Cargo (Tier 4): Lowest precedence. Subject to extended siding holds (10-30m) to clear high-speed passenger paths.`;
-  }
+  const hotspotCodes = Array.from(new Set(incidents.map((i) => i.stationCode).filter((c) => c !== "PSR" && c !== "LC")));
 
   return {
     train: params.train,
-    totalPainPenaltyMin,
+    totalPainPenaltyMin: totalPain,
     unscheduledHaltsCount: unscheduledCount,
     unscheduledHaltDurationMin: Math.round(totalUnscheduledMins * 10) / 10,
     speedRestrictionPenaltyMin: Math.round(totalSpeedRestrMins * 10) / 10,
     signalDetentionMin: Math.round(totalSignalMins * 10) / 10,
     terminalThroatPenaltyMin: Math.round(totalThroatMins * 10) / 10,
+    tractionLossPenaltyMin: Math.round(totalTractionLossMins * 10) / 10,
+    mechanicalSafetyPenaltyMin: Math.round(totalMechSafetyMins * 10) / 10,
+    wateringBleedPenaltyMin: Math.round(totalWateringMins * 10) / 10,
     incidents,
-    hotspotStationCodes,
-    priorityConflictActive: unscheduledCount > 0 || priority >= 3,
-    precedenceSummary,
+    hotspotStationCodes: hotspotCodes,
+    priorityConflictActive: unscheduledCount > 0,
+    precedenceSummary:
+      unscheduledCount > 0
+        ? `Precedence Conflict: Yielding mainline to higher-priority rakes at ${hotspotCodes.join(", ")}`
+        : `Normal Corridor Flow: No active siding holds required`,
   };
 }
