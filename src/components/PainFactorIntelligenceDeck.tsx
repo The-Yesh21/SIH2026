@@ -23,6 +23,9 @@ import {
   Radio,
   Sparkles,
   RefreshCw,
+  Droplets,
+  Cpu,
+  Activity,
 } from "lucide-react";
 
 interface PainFactorIntelligenceDeckProps {
@@ -41,7 +44,7 @@ export function PainFactorIntelligenceDeck({
   onSelectTrain,
 }: PainFactorIntelligenceDeckProps) {
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<"ALL" | "UNSCHEDULED" | "SPEED" | "THROAT">("ALL");
+  const [filterType, setFilterType] = useState<"ALL" | "UNSCHEDULED" | "TRACTION" | "SPEED" | "THROAT_WATERING">("ALL");
 
   // 1. Compute dynamic recovery capability for active train
   const recovery = evaluateTrainRecoveryCapability({
@@ -80,8 +83,15 @@ export function PainFactorIntelligenceDeck({
 
   const filteredIncidents = painAnalysis.incidents.filter((inc) => {
     if (filterType === "UNSCHEDULED") return inc.type === "UNSCHEDULED_LOOP_HOLD";
+    if (filterType === "TRACTION") return inc.type === "OHE_VOLTAGE_SAG" || inc.type === "WET_RAIL_ADHESION_SLIP";
     if (filterType === "SPEED") return inc.type === "TSR_CAUTION_SLOWDOWN" || inc.type === "PSR_CURVE_GRADIENT_CAP";
-    if (filterType === "THROAT") return inc.type === "TERMINAL_THROAT_CHOKE" || inc.type === "LC_GATE_INTERLOCKING_HOLD";
+    if (filterType === "THROAT_WATERING")
+      return (
+        inc.type === "TERMINAL_THROAT_CHOKE" ||
+        inc.type === "WATERING_SANITATION_BLEED" ||
+        inc.type === "LC_ROAD_TRAFFIC_JAM" ||
+        inc.type === "WILD_HOTBOX_INSPECTION"
+      );
     return true;
   });
 
@@ -106,7 +116,7 @@ export function PainFactorIntelligenceDeck({
             Delay Pain Factors &amp; Recovery Confidence Intelligence
           </h2>
           <p className="text-xs text-steel mt-0.5">
-            Real-time attribution of unscheduled station loop stabling, precedence conflicts, and tractive pace recovery limits.
+            Real-time attribution of unscheduled station loop stabling, OHE voltage sags, wet-rail slip, and SBC terminal throat bottlenecks.
           </p>
         </div>
 
@@ -264,8 +274,8 @@ export function PainFactorIntelligenceDeck({
             </div>
 
             {/* Filter Pills */}
-            <div className="flex gap-1 font-data text-[10px]">
-              {(["ALL", "UNSCHEDULED", "SPEED", "THROAT"] as const).map((cat) => (
+            <div className="flex flex-wrap gap-1 font-data text-[10px]">
+              {(["ALL", "UNSCHEDULED", "TRACTION", "SPEED", "THROAT_WATERING"] as const).map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setFilterType(cat)}
@@ -279,44 +289,46 @@ export function PainFactorIntelligenceDeck({
                     ? "All Factors"
                     : cat === "UNSCHEDULED"
                     ? "Unscheduled Loops"
+                    : cat === "TRACTION"
+                    ? "Traction & OHE"
                     : cat === "SPEED"
                     ? "TSR/PSR Caps"
-                    : "Gate/Throat"}
+                    : "Terminal & Yard"}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Pain Factor Metric Strip */}
-          <div className="grid grid-cols-4 gap-2 font-data text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-data text-xs">
             <div className="p-2.5 rounded-xl bg-surface-raised border border-graphite">
               <div className="text-[10px] text-steel">Unscheduled Halts</div>
               <div className="text-base font-bold text-signal-red mt-0.5">
                 {painAnalysis.unscheduledHaltsCount} Stops
               </div>
               <div className="text-[9px] text-steel">
-                +{painAnalysis.unscheduledHaltDurationMin}m Lost in Sidings
+                +{painAnalysis.unscheduledHaltDurationMin}m in Sidings
               </div>
             </div>
 
             <div className="p-2.5 rounded-xl bg-surface-raised border border-graphite">
-              <div className="text-[10px] text-steel">Caution Orders (TSR)</div>
+              <div className="text-[10px] text-steel">Traction / OHE Sag</div>
+              <div className="text-base font-bold text-signal-amber mt-0.5">
+                +{painAnalysis.tractionLossPenaltyMin}m
+              </div>
+              <div className="text-[9px] text-steel">Grid / Slip Drag</div>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-surface-raised border border-graphite">
+              <div className="text-[10px] text-steel">Speed Restrictions</div>
               <div className="text-base font-bold text-signal-amber mt-0.5">
                 +{painAnalysis.speedRestrictionPenaltyMin}m
               </div>
-              <div className="text-[9px] text-steel">Track Maintenance</div>
+              <div className="text-[9px] text-steel">PSRs &amp; Curves</div>
             </div>
 
             <div className="p-2.5 rounded-xl bg-surface-raised border border-graphite">
-              <div className="text-[10px] text-steel">Signal Detentions</div>
-              <div className="text-base font-bold text-signal-amber mt-0.5">
-                +{painAnalysis.signalDetentionMin}m
-              </div>
-              <div className="text-[9px] text-steel">LC Gate / Headway</div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-surface-raised border border-graphite">
-              <div className="text-[10px] text-steel">SBC Terminal Throat</div>
+              <div className="text-[10px] text-steel">SBC Terminal Outer</div>
               <div className="text-base font-bold text-chalk mt-0.5">
                 +{painAnalysis.terminalThroatPenaltyMin}m
               </div>
@@ -349,9 +361,13 @@ export function PainFactorIntelligenceDeck({
                           <span className="p-1 rounded bg-signal-red/20 text-signal-red">
                             <AlertTriangle className="w-3.5 h-3.5" />
                           </span>
-                        ) : inc.type === "TSR_CAUTION_SLOWDOWN" ? (
+                        ) : inc.type === "OHE_VOLTAGE_SAG" || inc.type === "WET_RAIL_ADHESION_SLIP" ? (
                           <span className="p-1 rounded bg-signal-amber/20 text-signal-amber">
-                            <Gauge className="w-3.5 h-3.5" />
+                            <Zap className="w-3.5 h-3.5" />
+                          </span>
+                        ) : inc.type === "WATERING_SANITATION_BLEED" ? (
+                          <span className="p-1 rounded bg-sky-500/20 text-sky-400">
+                            <Droplets className="w-3.5 h-3.5" />
                           </span>
                         ) : (
                           <span className="p-1 rounded bg-signal-amber/20 text-signal-amber">
