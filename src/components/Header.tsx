@@ -4,8 +4,11 @@ import {
   Sliders,
   Radio,
   Clock,
+  Cpu,
+  CheckCircle2,
 } from "lucide-react";
 import { formatClockMinutes } from "../lib/rail/timeResolver";
+import { checkBackendHealth } from "../lib/rail/apiClient";
 
 interface HeaderProps {
   showScenarioBar: boolean;
@@ -32,6 +35,19 @@ export function Header({
   activeTab,
   setActiveTab,
 }: HeaderProps) {
+  const [pythonBackendOnline, setPythonBackendOnline] = useState<boolean>(false);
+
+  // Check Python ML backend status periodically
+  useEffect(() => {
+    const probe = async () => {
+      const isUp = await checkBackendHealth();
+      setPythonBackendOnline(isUp);
+    };
+    probe();
+    const interval = setInterval(probe, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Sync with real-time clock when in real-time mode
   useEffect(() => {
     if (!isRealTimeSynced) return;
@@ -46,8 +62,6 @@ export function Header({
     const interval = setInterval(updateClock, 10000); // Check every 10 seconds
     return () => clearInterval(interval);
   }, [isRealTimeSynced, setActiveClockMinutes]);
-
-  const hasActiveDisruptions = injectedDelay > 0 || weather !== "CLEAR";
 
   const handlePresetClick = (mins: number) => {
     setIsRealTimeSynced(false);
@@ -74,6 +88,22 @@ export function Header({
               <h1 className="text-lg font-heading font-bold text-chalk">
                 RailRakshak
               </h1>
+              {/* Python ML Backend Status Badge */}
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-data font-semibold border transition-all ${
+                  pythonBackendOnline
+                    ? "bg-signal-green/10 text-signal-green border-signal-green/30"
+                    : "bg-surface-raised text-steel border-graphite"
+                }`}
+                title={
+                  pythonBackendOnline
+                    ? "FastAPI Python ML Intelligence Core Active (LightGBM + SHAP)"
+                    : "Running in Client-Side Kinematics Simulation Mode"
+                }
+              >
+                <Cpu className="w-3 h-3" />
+                <span>{pythonBackendOnline ? "Python ML Engine Online" : "Hybrid Offline Mode"}</span>
+              </span>
             </div>
             <p className="text-sm font-body text-steel">
               SWR Corridor · <strong className="text-chalk">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km
