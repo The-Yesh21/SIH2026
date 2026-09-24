@@ -1,0 +1,158 @@
+{
+  "metrics": {
+    "r2Score": 0.8999,
+    "meanAbsoluteErrorMin": 0.701,
+    "rootMeanSquaredErrorMin": 1.226,
+    "sampleCount": 35000,
+    "featuresCount": 29,
+    "trainedAt": "2026-09-24T17:35:14.506880+00:00"
+  },
+  "feature_importances": [
+    {
+      "feature": "total_current_delay",
+      "importance": 14.04,
+      "description": "Total Cumulative Delay at Current Observation (minutes)"
+    },
+    {
+      "feature": "current_km",
+      "importance": 9.81,
+      "description": "Current Traversed Distance from Mysuru Junction (km)"
+    },
+    {
+      "feature": "remaining_km",
+      "importance": 7.4,
+      "description": "Remaining Distance to SBC Terminal (km)"
+    },
+    {
+      "feature": "downstream_tsr_count",
+      "importance": 7.37,
+      "description": "Active Temporary Speed Restrictions Ahead"
+    },
+    {
+      "feature": "commuter_surge_multiplier",
+      "importance": 7.16,
+      "description": "Suburban Passenger Boarding Surge Multiplier"
+    },
+    {
+      "feature": "train_type_code",
+      "importance": 6.16,
+      "description": "Train Rolling Stock Type (Vande Bharat, Shatabdi, Superfast, Express, MEMU, Freight)"
+    },
+    {
+      "feature": "visibility_meters",
+      "importance": 5.32,
+      "description": "Driver Track Visibility Range (meters)"
+    },
+    {
+      "feature": "weather_code",
+      "importance": 5.23,
+      "description": "Environmental Weather State (Clear, Fog, Monsoon, Heavy Rain)"
+    },
+    {
+      "feature": "initial_delay_min",
+      "importance": 5.1,
+      "description": "Initial Recorded Schedule Delay (minutes)"
+    },
+    {
+      "feature": "ambient_temp_celsius",
+      "importance": 4.58,
+      "description": "Ambient Track & Air Temperature (\u00b0C)"
+    },
+    {
+      "feature": "ohe_voltage_kv",
+      "importance": 4.08,
+      "description": "25kV AC Overhead Traction Voltage (kV)"
+    },
+    {
+      "feature": "current_speed_kmph",
+      "importance": 3.93,
+      "description": "Live Telemetry Running Speed (km/h)"
+    },
+    {
+      "feature": "wild_alarm_flag",
+      "importance": 3.72,
+      "description": "Wheel Impact Load Detector Hotbox Alarm Active"
+    },
+    {
+      "feature": "single_line_block_flag",
+      "importance": 2.51,
+      "description": "Maintenance Mega-Block / Single Line Working Active"
+    },
+    {
+      "feature": "dep_hour",
+      "importance": 1.76,
+      "description": "Departure Hour of Day (0-23)"
+    },
+    {
+      "feature": "remaining_stops_count",
+      "importance": 1.58,
+      "description": "Number of Downstream Scheduled Halts Remaining"
+    },
+    {
+      "feature": "terminal_throat_occupancy",
+      "importance": 1.58,
+      "description": "KSR Bengaluru (SBC) Approach Throat Congestion Ratio"
+    },
+    {
+      "feature": "dep_hour_sin",
+      "importance": 1.41,
+      "description": "Cyclic Time Feature (Sine of Departure Hour)"
+    },
+    {
+      "feature": "dep_hour_cos",
+      "importance": 1.23,
+      "description": "Cyclic Time Feature (Cosine of Departure Hour)"
+    },
+    {
+      "feature": "coaches",
+      "importance": 1.17,
+      "description": "Train Coach Composition Length"
+    },
+    {
+      "feature": "injected_delay_min",
+      "importance": 1.08,
+      "description": "Active Scenario Injected Delay (minutes)"
+    },
+    {
+      "feature": "is_peak_hour",
+      "importance": 1.01,
+      "description": "Corridor Peak Traffic Window (Morning / Evening Rush)"
+    },
+    {
+      "feature": "rail_surface_code",
+      "importance": 0.69,
+      "description": "Rail Adhesion Surface State (Dry, Damp, Wet, Waterlogged)"
+    },
+    {
+      "feature": "tractive_hp_per_ton",
+      "importance": 0.59,
+      "description": "Tractive Effort Power-to-Weight Ratio (HP/ton)"
+    },
+    {
+      "feature": "priority_tier",
+      "importance": 0.49,
+      "description": "Operational Dispatching Priority Tier (1: Highest, 4: Freight)"
+    },
+    {
+      "feature": "nominal_decel",
+      "importance": 0.46,
+      "description": "Service Braking Deceleration Rate (m/s\u00b2)"
+    },
+    {
+      "feature": "downstream_lc_gates_count",
+      "importance": 0.44,
+      "description": "Downstream Level Crossing Gates Ahead"
+    },
+    {
+      "feature": "sectional_mps",
+      "importance": 0.08,
+      "description": "Maximum Permissible Speed for Train & Section (km/h)"
+    },
+    {
+      "feature": "adhesion_factor",
+      "importance": 0.03,
+      "description": "Wheel-Rail Traction Adhesion Coefficient"
+    }
+  ],
+  "trainedAt": "2026-09-24T17:35:14.506880+00:00"
+}
