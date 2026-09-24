@@ -74,3 +74,32 @@ export async function getDynamicPrediction(params: {
     source: "CLIENT_KINEMATICS",
   };
 }
+
+export async function getModelMetadata(): Promise<import("./types").ModelMetadata | null> {
+  try {
+    const res = await fetch(`${BACKEND_API_BASE}/api/ml/model-info`, {
+      method: "GET",
+      signal: AbortSignal.timeout(2000),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    // backend offline or unavailable
+  }
+  return null;
+}
+
+export async function triggerModelRetrain(sampleCount: number = 35000): Promise<boolean> {
+  try {
+    const res = await fetch(`${BACKEND_API_BASE}/api/ml/retrain`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sampleCount }),
+      signal: AbortSignal.timeout(30000),
+    });
+    return res.ok;
+  } catch (err) {
+    return false;
+  }
+}
