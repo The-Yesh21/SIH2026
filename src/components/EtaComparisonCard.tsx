@@ -74,7 +74,12 @@ export function EtaComparisonCard({ prediction }: EtaComparisonCardProps) {
             <TrendingDown className="h-3.5 w-3.5 text-emerald-400" />
             <span>Slack Recovery: <strong>-{slackRecoveredMin} min</strong></span>
           </div>
-          {errorDeltaMin !== 0 && (
+          {prediction.confidenceInterval && (
+            <div className="text-cyan-300 text-[11px] font-semibold">
+              95% CI: {prediction.confidenceInterval.lowerEta} – {prediction.confidenceInterval.upperEta} (±{prediction.confidenceInterval.rmseMarginMin}m)
+            </div>
+          )}
+          {errorDeltaMin !== 0 && !prediction.confidenceInterval && (
             <div className="text-cyan-300 font-bold">
               Accuracy Improvement: {Math.abs(errorDeltaMin)} min precision gain
             </div>
