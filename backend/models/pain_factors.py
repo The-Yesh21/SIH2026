@@ -141,6 +141,14 @@ class CorridorPainSummaryModel(BaseModel):
     ]
     recoveryProbabilityPct: float
 
+class ConfidenceIntervalModel(BaseModel):
+    lowerEta: str
+    upperEta: str
+    lowerDelayMin: float
+    upperDelayMin: float
+    confidencePct: float = 95.0
+    rmseMarginMin: float
+
 class DynamicPredictionResponseModel(BaseModel):
     train: TrainConfigModel
     traditionalStaticEta: str
@@ -154,4 +162,35 @@ class DynamicPredictionResponseModel(BaseModel):
     shapFactors: List[ShapAttributionFactorModel]
     stationBreakdown: List[StationForecastRowModel]
     painSummary: CorridorPainSummaryModel
-    engineVersion: str = "Python-ML-v2.5-LightGBM"
+    confidenceInterval: Optional[ConfidenceIntervalModel] = None
+    modelConfidenceScore: float = 0.96
+    engineVersion: str = "Python-ML-v3.0-LightGBM+SHAP"
+
+class FeatureImportanceItem(BaseModel):
+    feature: str
+    importance: float
+    description: str
+
+class ModelEvaluationMetrics(BaseModel):
+    r2Score: float
+    meanAbsoluteErrorMin: float
+    rootMeanSquaredErrorMin: float
+    sampleCount: int
+    featuresCount: int
+    trainedAt: str
+
+class ModelMetadataResponseModel(BaseModel):
+    modelName: str
+    algorithm: str
+    version: str
+    status: str
+    corridor: str
+    evaluationMetrics: ModelEvaluationMetrics
+    topFeatureImportances: List[FeatureImportanceItem]
+    shapExplainerReady: bool
+
+class RetrainResponseModel(BaseModel):
+    status: str
+    message: str
+    trainingSamplesGenerated: int
+    evaluationMetrics: ModelEvaluationMetrics
