@@ -81,6 +81,40 @@ export interface DynamicPredictionResult {
   signalHaltsPenaltyMin: number;
   shapFactors: ShapAttributionFactor[];
   stationBreakdown: StationForecastRow[];
+  confidenceInterval?: {
+    lowerEta: string;
+    upperEta: string;
+    lowerDelayMin: number;
+    upperDelayMin: number;
+    confidencePct: number;
+    rmseMarginMin: number;
+  };
+  modelConfidenceScore?: number;
+  engineVersion?: string;
+}
+
+export interface FeatureImportanceItem {
+  feature: string;
+  importance: number;
+  description: string;
+}
+
+export interface ModelMetadata {
+  modelName: string;
+  algorithm: string;
+  version: string;
+  status: string;
+  corridor: string;
+  evaluationMetrics: {
+    r2Score: number;
+    meanAbsoluteErrorMin: number;
+    rootMeanSquaredErrorMin: number;
+    sampleCount: number;
+    featuresCount: number;
+    trainedAt: string;
+  };
+  topFeatureImportances: FeatureImportanceItem[];
+  shapExplainerReady: boolean;
 }
 
 export interface ShapAttributionFactor {
