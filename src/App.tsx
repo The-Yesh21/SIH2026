@@ -21,8 +21,8 @@ import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceD
 import { Flame } from "lucide-react";
 
 export function App() {
-  // Navigation View State - Defaults to the clean 3-section layout
-  const [activeTab, setActiveTab] = useState<"SECTIONED" | "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS">("SECTIONED");
+  // Navigation View State - Defaults to the deep engineering cockpit
+  const [activeTab, setActiveTab] = useState<"COCKPIT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">("COCKPIT");
 
   // Initialize with exact real-world clock time (in minutes from midnight)
   const [activeClockMinutes, setActiveClockMinutes] = useState<number>(() => {
@@ -91,7 +91,7 @@ export function App() {
       {/* 2. Main Mission Control Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
         
-        {activeTab === "SECTIONED" ? (
+        {activeTab === "STITCH_INSIGHT" ? (
           /* Clean 3-Section Light Layout (Fleet Selector | Movements Spine | Dynamic ETA & Pain Points) */
           <CleanSectionedCockpit
             selectedTrain={resolvedLive.config}

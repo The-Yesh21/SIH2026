@@ -19,8 +19,8 @@ interface HeaderProps {
   setActiveClockMinutes: (mins: number) => void;
   isRealTimeSynced: boolean;
   setIsRealTimeSynced: (synced: boolean) => void;
-  activeTab: "SECTIONED" | "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS";
-  setActiveTab: (tab: "SECTIONED" | "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS") => void;
+  activeTab: "COCKPIT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS";
+  setActiveTab: (tab: "COCKPIT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => void;
 }
 
 export function Header({
@@ -177,18 +177,6 @@ export function Header({
       {/* Primary Section Switcher Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto">
         <button
-          onClick={() => setActiveTab("SECTIONED")}
-          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
-            activeTab === "SECTIONED"
-              ? "text-blue-400 border-b-2 border-blue-400 font-bold bg-blue-500/10 rounded-t-lg"
-              : "text-steel hover:text-chalk border-b-2 border-transparent"
-          }`}
-        >
-          <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-          <span>⚡ Live 3-Section Insight (Light)</span>
-        </button>
-
-        <button
           onClick={() => setActiveTab("COCKPIT")}
           className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
             activeTab === "COCKPIT"
@@ -198,6 +186,21 @@ export function Header({
         >
           <Radio className="w-4 h-4 text-signal-green" />
           <span>Corridor Dynamic Cockpit</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("STITCH_INSIGHT")}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border ${
+            activeTab === "STITCH_INSIGHT"
+              ? "bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20"
+              : "bg-blue-950/40 text-blue-300 border-blue-800/60 hover:bg-blue-900/40 hover:text-white"
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+          <span>✨ Stitch Live Insight (Light)</span>
+          <span className="px-1.5 py-0.2 rounded bg-blue-400 text-slate-950 text-[10px] font-mono font-black uppercase">
+            NEW
+          </span>
         </button>
 
         <button
