@@ -22,6 +22,8 @@ PainFactorCategory = Literal[
     "MECHANICAL_SAFETY_WILD",
     "WATERING_SANITATION",
     "SINGLE_LINE_WORKING",
+    "PRECEDING_TRAIN_IMPACT",
+    "SECTOR_BOTTLENECK_HOTSPOT",
     "TIMETABLE_SLACK_RECOVERY"
 ]
 
@@ -38,7 +40,9 @@ PainFactorType = Literal[
     "WET_RAIL_ADHESION_SLIP",
     "WILD_HOTBOX_INSPECTION",
     "WATERING_SANITATION_BLEED",
-    "SINGLE_LINE_MEGABLOCK"
+    "SINGLE_LINE_MEGABLOCK",
+    "PRECEDING_TRAIN_HEADWAY_CHOKE",
+    "SECTOR_RECURRENT_BOTTLENECK"
 ]
 
 class EnvironmentalConditionsModel(BaseModel):
@@ -78,6 +82,81 @@ class LoopPenaltyDecompositionModel(BaseModel):
     restartAccelerationMin: float
     rejoiningMainlineMin: float
     totalPenaltyMin: float
+
+class PrecedingTrainContextModel(BaseModel):
+    hasPrecedingTrain: bool = False
+    leadTrainId: Optional[str] = None
+    leadTrainName: Optional[str] = None
+    leadTrainType: Optional[str] = None
+    leadTrainLocationKm: Optional[float] = None
+    headwayDistanceKm: Optional[float] = None
+    headwayGapMinutes: Optional[float] = None
+    leadTrainDelayDeltaMin: float = 0.0
+    leadTrainLastSection: Optional[str] = None
+    sectionFrictionIndex: float = 0.0
+    rippleDelayPropagatedMin: float = 0.0
+    headwayCompressionRisk: Literal["NOMINAL_GREEN", "CAUTION_AMBER", "HIGH_RISK_BRAKING"] = "NOMINAL_GREEN"
+    operationalSummary: str = "Clear track headway ahead."
+
+class SectionFrictionModel(BaseModel):
+    sectionCode: str
+    fromStation: str
+    toStation: str
+    startKm: float
+    endKm: float
+    lengthKm: float
+    frictionScore: float
+    degradationTier: Literal["OPTIMAL", "MODERATE_FRICTION", "HEAVY_CONGESTION", "BLOCKED_RESTRICTED"]
+    sectionalMpsKmph: float
+    lastTraversedTrainId: Optional[str] = None
+    lastTraversedTrainName: Optional[str] = None
+    delayRecordedMin: float = 0.0
+    activeRestrictionReason: str
+
+class AffectedTrainRecordModel(BaseModel):
+    trainId: str
+    trainName: str
+    trainType: str
+    avgHistoricalDelayMin: float
+    maxDetentionMin: float
+    historicalOccurrenceCount: int
+    vulnerabilityReason: str
+
+class SectorHotspotModel(BaseModel):
+    id: str
+    rank: int
+    sectorName: str
+    chainageKm: str
+    startKm: float
+    endKm: float
+    totalCumulativeDelayMin: float
+    delayFrequencyPct: float
+    delayedTrainsCount: int
+    totalObservedTrains: int = 16
+    avgDelayPerTrainMin: float
+    maxSingleDetentionMin: float
+    primaryCause: str
+    causeCategory: Literal["Terminal Throat", "Suburban Commuters", "Precedence & Loop", "Track Curvature PSR", "Level Crossing"]
+    speedCapKmph: float
+    affectedTrainsList: List[AffectedTrainRecordModel]
+    mitigationStrategy: str
+    etaPredictionRiskWeight: float
+
+class TrainVulnerabilitySectorModel(BaseModel):
+    trainId: str
+    trainName: str
+    primarySectorId: str
+    primarySectorName: str
+    chainageRangeKm: str
+    startKm: float
+    endKm: float
+    historicalAverageDelayMin: float
+    historicalOccurrenceFrequencyPct: float
+    maxHistoricalDetentionMin: float
+    riskLevel: Literal["CRITICAL_BOTTLENECK", "HIGH_RISK", "MODERATE_RISK", "LOW_RISK"]
+    vulnerabilityReason: str
+    dispatchActionAdvice: str
+    etaBufferAdjustedMin: float
 
 class IdentifiedPainIncidentModel(BaseModel):
     id: str
@@ -159,6 +238,10 @@ class DynamicPredictionResponseModel(BaseModel):
     bottlenecksIncurredMin: float
     speedRestrictionPenaltyMin: float
     signalHaltsPenaltyMin: float
+    precedingTrainContext: Optional[PrecedingTrainContextModel] = None
+    sectionFriction: Optional[List[SectionFrictionModel]] = None
+    hotspotSectors: Optional[List[SectorHotspotModel]] = None
+    primaryVulnerabilitySector: Optional[TrainVulnerabilitySectorModel] = None
     shapFactors: List[ShapAttributionFactorModel]
     stationBreakdown: List[StationForecastRowModel]
     painSummary: CorridorPainSummaryModel
@@ -194,3 +277,13 @@ class RetrainResponseModel(BaseModel):
     message: str
     trainingSamplesGenerated: int
     evaluationMetrics: ModelEvaluationMetrics
+
+class ContinuousCorridorMonitorResponseModel(BaseModel):
+    activeClockMinutes: float
+    activeClockDisplay: str
+    corridorHealthScorePct: float
+    overallStatus: Literal["OPTIMAL_FLOW", "MODERATE_FRICTION", "SEVERE_CONGESTION"]
+    activeTrainsCount: int
+    sections: List[SectionFrictionModel]
+    precedingTrainAlerts: List[str]
+    recentCrossingsSummary: str
