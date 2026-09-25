@@ -89,10 +89,16 @@ export function App() {
       />
 
       {/* 2. Main Mission Control Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
+      <main
+        className={`flex-1 w-full mx-auto py-6 sm:py-8 transition-all ${
+          activeTab === "STITCH_INSIGHT"
+            ? "max-w-full px-4 sm:px-6 lg:px-10 xl:px-12 space-y-6"
+            : "max-w-7xl px-4 sm:px-6 lg:px-8 space-y-7 sm:space-y-8"
+        }`}
+      >
         
         {activeTab === "STITCH_INSIGHT" ? (
-          /* Clean 3-Section Light Layout (Fleet Selector | Movements Spine | Dynamic ETA & Pain Points) */
+          /* Clean Full-Screen Light Layout (Fleet Selector | Movements Spine | Dynamic ETA & Pain Points) */
           <CleanSectionedCockpit
             selectedTrain={resolvedLive.config}
             prediction={prediction}
