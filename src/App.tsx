@@ -223,52 +223,55 @@ export function App() {
           </>
         )}
 
-        {/* Micro-Climate Weather Sensors & Operational Unscheduled Stops Deck */}
-        <StopsAndWeatherIntelligenceDeck
-          selectedTrain={resolvedLive.config}
-          environment={environment}
-          setEnvironment={setEnvironment}
-          activeClockMinutes={activeClockMinutes}
-          injectedDelay={injectedDelay}
-        />
+        {/* Micro-Climate Weather Sensors & Secondary Decks (Shown only in Dark Engineering Cockpit Views) */}
+        {activeTab !== "STITCH_INSIGHT" && (
+          <>
+            <StopsAndWeatherIntelligenceDeck
+              selectedTrain={resolvedLive.config}
+              environment={environment}
+              setEnvironment={setEnvironment}
+              activeClockMinutes={activeClockMinutes}
+              injectedDelay={injectedDelay}
+            />
 
-        {/* Yesterday's Corridor Traffic & Delay Gap Forensics Deck */}
-        <YesterdayTrafficAnalysis
-          onSelectTrainForLiveView={(trainNo) => {
-            setSelectedTrainId(trainNo);
-            setActiveTab("COCKPIT");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-        />
+            <YesterdayTrafficAnalysis
+              onSelectTrainForLiveView={(trainNo) => {
+                setSelectedTrainId(trainNo);
+                setActiveTab("COCKPIT");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
 
-        {/* Delay Hotspot Analysis Section (Collapsible) */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setShowHotspots(!showHotspots)}
-              className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-surface-raised hover:bg-surface-overlay border border-graphite text-xs font-data font-semibold text-signal-amber transition-colors"
-            >
-              <Flame className="w-4 h-4 text-signal-red" />
-              <span>
-                {showHotspots
-                  ? "Hide Detailed Hotspot Calculations"
-                  : "View Infrastructure Bottleneck Technical Specifications"}
-              </span>
-            </button>
-            <span className="text-xs text-steel font-data hidden sm:inline">
-              SWR Mysore–Bangalore Division
-            </span>
-          </div>
+            {/* Delay Hotspot Analysis Section (Collapsible) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setShowHotspots(!showHotspots)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-surface-raised hover:bg-surface-overlay border border-graphite text-xs font-data font-semibold text-signal-amber transition-colors"
+                >
+                  <Flame className="w-4 h-4 text-signal-red" />
+                  <span>
+                    {showHotspots
+                      ? "Hide Detailed Hotspot Calculations"
+                      : "View Infrastructure Bottleneck Technical Specifications"}
+                  </span>
+                </button>
+                <span className="text-xs text-steel font-data hidden sm:inline">
+                  SWR Mysore–Bangalore Division
+                </span>
+              </div>
 
-          {showHotspots && (
-            <div className="animate-fade-in">
-              <CorridorDelayHotspots
-                environment={environment}
-                injectedDelay={injectedDelay}
-              />
+              {showHotspots && (
+                <div className="animate-fade-in">
+                  <CorridorDelayHotspots
+                    environment={environment}
+                    injectedDelay={injectedDelay}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </main>
 
       {/* Footer Branding & Disclaimer */}
