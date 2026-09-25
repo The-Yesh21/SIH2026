@@ -19,8 +19,8 @@ interface HeaderProps {
   setActiveClockMinutes: (mins: number) => void;
   isRealTimeSynced: boolean;
   setIsRealTimeSynced: (synced: boolean) => void;
-  activeTab: "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS";
-  setActiveTab: (tab: "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS") => void;
+  activeTab: "SECTIONED" | "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS";
+  setActiveTab: (tab: "SECTIONED" | "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS") => void;
 }
 
 export function Header({
@@ -176,6 +176,18 @@ export function Header({
 
       {/* Primary Section Switcher Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab("SECTIONED")}
+          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+            activeTab === "SECTIONED"
+              ? "text-blue-400 border-b-2 border-blue-400 font-bold bg-blue-500/10 rounded-t-lg"
+              : "text-steel hover:text-chalk border-b-2 border-transparent"
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+          <span>⚡ Live 3-Section Insight (Light)</span>
+        </button>
+
         <button
           onClick={() => setActiveTab("COCKPIT")}
           className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${

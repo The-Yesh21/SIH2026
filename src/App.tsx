@@ -7,6 +7,7 @@ import {
   resolveTrainAtClockTime,
 } from "./lib/rail/timeResolver";
 import { Header } from "./components/Header";
+import { CleanSectionedCockpit } from "./components/CleanSectionedCockpit";
 import { TrainSelector } from "./components/TrainSelector";
 import { DelayIntelligenceDeck } from "./components/DelayIntelligenceDeck";
 import { PrecedingTrainMonitorDeck } from "./components/PrecedingTrainMonitorDeck";
@@ -20,8 +21,8 @@ import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceD
 import { Flame } from "lucide-react";
 
 export function App() {
-  // Navigation View State
-  const [activeTab, setActiveTab] = useState<"COCKPIT" | "PAIN_FACTORS" | "ANALYSIS">("COCKPIT");
+  // Navigation View State - Defaults to the clean 3-section layout
+  const [activeTab, setActiveTab] = useState<"SECTIONED" | "COCKPIT" | "PAIN_FACTORS" | "ANALYSIS">("SECTIONED");
 
   // Initialize with exact real-world clock time (in minutes from midnight)
   const [activeClockMinutes, setActiveClockMinutes] = useState<number>(() => {
@@ -90,7 +91,18 @@ export function App() {
       {/* 2. Main Mission Control Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
         
-        {activeTab === "COCKPIT" ? (
+        {activeTab === "SECTIONED" ? (
+          /* Clean 3-Section Light Layout (Fleet Selector | Movements Spine | Dynamic ETA & Pain Points) */
+          <CleanSectionedCockpit
+            selectedTrain={resolvedLive.config}
+            prediction={prediction}
+            onSelectTrain={handleSelectTrain}
+            activeClockMinutes={activeClockMinutes}
+            environment={environment}
+            injectedDelay={injectedDelay}
+            setInjectedDelay={setInjectedDelay}
+          />
+        ) : activeTab === "COCKPIT" ? (
           <>
             {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
             <TrainSelector
