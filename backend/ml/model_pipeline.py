@@ -23,6 +23,7 @@ from ml.dataset_generator import (
 from models.pain_factors import (
     TrainConfigModel,
     EnvironmentalConditionsModel,
+    PrecedingTrainContextModel,
     FeatureImportanceItem,
     ModelEvaluationMetrics,
     ModelMetadataResponseModel
@@ -61,7 +62,12 @@ FEATURE_DESCRIPTIONS = {
     "remaining_stops_count": "Number of Downstream Scheduled Halts Remaining",
     "downstream_tsr_count": "Active Temporary Speed Restrictions Ahead",
     "downstream_lc_gates_count": "Downstream Level Crossing Gates Ahead",
-    "terminal_throat_occupancy": "KSR Bengaluru (SBC) Approach Throat Congestion Ratio"
+    "terminal_throat_occupancy": "KSR Bengaluru (SBC) Approach Throat Congestion Ratio",
+    "lead_train_headway_gap_min": "Time Headway Spacing to Preceding Train (minutes)",
+    "lead_train_delay_delta_min": "Recent Delay Incurred by Preceding Train (minutes)",
+    "section_friction_score": "Live Downstream Section Degradation & Friction Index (0-1)",
+    "recent_lc_gate_detention_min": "Recent LC Gate Clearance Lag Recorded by Prior Trains (minutes)",
+    "preceding_train_dwell_surge_min": "Commuter Boarding Spillover Lag from Preceding Train (minutes)"
 }
 
 class RailwayMLPipeline:
@@ -99,100 +105,111 @@ class RailwayMLPipeline:
         y = df["dynamic_delay_delta_min"]
         
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
+            X, y, test_size=0.20, random_state=42
         )
         
-        # Train High-Precision LightGBM Regressor
+        # Configure LightGBM Regressor
         model = lgb.LGBMRegressor(
-            objective="regression",
             n_estimators=300,
-            learning_rate=0.035,
-            num_leaves=31,
+            learning_rate=0.045,
+            num_leaves=38,
             max_depth=7,
+            min_child_samples=25,
             subsample=0.85,
             colsample_bytree=0.85,
+            reg_alpha=0.1,
+            reg_lambda=0.15,
             random_state=42,
             n_jobs=-1,
-            verbose=-1
+            verbosity=-1
         )
-        model.fit(X_train, y_train)
         
-        # Evaluate on Test Set
+        model.fit(
+            X_train,
+            y_train,
+            eval_set=[(X_test, y_test)],
+            callbacks=[lgb.early_stopping(stopping_rounds=25, verbose=False)]
+        )
+        
+        # Predictions & Metrics
         y_pred = model.predict(X_test)
         r2 = float(r2_score(y_test, y_pred))
         mae = float(mean_absolute_error(y_test, y_pred))
         rmse = float(root_mean_squared_error(y_test, y_pred))
         
-        # Build SHAP TreeExplainer
-        explainer = shap.TreeExplainer(model)
-        
         # Compute Feature Importances
         raw_importances = model.feature_importances_
-        norm_importances = (raw_importances / np.sum(raw_importances)) * 100.0
-        
-        fi_list = []
-        for feat_name, imp in sorted(zip(FEATURE_COLUMNS, norm_importances), key=lambda x: x[1], reverse=True):
-            fi_list.append({
-                "feature": feat_name,
-                "importance": round(float(imp), 2),
-                "description": FEATURE_DESCRIPTIONS.get(feat_name, feat_name)
+        importance_list = []
+        total_imp = max(1.0, float(np.sum(raw_importances)))
+        for feat, imp in zip(FEATURE_COLUMNS, raw_importances):
+            normalized_imp = float(imp / total_imp)
+            importance_list.append({
+                "feature": feat,
+                "importance": round(normalized_imp, 4),
+                "description": FEATURE_DESCRIPTIONS.get(feat, feat)
             })
-            
-        trained_timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        importance_list.sort(key=lambda x: x["importance"], reverse=True)
         
-        metrics_dict = {
+        # Initialize SHAP TreeExplainer
+        explainer = shap.TreeExplainer(model)
+        
+        self.model = model
+        self.explainer = explainer
+        self.feature_importances = importance_list
+        self.trained_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        self.metrics = {
             "r2Score": round(r2, 4),
             "meanAbsoluteErrorMin": round(mae, 3),
             "rootMeanSquaredErrorMin": round(rmse, 3),
             "sampleCount": num_samples,
             "featuresCount": len(FEATURE_COLUMNS),
-            "trainedAt": trained_timestamp
+            "trainedAt": self.trained_at
         }
         
-        self.model = model
-        self.explainer = explainer
-        self.metrics = metrics_dict
-        self.feature_importances = fi_list
-        self.trained_at = trained_timestamp
+        self.save_model()
         
-        # Save model and metadata
-        joblib.dump(model, MODEL_FILE_PATH)
+        duration = time.time() - start_time
+        print(f">>> [RailRakshak ML] Model trained in {duration:.2f}s | R2: {r2:.4f} | MAE: {mae:.3f} min | RMSE: {rmse:.3f} min")
+        return self.metrics
+
+    def save_model(self):
+        joblib.dump(self.model, MODEL_FILE_PATH)
+        metadata = {
+            "modelName": "RailRakshak LightGBM Corridor Intelligence Core",
+            "version": "3.0.0-PROD",
+            "features": FEATURE_COLUMNS,
+            "featureDescriptions": FEATURE_DESCRIPTIONS,
+            "metrics": self.metrics,
+            "topImportances": self.feature_importances[:15],
+            "trainedAt": self.trained_at
+        }
         with open(METADATA_FILE_PATH, "w") as f:
-            json.dump({
-                "metrics": metrics_dict,
-                "feature_importances": fi_list,
-                "trainedAt": trained_timestamp
-            }, f, indent=2)
-            
-        elapsed = time.time() - start_time
-        print(f">>> [RailRakshak ML] Model trained in {elapsed:.2f}s | R²: {r2:.4f} | MAE: {mae:.2f}m | RMSE: {rmse:.2f}m")
-        return metrics_dict
+            json.dump(metadata, f, indent=2)
 
     def load_model(self):
+        if not os.path.exists(MODEL_FILE_PATH) or not os.path.exists(METADATA_FILE_PATH):
+            raise FileNotFoundError("Model artifacts not found.")
         self.model = joblib.load(MODEL_FILE_PATH)
         self.explainer = shap.TreeExplainer(self.model)
         with open(METADATA_FILE_PATH, "r") as f:
-            meta = json.load(f)
-            self.metrics = meta["metrics"]
-            self.feature_importances = meta["feature_importances"]
-            self.trained_at = meta.get("trainedAt")
+            metadata = json.load(f)
+        self.metrics = metadata.get("metrics")
+        self.feature_importances = metadata.get("topImportances", [])
+        self.trained_at = metadata.get("trainedAt")
 
     def build_feature_vector(
         self,
         train: TrainConfigModel,
         env: EnvironmentalConditionsModel,
-        injected_delay_min: float = 0.0
+        injected_delay_min: float = 0.0,
+        preceding_ctx: Optional[PrecedingTrainContextModel] = None
     ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-        """
-        Extracts tabular feature vector from current live train config and environmental telemetry.
-        """
         ttype = train.type
         spec = PRIORITY_SPECS.get(ttype, PRIORITY_SPECS["EXPRESS"])
         current_km = float(min(CORRIDOR_LENGTH_KM - 0.1, max(0.0, train.currentLocationKm)))
         remaining_km = float(CORRIDOR_LENGTH_KM - current_km)
         total_delay = float(train.initialDelayMin + injected_delay_min)
         
-        # Departure & Time features
         try:
             dep_parts = train.scheduledDep.split(":")
             dep_hour = int(dep_parts[0])
@@ -224,6 +241,20 @@ class RailwayMLPipeline:
         near_sbc = 1.0 if (remaining_km < 25.0) else (remaining_km / 25.0)
         throat_occupancy = float(np.clip(0.45 + (0.40 if is_peak else 0.10) * (1.0 - near_sbc), 0.2, 1.0))
         
+        # Preceding train context features
+        if preceding_ctx and preceding_ctx.hasPrecedingTrain:
+            lead_headway = float(preceding_ctx.headwayGapMinutes or 15.0)
+            lead_delay_delta = float(preceding_ctx.leadTrainDelayDeltaMin)
+            sec_friction = float(preceding_ctx.sectionFrictionIndex)
+            recent_lc_delay = 2.5 if (lead_delay_delta > 3.0 and remaining_km > 30.0) else 0.0
+            dwell_surge_spill = max(0.0, (env.commuterSurgeMultiplier - 1.0) * 1.5)
+        else:
+            lead_headway = 45.0
+            lead_delay_delta = 0.0
+            sec_friction = 0.10 if not is_peak else 0.25
+            recent_lc_delay = 0.0
+            dwell_surge_spill = 0.0
+
         feat_dict = {
             "train_type_code": TRAIN_TYPE_MAP.get(ttype, 3),
             "priority_tier": train.priorityTier,
@@ -253,7 +284,14 @@ class RailwayMLPipeline:
             "remaining_stops_count": remaining_stops,
             "downstream_tsr_count": downstream_tsr,
             "downstream_lc_gates_count": downstream_lc,
-            "terminal_throat_occupancy": throat_occupancy
+            "terminal_throat_occupancy": throat_occupancy,
+            
+            # Preceding train features
+            "lead_train_headway_gap_min": lead_headway,
+            "lead_train_delay_delta_min": lead_delay_delta,
+            "section_friction_score": sec_friction,
+            "recent_lc_gate_detention_min": recent_lc_delay,
+            "preceding_train_dwell_surge_min": dwell_surge_spill
         }
         
         df_row = pd.DataFrame([feat_dict])[FEATURE_COLUMNS]
@@ -263,12 +301,13 @@ class RailwayMLPipeline:
         self,
         train: TrainConfigModel,
         env: EnvironmentalConditionsModel,
-        injected_delay_min: float = 0.0
+        injected_delay_min: float = 0.0,
+        preceding_ctx: Optional[PrecedingTrainContextModel] = None
     ) -> Dict[str, Any]:
         """
         Runs LightGBM inference and computes true SHAP attribution values for XAI explainability.
         """
-        df_feat, feat_dict = self.build_feature_vector(train, env, injected_delay_min)
+        df_feat, feat_dict = self.build_feature_vector(train, env, injected_delay_min, preceding_ctx)
         
         # 1. Model inference: predicts net delta to delay
         predicted_delta = float(self.model.predict(df_feat)[0])
@@ -284,7 +323,7 @@ class RailwayMLPipeline:
         shap_attributions = []
         for feat_name, shap_val in zip(FEATURE_COLUMNS, shap_values):
             val = float(shap_val)
-            if abs(val) < 0.05:
+            if abs(val) < 0.04:
                 continue
                 
             is_recovery = val < 0
@@ -326,6 +365,8 @@ class RailwayMLPipeline:
         }
 
     def _categorize_feature(self, feature: str) -> str:
+        if "lead_train" in feature or "preceding" in feature or "section_friction" in feature:
+            return "Preceding Train Behavioral Ripple"
         if "tractive" in feature or "decel" in feature or "mps" in feature or "train_type" in feature:
             return "Kinematic Tractive Reserve"
         if "weather" in feature or "temp" in feature or "visibility" in feature or "adhesion" in feature:
@@ -342,6 +383,14 @@ class RailwayMLPipeline:
 
     def _explain_feature_impact(self, feature: str, value: Any, impact: float) -> str:
         impact_abs = abs(impact)
+        if feature == "lead_train_headway_gap_min":
+            if float(value) < 10.0:
+                return f"Compressed headway ({value:.1f}m to preceding train) induces caution signal checks and braking ({impact:+.1f} min)."
+            return f"Optimal line spacing ({value:.1f}m gap) ensures green aspect wave ({impact:+.1f} min)."
+        if feature == "lead_train_delay_delta_min":
+            return f"Delay delta (+{value:.1f} min) suffered by preceding train cascades frictional lag ({impact:+.1f} min)."
+        if feature == "section_friction_score":
+            return f"Section degradation index ({value:.2f}) from recent train crossings adds {impact:+.1f} min line resistance."
         if feature == "tractive_hp_per_ton":
             return f"High tractive reserve ({value} HP/t) enables sectional sprint recovery of {impact_abs:.1f} mins."
         if feature == "priority_tier":
@@ -391,5 +440,4 @@ class RailwayMLPipeline:
             shapExplainerReady=self.explainer is not None
         )
 
-# Global Singleton Instance of the ML Pipeline
 ml_pipeline = RailwayMLPipeline()
