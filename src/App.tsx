@@ -9,6 +9,8 @@ import {
 import { Header } from "./components/Header";
 import { TrainSelector } from "./components/TrainSelector";
 import { DelayIntelligenceDeck } from "./components/DelayIntelligenceDeck";
+import { PrecedingTrainMonitorDeck } from "./components/PrecedingTrainMonitorDeck";
+import { CorridorPainSectorDeck } from "./components/CorridorPainSectorDeck";
 import { CorridorPhysicalSpine } from "./components/CorridorPhysicalSpine";
 import { CorridorDelayHotspots } from "./components/CorridorDelayHotspots";
 import { YesterdayTrafficAnalysis } from "./components/YesterdayTrafficAnalysis";
@@ -59,8 +61,15 @@ export function App() {
       train: resolvedLive.config,
       userInjectedDelayMin: injectedDelay,
       environment,
+      activeClockMinutes,
     });
-  }, [resolvedLive.config, injectedDelay, environment]);
+  }, [resolvedLive.config, injectedDelay, environment, activeClockMinutes]);
+
+  const handleSelectTrain = (trainId: string) => {
+    setSelectedTrainId(trainId);
+    setInjectedDelay(0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div className="min-h-screen bg-ink text-chalk flex flex-col font-body selection:bg-signal-green/30 selection:text-chalk panel-grid">
@@ -86,10 +95,7 @@ export function App() {
             {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
             <TrainSelector
               selectedTrainId={selectedTrainId}
-              onSelectTrain={(train) => {
-                setSelectedTrainId(train.id);
-                setInjectedDelay(0);
-              }}
+              onSelectTrain={(train) => handleSelectTrain(train.id)}
               activeClockMinutes={activeClockMinutes}
             />
 
@@ -105,16 +111,32 @@ export function App() {
               activeClockMinutes={activeClockMinutes}
             />
 
+            {/* Bottleneck Sectors Ranked by Longest Delay Duration & Recurrence */}
+            <CorridorPainSectorDeck
+              selectedTrain={resolvedLive.config}
+              hotspotSectors={prediction.hotspotSectors}
+              primaryVulnerability={prediction.primaryVulnerabilitySector}
+              onSelectTrain={handleSelectTrain}
+              activeClockMinutes={activeClockMinutes}
+            />
+
+            {/* Continuous Preceding Train Telemetry & Section Friction Monitor */}
+            <PrecedingTrainMonitorDeck
+              selectedTrain={resolvedLive.config}
+              precedingContext={prediction.precedingTrainContext}
+              sections={prediction.sectionFriction}
+              activeClockMinutes={activeClockMinutes}
+              environment={environment}
+              onSelectTrain={handleSelectTrain}
+            />
+
             {/* Dedicated Pain Factor Attribution & Kinematic Recovery Deck */}
             <PainFactorIntelligenceDeck
               selectedTrain={resolvedLive.config}
               environment={environment}
               injectedDelay={injectedDelay}
               activeClockMinutes={activeClockMinutes}
-              onSelectTrain={(trainId) => {
-                setSelectedTrainId(trainId);
-                setInjectedDelay(0);
-              }}
+              onSelectTrain={handleSelectTrain}
             />
 
             {/* Physical Track Spine & Station-by-Station Live Running Log */}
@@ -128,11 +150,27 @@ export function App() {
             {/* Train Command Deck for Quick Selection */}
             <TrainSelector
               selectedTrainId={selectedTrainId}
-              onSelectTrain={(train) => {
-                setSelectedTrainId(train.id);
-                setInjectedDelay(0);
-              }}
+              onSelectTrain={(train) => handleSelectTrain(train.id)}
               activeClockMinutes={activeClockMinutes}
+            />
+
+            {/* Bottleneck Sectors Ranked by Longest Delay Duration & Recurrence */}
+            <CorridorPainSectorDeck
+              selectedTrain={resolvedLive.config}
+              hotspotSectors={prediction.hotspotSectors}
+              primaryVulnerability={prediction.primaryVulnerabilitySector}
+              onSelectTrain={handleSelectTrain}
+              activeClockMinutes={activeClockMinutes}
+            />
+
+            {/* Continuous Preceding Train Telemetry & Section Friction Monitor */}
+            <PrecedingTrainMonitorDeck
+              selectedTrain={resolvedLive.config}
+              precedingContext={prediction.precedingTrainContext}
+              sections={prediction.sectionFriction}
+              activeClockMinutes={activeClockMinutes}
+              environment={environment}
+              onSelectTrain={handleSelectTrain}
             />
 
             {/* Dedicated Standalone Pain Factors & Recovery Confidence Deck */}
@@ -141,10 +179,7 @@ export function App() {
               environment={environment}
               injectedDelay={injectedDelay}
               activeClockMinutes={activeClockMinutes}
-              onSelectTrain={(trainId) => {
-                setSelectedTrainId(trainId);
-                setInjectedDelay(0);
-              }}
+              onSelectTrain={handleSelectTrain}
             />
           </>
         ) : (
@@ -159,6 +194,19 @@ export function App() {
                 setActiveTab("COCKPIT");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
+            />
+
+            {/* Bottleneck Sectors Forensics */}
+            <CorridorPainSectorDeck
+              selectedTrain={resolvedLive.config}
+              hotspotSectors={prediction.hotspotSectors}
+              primaryVulnerability={prediction.primaryVulnerabilitySector}
+              onSelectTrain={(trainId) => {
+                setSelectedTrainId(trainId);
+                setActiveTab("COCKPIT");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              activeClockMinutes={activeClockMinutes}
             />
           </>
         )}
@@ -213,7 +261,7 @@ export function App() {
 
       {/* Footer Branding & Disclaimer */}
       <footer className="border-t border-graphite bg-ink py-4 px-6 text-center text-xs font-data text-steel">
-        RailRakshak v2.0 · SWR Mysore–Bangalore Division · Corridor Delay Intelligence &amp; Infrastructure Factor Prediction Engine
+        RailRakshak v2.0 · SWR Mysore–Bangalore Division · Corridor Delay Intelligence, Sector Bottleneck Forensics &amp; Preceding-Train Behavioral Monitor
       </footer>
     </div>
   );
