@@ -8,6 +8,7 @@ import {
 } from "./lib/rail/timeResolver";
 import { Header } from "./components/Header";
 import { CleanSectionedCockpit } from "./components/CleanSectionedCockpit";
+import { GodModeSimulatorDeck } from "./components/GodModeSimulatorDeck";
 import { TrainSelector } from "./components/TrainSelector";
 import { DelayIntelligenceDeck } from "./components/DelayIntelligenceDeck";
 import { PrecedingTrainMonitorDeck } from "./components/PrecedingTrainMonitorDeck";
@@ -22,7 +23,7 @@ import { Flame } from "lucide-react";
 
 export function App() {
   // Navigation View State - Defaults to the deep engineering cockpit
-  const [activeTab, setActiveTab] = useState<"COCKPIT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">("COCKPIT");
+  const [activeTab, setActiveTab] = useState<"COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">("COCKPIT");
 
   // Initialize with exact real-world clock time (in minutes from midnight)
   const [activeClockMinutes, setActiveClockMinutes] = useState<number>(() => {
@@ -84,6 +85,7 @@ export function App() {
         isRealTimeSynced={isRealTimeSynced}
         setIsRealTimeSynced={setIsRealTimeSynced}
         onSwitchToDarkCockpit={() => setActiveTab("COCKPIT")}
+        onOpenSimulator={() => setActiveTab("SIMULATOR")}
         environment={environment}
       />
     );
@@ -107,7 +109,14 @@ export function App() {
 
       {/* 2. Main Mission Control Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
-        {activeTab === "COCKPIT" ? (
+        {activeTab === "SIMULATOR" ? (
+          /* God-Mode Interactive Moving Train & Real-Time Pain Factor Simulator */
+          <GodModeSimulatorDeck
+            selectedTrain={resolvedLive.config}
+            onSelectTrain={handleSelectTrain}
+            activeClockMinutes={activeClockMinutes}
+          />
+        ) : activeTab === "COCKPIT" ? (
           <>
             {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
             <TrainSelector

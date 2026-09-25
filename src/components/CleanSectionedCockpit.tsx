@@ -40,6 +40,7 @@ interface CleanSectionedCockpitProps {
   isRealTimeSynced: boolean;
   setIsRealTimeSynced: (synced: boolean) => void;
   onSwitchToDarkCockpit: () => void;
+  onOpenSimulator?: () => void;
   environment: EnvironmentalConditions;
 }
 
@@ -52,6 +53,7 @@ export function CleanSectionedCockpit({
   isRealTimeSynced,
   setIsRealTimeSynced,
   onSwitchToDarkCockpit,
+  onOpenSimulator,
   environment,
 }: CleanSectionedCockpitProps) {
   // Navigation: Step 1: Fleet Selection screen | Step 2: Selected Train's Deep Intelligence screen
@@ -230,8 +232,18 @@ export function CleanSectionedCockpit({
             </div>
           </div>
 
-          {/* Right Action Controls: Fullscreen & Switch to Dark Mission Control */}
+          {/* Right Action Controls: Simulator, Fullscreen & Switch to Dark Mission Control */}
           <div className="flex items-center gap-2.5">
+            {onOpenSimulator && (
+              <button
+                onClick={onOpenSimulator}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
+                <span>🎮 Simulator</span>
+              </button>
+            )}
+
             <button
               onClick={toggleFullscreen}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-all shadow-xs"
