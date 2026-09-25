@@ -7,3 +7,7 @@ dist
 .agents
 scratch
 *.log
+
+__pycache__/
+*.pyc
+.pytest_cache/
