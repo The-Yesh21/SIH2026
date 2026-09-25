@@ -8,7 +8,10 @@ import { EnvironmentalConditions, DEFAULT_ENVIRONMENT } from "./restrictions";
 import { computeDynamicEta } from "./dynamicEta";
 import { analyzeCorridorPainFactors, CorridorPainSummary } from "./painFactorEngine";
 
-const BACKEND_API_BASE = "http://localhost:8000";
+const BACKEND_API_BASE =
+  typeof window !== "undefined" && window.location.hostname
+    ? `http://${window.location.hostname}:8000`
+    : "http://localhost:8000";
 
 let isBackendOnline = false;
 
