@@ -72,6 +72,23 @@ export function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Independent Standalone Google Stitch Light App Interface
+  if (activeTab === "STITCH_INSIGHT") {
+    return (
+      <CleanSectionedCockpit
+        selectedTrain={resolvedLive.config}
+        prediction={prediction}
+        onSelectTrain={handleSelectTrain}
+        activeClockMinutes={activeClockMinutes}
+        setActiveClockMinutes={setActiveClockMinutes}
+        isRealTimeSynced={isRealTimeSynced}
+        setIsRealTimeSynced={setIsRealTimeSynced}
+        onSwitchToDarkCockpit={() => setActiveTab("COCKPIT")}
+        environment={environment}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-ink text-chalk flex flex-col font-body selection:bg-signal-green/30 selection:text-chalk panel-grid">
       {/* 1. Masthead Dispatcher Navigation with Live Real-Time Clock Scrubber & View Tabs */}
@@ -89,26 +106,8 @@ export function App() {
       />
 
       {/* 2. Main Mission Control Body */}
-      <main
-        className={`flex-1 w-full mx-auto py-6 sm:py-8 transition-all ${
-          activeTab === "STITCH_INSIGHT"
-            ? "max-w-full px-4 sm:px-6 lg:px-10 xl:px-12 space-y-6"
-            : "max-w-7xl px-4 sm:px-6 lg:px-8 space-y-7 sm:space-y-8"
-        }`}
-      >
-        
-        {activeTab === "STITCH_INSIGHT" ? (
-          /* Clean Full-Screen Light Layout (Fleet Selector | Movements Spine | Dynamic ETA & Pain Points) */
-          <CleanSectionedCockpit
-            selectedTrain={resolvedLive.config}
-            prediction={prediction}
-            onSelectTrain={handleSelectTrain}
-            activeClockMinutes={activeClockMinutes}
-            environment={environment}
-            injectedDelay={injectedDelay}
-            setInjectedDelay={setInjectedDelay}
-          />
-        ) : activeTab === "COCKPIT" ? (
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
+        {activeTab === "COCKPIT" ? (
           <>
             {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
             <TrainSelector
@@ -229,55 +228,52 @@ export function App() {
           </>
         )}
 
-        {/* Micro-Climate Weather Sensors & Secondary Decks (Shown only in Dark Engineering Cockpit Views) */}
-        {activeTab !== "STITCH_INSIGHT" && (
-          <>
-            <StopsAndWeatherIntelligenceDeck
-              selectedTrain={resolvedLive.config}
-              environment={environment}
-              setEnvironment={setEnvironment}
-              activeClockMinutes={activeClockMinutes}
-              injectedDelay={injectedDelay}
-            />
+        {/* Micro-Climate Weather Sensors & Operational Unscheduled Stops Deck */}
+        <StopsAndWeatherIntelligenceDeck
+          selectedTrain={resolvedLive.config}
+          environment={environment}
+          setEnvironment={setEnvironment}
+          activeClockMinutes={activeClockMinutes}
+          injectedDelay={injectedDelay}
+        />
 
-            <YesterdayTrafficAnalysis
-              onSelectTrainForLiveView={(trainNo) => {
-                setSelectedTrainId(trainNo);
-                setActiveTab("COCKPIT");
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            />
+        {/* Yesterday's Corridor Traffic & Delay Gap Forensics Deck */}
+        <YesterdayTrafficAnalysis
+          onSelectTrainForLiveView={(trainNo) => {
+            setSelectedTrainId(trainNo);
+            setActiveTab("COCKPIT");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
 
-            {/* Delay Hotspot Analysis Section (Collapsible) */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setShowHotspots(!showHotspots)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-surface-raised hover:bg-surface-overlay border border-graphite text-xs font-data font-semibold text-signal-amber transition-colors"
-                >
-                  <Flame className="w-4 h-4 text-signal-red" />
-                  <span>
-                    {showHotspots
-                      ? "Hide Detailed Hotspot Calculations"
-                      : "View Infrastructure Bottleneck Technical Specifications"}
-                  </span>
-                </button>
-                <span className="text-xs text-steel font-data hidden sm:inline">
-                  SWR Mysore–Bangalore Division
-                </span>
-              </div>
+        {/* Delay Hotspot Analysis Section (Collapsible) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setShowHotspots(!showHotspots)}
+              className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-surface-raised hover:bg-surface-overlay border border-graphite text-xs font-data font-semibold text-signal-amber transition-colors"
+            >
+              <Flame className="w-4 h-4 text-signal-red" />
+              <span>
+                {showHotspots
+                  ? "Hide Detailed Hotspot Calculations"
+                  : "View Infrastructure Bottleneck Technical Specifications"}
+              </span>
+            </button>
+            <span className="text-xs text-steel font-data hidden sm:inline">
+              SWR Mysore–Bangalore Division
+            </span>
+          </div>
 
-              {showHotspots && (
-                <div className="animate-fade-in">
-                  <CorridorDelayHotspots
-                    environment={environment}
-                    injectedDelay={injectedDelay}
-                  />
-                </div>
-              )}
+          {showHotspots && (
+            <div className="animate-fade-in">
+              <CorridorDelayHotspots
+                environment={environment}
+                injectedDelay={injectedDelay}
+              />
             </div>
-          </>
-        )}
+          )}
+        </div>
       </main>
 
       {/* Footer Branding & Disclaimer */}
