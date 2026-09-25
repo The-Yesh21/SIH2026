@@ -16,10 +16,13 @@ import {
   CheckCircle2,
   Clock,
   Compass,
+  CornerUpLeft,
+  Eraser,
   FastForward,
   Flame,
   Gauge,
   HelpCircle,
+  Layers,
   MapPin,
   Maximize2,
   Minimize2,
@@ -32,7 +35,9 @@ import {
   Sparkles,
   Train,
   Trash2,
+  Undo2,
   Wrench,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -52,12 +57,15 @@ export function GodModeSimulatorDeck({
   const [playSpeedMultiplier, setPlaySpeedMultiplier] = useState<number>(2); // 2x default speed
   const [simulatedKm, setSimulatedKm] = useState<number>(() => {
     const res = resolveTrainAtClockTime(selectedTrain, activeClockMinutes);
-    return res.operatingState === "RUNNING_ON_TRACK" ? res.currentLocationKm : 15.0;
+    return res.operatingState === "RUNNING_ON_TRACK" ? res.currentLocationKm : 12.0;
   });
 
   // Selected Hazard Template from palette
   const [selectedHazardTemplateIndex, setSelectedHazardTemplateIndex] = useState<number>(0);
   const [customDelayMinutes, setCustomDelayMinutes] = useState<number>(8);
+
+  // Active Selected Hazard for on-track popup inspector
+  const [inspectedHazardId, setInspectedHazardId] = useState<string | null>(null);
 
   // Planted Hazards on track
   const [plantedHazards, setPlantedHazards] = useState<PlantedHazard[]>([
@@ -159,6 +167,7 @@ export function GodModeSimulatorDeck({
     };
 
     setPlantedHazards((prev) => [...prev, newHazard]);
+    setInspectedHazardId(newHazard.id);
   };
 
   // Click on Track to Plant
@@ -171,8 +180,22 @@ export function GodModeSimulatorDeck({
     handlePlantHazardAtKm(targetKm);
   };
 
+  // Remove a single hazard
   const removeHazard = (id: string) => {
     setPlantedHazards((prev) => prev.filter((h) => h.id !== id));
+    if (inspectedHazardId === id) setInspectedHazardId(null);
+  };
+
+  // Remove all hazards (Clear Track)
+  const clearAllHazards = () => {
+    setPlantedHazards([]);
+    setInspectedHazardId(null);
+  };
+
+  // Undo last planted hazard
+  const undoLastHazard = () => {
+    setPlantedHazards((prev) => prev.slice(0, -1));
+    setInspectedHazardId(null);
   };
 
   const toggleHazardActive = (id: string) => {
@@ -190,40 +213,43 @@ export function GodModeSimulatorDeck({
     setSimulatedKm(km);
   };
 
+  const isVandeBharat = selectedTrain.type.toLowerCase().includes("vande");
+  const isFreight = selectedTrain.type.toLowerCase().includes("freight");
+
   return (
     <div className="w-full space-y-6 font-body">
       
       {/* 1. Masthead God-Mode Hero Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-indigo-500/30 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 relative z-10">
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1.5">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="px-3.5 py-1 rounded-full text-xs font-bold font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1.5 shadow-xs">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-                GOD-MODE SIMULATOR
+                GOD-MODE SIMULATOR &amp; 3D KINEMATIC ENGINE
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/30">
-                ● Live Kinematics Active
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono text-emerald-400 bg-emerald-950/70 border border-emerald-500/30">
+                ● Live 100ms Physical Loop
               </span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-bold font-heading mt-2 tracking-tight">
-              Interactive Moving Train &amp; Real-Time Pain Factor Simulator
+              Real-Time Moving Train &amp; Interactive Pain Factor Simulator
             </h2>
-            <p className="text-sm text-slate-300 mt-1 max-w-3xl">
-              Watch the locomotive navigate the SWR corridor in real-time. Plant any operational pain factor onto the track ahead to observe instant dynamic ETA reactions, next-station delays, and tractive recovery speeds.
+            <p className="text-sm text-slate-300 mt-1 max-w-3xl leading-relaxed">
+              Watch the 3D-styled locomotive navigate the SWR corridor in real-time. Plant or remove any operational pain factor on the track ahead to observe instant dynamic ETA reactions, next-station delays, and tractive recovery speeds.
             </p>
           </div>
 
           {/* Train Selector Dropdown */}
-          <div className="flex items-center gap-2.5 bg-slate-800/80 p-2.5 rounded-2xl border border-slate-700 font-mono text-xs shrink-0">
-            <span className="text-slate-400">Simulating:</span>
+          <div className="flex items-center gap-2.5 bg-slate-900/90 p-3 rounded-2xl border border-slate-700/80 font-mono text-xs shrink-0 shadow-lg">
+            <span className="text-slate-400 font-semibold">Active Rake:</span>
             <select
               value={selectedTrain.id}
               onChange={(e) => onSelectTrain(e.target.value)}
-              className="bg-slate-900 border border-indigo-500/40 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="bg-slate-950 border border-indigo-500/50 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             >
               {ALL_CORRIDOR_FLEET.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -235,12 +261,14 @@ export function GodModeSimulatorDeck({
         </div>
       </div>
 
-      {/* 2. Interactive Animated Track Canvas (Visual GUI Track Schematic) */}
+      {/* 2. Interactive Animated Track Canvas (Visual GUI Track Schematic with 3D Train) */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+        
+        {/* Track Header & Quick Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
                 🛤️
               </div>
               <h3 className="text-lg font-bold text-slate-900 font-heading">
@@ -248,44 +276,69 @@ export function GodModeSimulatorDeck({
               </h3>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 font-mono">
-              Click anywhere along the track below to plant the selected pain factor hazard in real-time.
+              Click anywhere along the track to plant a hazard. Click on hazard pins to remove or inspect.
             </p>
           </div>
 
-          {/* Real-time Telemetry Readout */}
-          <div className="flex items-center gap-2.5 font-mono text-xs">
-            <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700">
-              Location: <strong className="text-blue-600">KM {simState.currentKm.toFixed(1)}</strong>
-            </div>
-            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 font-bold">
-              Velocity: {simState.currentSpeedKmph} km/h
-            </div>
-            <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 font-bold">
-              Total Delay: +{simState.totalIncurredDelayMin}m
+          {/* Track Hazard Actions: Clear All & Undo */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {plantedHazards.length > 0 && (
+              <>
+                <button
+                  onClick={undoLastHazard}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-mono text-xs font-semibold transition-colors"
+                  title="Undo last planted hazard"
+                >
+                  <Undo2 className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Undo Last</span>
+                </button>
+
+                <button
+                  onClick={clearAllHazards}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-mono text-xs font-bold transition-colors shadow-xs"
+                  title="Remove all planted hazards and clear the track"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear All ({plantedHazards.length})</span>
+                </button>
+              </>
+            )}
+
+            {/* Live Telemetry Pill */}
+            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 font-mono text-xs font-bold">
+              KM {simState.currentKm.toFixed(1)} · {simState.currentSpeedKmph} km/h
             </div>
           </div>
         </div>
 
-        {/* The Live Interactive Track Bar */}
+        {/* The Live Interactive Track Bar with 3D Train Model */}
         <div className="space-y-4">
           <div
             ref={trackContainerRef}
             onClick={handleTrackClick}
-            className="relative w-full h-24 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-3 cursor-crosshair select-none overflow-hidden shadow-inner border border-slate-700"
+            className="relative w-full h-32 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 rounded-2xl p-3 cursor-crosshair select-none overflow-hidden shadow-2xl border border-slate-800"
             title="Click anywhere on this track to plant the selected pain factor hazard"
           >
-            {/* Background Railway Ties and Ballast Pattern */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-4 bg-slate-950/80 border-y border-amber-500/30 flex items-center justify-between px-1 pointer-events-none">
-              {Array.from({ length: 70 }).map((_, i) => (
-                <div key={i} className="w-1 h-3.5 bg-slate-700/60 rounded-xs" />
+            {/* OHE Overhead Catenary Wire (25kV AC) */}
+            <div className="absolute inset-x-0 top-3 h-[1px] bg-amber-400/40 shadow-xs pointer-events-none" />
+            <div className="absolute inset-x-0 top-3 flex items-center justify-between px-4 pointer-events-none">
+              {Array.from({ length: 18 }).map((_, i) => (
+                <div key={i} className="w-[1px] h-3 bg-amber-500/30" />
               ))}
             </div>
 
-            {/* Steel Dual Rails */}
-            <div className="absolute inset-x-0 top-[42%] h-[2px] bg-slate-300 shadow-sm pointer-events-none" />
-            <div className="absolute inset-x-0 top-[56%] h-[2px] bg-slate-300 shadow-sm pointer-events-none" />
+            {/* Concrete Sleepers & Ballast Bed */}
+            <div className="absolute inset-x-0 top-[55%] -translate-y-1/2 h-6 bg-slate-950/90 border-y border-slate-700/60 flex items-center justify-between px-1 pointer-events-none">
+              {Array.from({ length: 80 }).map((_, i) => (
+                <div key={i} className="w-1 h-5 bg-slate-800/80 rounded-xs" />
+              ))}
+            </div>
 
-            {/* Station Markers along track */}
+            {/* Steel Dual Rails with Metallic Specular Glare */}
+            <div className="absolute inset-x-0 top-[48%] h-[2.5px] bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 shadow-sm pointer-events-none" />
+            <div className="absolute inset-x-0 top-[62%] h-[2.5px] bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 shadow-sm pointer-events-none" />
+
+            {/* 17 Station Markers along track */}
             {SWR_CORRIDOR_STATIONS.map((st) => {
               const leftPct = (st.distanceFromMysKm / 138.25) * 100;
               const isPassed = simulatedKm >= st.distanceFromMysKm;
@@ -300,8 +353,8 @@ export function GodModeSimulatorDeck({
                   <span
                     className={`text-[9px] font-mono font-bold px-1 rounded transition-all ${
                       isPassed
-                        ? "text-emerald-400 bg-emerald-950/70"
-                        : "text-slate-400 bg-slate-900/80"
+                        ? "text-emerald-400 bg-emerald-950/80"
+                        : "text-slate-400 bg-slate-900/90"
                     }`}
                   >
                     {st.code}
@@ -310,10 +363,10 @@ export function GodModeSimulatorDeck({
                   <div
                     className={`w-2.5 h-2.5 rounded-full border transition-all ${
                       isStop
-                        ? "bg-amber-400 border-amber-200 shadow-md shadow-amber-400/50"
+                        ? "bg-amber-400 border-amber-200 shadow-lg shadow-amber-400/60 scale-110"
                         : isPassed
                         ? "bg-emerald-500 border-emerald-300"
-                        : "bg-slate-600 border-slate-400"
+                        : "bg-slate-700 border-slate-500"
                     }`}
                   />
 
@@ -324,20 +377,21 @@ export function GodModeSimulatorDeck({
               );
             })}
 
-            {/* Planted Hazard Zones & Glowing Hazard Markers */}
+            {/* Planted Hazard Zones & Interactive Pins */}
             {plantedHazards.map((hazard) => {
               const leftPct = (hazard.chainageKm / 138.25) * 100;
-              const widthPct = Math.max(2, (hazard.zoneLengthKm / 138.25) * 100);
+              const widthPct = Math.max(2.5, (hazard.zoneLengthKm / 138.25) * 100);
+              const isInspected = inspectedHazardId === hazard.id;
 
               return (
                 <React.Fragment key={hazard.id}>
-                  {/* Zone restriction area */}
+                  {/* Zone restriction band on track */}
                   <div
                     style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                    className={`absolute top-2 bottom-2 rounded-lg pointer-events-none border transition-all ${
+                    className={`absolute top-2 bottom-2 rounded-xl pointer-events-none border transition-all ${
                       hazard.active
-                        ? "bg-rose-500/20 border-rose-500/50 animate-pulse"
-                        : "bg-slate-500/10 border-slate-500/30 opacity-50"
+                        ? "bg-rose-500/25 border-rose-500/70 shadow-inner shadow-rose-500/20 animate-pulse"
+                        : "bg-slate-500/10 border-slate-500/30 opacity-40"
                     }`}
                   />
 
@@ -346,44 +400,105 @@ export function GodModeSimulatorDeck({
                     style={{ left: `${leftPct}%` }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleHazardActive(hazard.id);
+                      setInspectedHazardId(isInspected ? null : hazard.id);
                     }}
                     className={`absolute -top-1 -translate-x-1/2 z-30 cursor-pointer flex flex-col items-center group transition-transform hover:scale-125 ${
                       hazard.active ? "" : "opacity-40"
                     }`}
-                    title={`${hazard.name} (KM ${hazard.chainageKm.toFixed(1)}) - Click to toggle active/inactive`}
                   >
-                    <span className="text-base filter drop-shadow-md animate-bounce">
+                    <span className="text-lg filter drop-shadow-lg animate-bounce">
                       {hazard.icon}
                     </span>
-                    <span className="px-1 py-0.2 rounded text-[8px] font-bold font-mono bg-rose-600 text-white shadow-sm whitespace-nowrap">
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold font-mono bg-rose-600 text-white shadow-md whitespace-nowrap flex items-center gap-1">
                       +{hazard.delayMinutes}m
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeHazard(hazard.id);
+                        }}
+                        className="hover:text-amber-200 ml-0.5"
+                        title="Delete hazard"
+                      >
+                        ×
+                      </button>
                     </span>
                   </div>
                 </React.Fragment>
               );
             })}
 
-            {/* Moving Locomotive & Train Indicator */}
+            {/* ========================================================================= */}
+            {/* 3D-STYLED MOVING TRAIN MODEL (Isometric / Orthographic High-Gloss Rake)  */}
+            {/* ========================================================================= */}
             <div
               style={{ left: `${simState.traversalProgressPct}%` }}
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 transition-all duration-100 flex items-center pointer-events-none"
+              className="absolute top-[55%] -translate-y-1/2 -translate-x-1/2 z-20 transition-all duration-100 flex items-center pointer-events-none"
             >
-              {/* Headlight beam */}
-              <div className="absolute left-full top-1/2 -translate-y-1/2 w-16 h-8 bg-gradient-to-r from-amber-300/40 via-amber-300/10 to-transparent pointer-events-none rounded-r-full blur-xs" />
+              {/* Volumetric LED Headlight Beam Casting Ahead */}
+              <div className="absolute left-full top-1/2 -translate-y-1/2 w-28 h-12 bg-gradient-to-r from-amber-300/40 via-amber-300/15 to-transparent pointer-events-none rounded-r-full blur-xs" />
 
-              {/* Locomotive Rake */}
-              <div className="relative flex items-center gap-0.5 bg-blue-600 text-white px-2.5 py-1.5 rounded-xl shadow-lg shadow-blue-500/50 border border-blue-300 font-mono text-xs font-bold whitespace-nowrap">
-                <Train className="w-4 h-4 text-amber-300 animate-pulse" />
-                <span>#{selectedTrain.id}</span>
-                <span className="text-[10px] text-blue-200 ml-1">
-                  {simState.currentSpeedKmph} km/h
-                </span>
+              {/* 3D Rendered Locomotive Body */}
+              <div className="relative flex items-center filter drop-shadow-2xl">
+                
+                {/* Trailing Coach 2 */}
+                <div className="w-10 h-7 bg-gradient-to-b from-blue-700 via-blue-800 to-blue-950 rounded-l-md border-y border-l border-blue-400/50 shadow-md flex items-center justify-around px-1">
+                  <div className="w-2 h-2.5 bg-amber-200/80 rounded-xs shadow-xs" />
+                  <div className="w-2 h-2.5 bg-amber-200/80 rounded-xs shadow-xs" />
+                </div>
+
+                {/* Trailing Coach 1 */}
+                <div className="w-12 h-7 bg-gradient-to-b from-blue-600 via-blue-700 to-blue-900 border-y border-blue-400/60 shadow-md flex items-center justify-around px-1">
+                  <div className="w-2 h-2.5 bg-amber-200/90 rounded-xs shadow-xs" />
+                  <div className="w-2 h-2.5 bg-amber-200/90 rounded-xs shadow-xs" />
+                  <div className="w-2 h-2.5 bg-amber-200/90 rounded-xs shadow-xs" />
+                </div>
+
+                {/* Main 3D Locomotive Engine (WAP-7 / Vande Bharat Styling) */}
+                <div
+                  className={`relative w-24 h-9 rounded-r-2xl border border-white/40 shadow-xl flex items-center justify-between px-2.5 text-white ${
+                    isVandeBharat
+                      ? "bg-gradient-to-r from-slate-200 via-slate-100 to-blue-600 text-slate-900"
+                      : "bg-gradient-to-r from-red-700 via-red-600 to-blue-700 text-white"
+                  }`}
+                >
+                  {/* Roof Pantograph touching OHE wire */}
+                  <div className="absolute -top-3 left-6 w-3 h-3 border-t-2 border-r-2 border-amber-300 -rotate-45" />
+                  <div className="absolute -top-3.5 left-7 w-2 h-[2px] bg-amber-200 shadow-sm shadow-amber-300" />
+
+                  {/* Spark effect when in hazard zone */}
+                  {simState.hazardInZone && (
+                    <div className="absolute -top-4 left-6 text-[10px] animate-ping text-amber-300">
+                      ⚡
+                    </div>
+                  )}
+
+                  {/* Cab side branding */}
+                  <div className="font-mono font-extrabold text-[11px] tracking-tight truncate max-w-[55px] drop-shadow-sm">
+                    #{selectedTrain.id}
+                  </div>
+
+                  {/* 3D Windshield Cockpit Glass with Specular Glare */}
+                  <div className="w-5 h-5 rounded-r-xl bg-gradient-to-tr from-cyan-900 via-cyan-700 to-sky-300 border border-sky-200 shadow-inner flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                  </div>
+                </div>
+
+                {/* 3D Under-Bogie Wheels */}
+                <div className="absolute -bottom-2 left-2 right-2 flex justify-between px-2 pointer-events-none">
+                  <div className="w-3 h-3 rounded-full bg-slate-900 border border-slate-400 shadow-sm" />
+                  <div className="w-3 h-3 rounded-full bg-slate-900 border border-slate-400 shadow-sm" />
+                  <div className="w-3 h-3 rounded-full bg-slate-900 border border-slate-400 shadow-sm" />
+                </div>
+              </div>
+
+              {/* Floating Speedometer HUD Tag */}
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border border-blue-400/50 shadow-md whitespace-nowrap">
+                {simState.currentSpeedKmph} km/h
               </div>
             </div>
           </div>
 
-          {/* Quick Jump Buttons to Stations */}
+          {/* Quick Station Navigation Buttons */}
           <div className="flex items-center justify-between text-xs text-slate-500 font-mono overflow-x-auto pt-1 gap-2">
             <span className="text-slate-400 font-semibold shrink-0">Quick Jump:</span>
             {[
@@ -429,7 +544,7 @@ export function GodModeSimulatorDeck({
             </button>
           </div>
 
-          {/* Speed Multiplier */}
+          {/* Speed Multipliers */}
           <div className="flex items-center gap-1.5 font-mono text-xs">
             <span className="text-slate-400 font-semibold mr-1">Speed:</span>
             {[0.5, 1, 2, 5, 10, 20].map((spd) => (
@@ -656,7 +771,7 @@ export function GodModeSimulatorDeck({
             </div>
           </div>
 
-          {/* Active Planted Hazards On Track */}
+          {/* Active Planted Hazards On Track & Removal Controls */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
@@ -665,7 +780,17 @@ export function GodModeSimulatorDeck({
                   Active Planted Hazards ({plantedHazards.length})
                 </h3>
               </div>
-              <span className="text-xs text-slate-400 font-mono">Click to toggle / remove</span>
+
+              {plantedHazards.length > 0 && (
+                <button
+                  onClick={clearAllHazards}
+                  className="flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-bold font-mono transition-colors"
+                  title="Remove all hazards from the track"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove All</span>
+                </button>
+              )}
             </div>
 
             {plantedHazards.length === 0 ? (
@@ -710,9 +835,9 @@ export function GodModeSimulatorDeck({
                       <button
                         onClick={() => removeHazard(h.id)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-100 transition-colors"
-                        title="Remove hazard"
+                        title="Delete this hazard"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                       </button>
                     </div>
                   </div>
