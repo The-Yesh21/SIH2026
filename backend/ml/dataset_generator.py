@@ -41,7 +41,7 @@ def generate_synthetic_railway_dataset(num_samples: int = 35000, random_seed: in
     """
     Generates high-fidelity Indian Railways telemetry and operational journey dataset
     modeling the SWR MYS-SBC double-track corridor under various kinematic, weather,
-    dispatching, and congestion constraints.
+    dispatching, preceding train behavioral influence, and corridor friction constraints.
     """
     np.random.seed(random_seed)
     
@@ -73,7 +73,6 @@ def generate_synthetic_railway_dataset(num_samples: int = 35000, random_seed: in
         # Time of day & peak hours
         dep_hour = int(np.random.randint(0, 24))
         dep_minute = int(np.random.randint(0, 60))
-        total_time_mins = dep_hour * 60 + dep_minute
         dep_hour_sin = float(np.sin(2 * np.pi * dep_hour / 24.0))
         dep_hour_cos = float(np.cos(2 * np.pi * dep_hour / 24.0))
         
@@ -118,18 +117,43 @@ def generate_synthetic_railway_dataset(num_samples: int = 35000, random_seed: in
         single_line_block = 1 if np.random.rand() < 0.04 else 0
         
         # Downstream Infrastructure features
-        # Stations in SWR MYS-SBC: 17 stations total
         frac_remaining = remaining_km / CORRIDOR_LENGTH_KM
         remaining_stops = int(np.round(frac_remaining * (8 if ttype in ["EXPRESS", "MEMU"] else 4)))
         
-        # Estimated downstream TSR/PSR speed restrictions (usually 1-3 along 138km)
         downstream_tsr_count = int(np.round(frac_remaining * np.random.choice([1, 2, 3, 4], p=[0.4, 0.4, 0.15, 0.05])))
-        downstream_lc_gates = int(np.round(frac_remaining * 14)) # 14 LC gates along corridor
+        downstream_lc_gates = int(np.round(frac_remaining * 14))
         
         # Terminal throat congestion (Kengeri-SBC approach)
         near_sbc = 1.0 if (remaining_km < 25.0) else (remaining_km / 25.0)
         throat_occupancy = float(np.clip(0.4 + (0.45 if is_peak else 0.15) * (1.0 - near_sbc) + np.random.normal(0, 0.05), 0.2, 1.0))
         
+        # ----------------- Preceding Train Behavioral Features -----------------
+        # Probability of having a preceding train within active corridor window
+        has_lead = np.random.rand() < 0.85
+        if has_lead:
+            # Time headway between trains in minutes (e.g. 4 to 45 mins)
+            lead_headway_min = float(np.random.exponential(scale=14.0) + 4.0)
+            lead_headway_min = float(np.clip(lead_headway_min, 3.0, 60.0))
+            
+            # Delay delta incurred by the lead train on its recent section
+            lead_delay_delta = float(np.random.normal(loc=1.5 if is_peak else 0.5, scale=3.0))
+            lead_delay_delta = float(np.clip(lead_delay_delta, -4.0, 25.0))
+            
+            # Section friction score (0.0 clear -> 1.0 severe)
+            section_friction = float(np.clip(0.1 + (0.35 if is_peak else 0.05) + (lead_delay_delta / 30.0) + np.random.uniform(0.0, 0.2), 0.0, 1.0))
+            
+            # Recent LC gate delay experienced by lead train
+            recent_lc_delay = float(np.random.choice([0.0, 2.5, 4.0, 7.5], p=[0.7, 0.15, 0.1, 0.05]))
+            
+            # Commuter surge spillover from lead train dwell
+            dwell_surge_spillover = float(max(0.0, (surge_mult - 1.0) * 1.8 + np.random.uniform(0, 1.0)))
+        else:
+            lead_headway_min = 60.0
+            lead_delay_delta = 0.0
+            section_friction = 0.05
+            recent_lc_delay = 0.0
+            dwell_surge_spillover = 0.0
+
         # ----------------- Physics & Dispatching Ground Truth Calculation -----------------
         # 1. Recoverable Slack calculation
         base_slack = spec["baseSlack"]
@@ -144,39 +168,52 @@ def generate_synthetic_railway_dataset(num_samples: int = 35000, random_seed: in
         actual_slack_recovered = float(min(total_delay * recovery_factor, max_slack))
         
         # 2. Bottlenecks and Detentions Incurred
-        # TSR slowdowns (each ~1.2 min)
         tsr_delay = downstream_tsr_count * 1.25 * (1.1 if ttype == "FREIGHT_BOXN" else 0.9)
         
-        # Signal / Headway detentions
-        signal_prob = 0.15 if is_peak else 0.06
-        if tier >= 3:
-            signal_prob += 0.25 # Lower priority trains held in loop lines
-        signal_delay = float(np.random.exponential(scale=3.0) if np.random.rand() < signal_prob else 0.0)
-        
-        # LC Gate Detentions
-        lc_delay = 0.0
-        if downstream_lc_gates > 0 and np.random.rand() < (0.10 * frac_remaining):
-            lc_delay = float(np.random.uniform(2.0, 5.5))
+        # Headway compression & preceding train ripple penalty
+        headway_ripple_penalty = 0.0
+        if lead_headway_min < 8.0:
+            # Dangerous headway compression: yellow/double-yellow aspect slowing
+            headway_ripple_penalty += (8.0 - lead_headway_min) * 0.85
+            if lead_delay_delta > 2.0:
+                headway_ripple_penalty += min(lead_delay_delta * 0.65, 8.0)
+        elif lead_headway_min < 15.0 and lead_delay_delta > 4.0:
+            # Cascading block hold
+            headway_ripple_penalty += (lead_delay_delta - 4.0) * 0.40
+
+        # Section friction penalty
+        friction_penalty = section_friction * (remaining_km / 30.0) * 2.2
+
+        # Loop stabling for precedence (Tier 3 & Tier 4 trains overtaken by Tier 1)
+        precedence_delay = 0.0
+        if tier >= 3 and remaining_km > 20.0 and np.random.rand() < 0.28:
+            precedence_delay = float(np.random.uniform(8.0, 18.0))
             
-        # Commuter Dwell bleed
-        dwell_bleed = 0.0
-        if surge_mult > 1.2 and remaining_stops > 0:
-            dwell_bleed = float(remaining_stops * (surge_mult - 1.0) * 0.75)
-            
-        # Terminal throat delay (KGI to SBC)
-        throat_delay = 0.0
-        if remaining_km > 5.0 and throat_occupancy > 0.65:
-            throat_delay = float((throat_occupancy - 0.65) * 12.0)
-            
-        # Equipment / Alarm detentions
-        alarm_delay = 8.0 if wild_alarm else 0.0
-        single_line_delay = 14.0 if single_line_block else 0.0
+        # LC gate detention
+        lc_detention = (downstream_lc_gates * 0.12) + (recent_lc_delay * 0.8 if remaining_km > 15 else 0.0)
         
-        total_bottlenecks = float(tsr_delay + signal_delay + lc_delay + dwell_bleed + throat_delay + alarm_delay + single_line_delay)
+        # Platform dwell extension
+        commuter_dwell_delay = remaining_stops * (surge_mult - 1.0) * 0.85 + (dwell_surge_spillover * 0.5)
         
-        # Net Dynamic Delay Delta
-        # Delta = additional minutes added (positive) or absorbed (negative)
-        dynamic_delay_delta = float(-actual_slack_recovered + (total_bottlenecks * 0.65))
+        # Terminal approach choke
+        throat_delay = (throat_occupancy ** 2.2) * (5.5 if remaining_km < 35.0 else 2.0)
+        
+        # Alarms
+        alarm_delay = (14.0 if wild_alarm else 0.0) + (18.0 if single_line_block else 0.0)
+        
+        total_bottlenecks = (
+            tsr_delay +
+            headway_ripple_penalty +
+            friction_penalty +
+            precedence_delay +
+            lc_detention +
+            commuter_dwell_delay +
+            throat_delay +
+            alarm_delay
+        )
+        
+        # Net dynamic delay delta
+        dynamic_delay_delta = float(total_bottlenecks - actual_slack_recovered)
         
         # Final SBC terminal delay
         final_delay = float(max(0.0, total_delay + dynamic_delay_delta))
@@ -211,6 +248,13 @@ def generate_synthetic_railway_dataset(num_samples: int = 35000, random_seed: in
             "downstream_tsr_count": downstream_tsr_count,
             "downstream_lc_gates_count": downstream_lc_gates,
             "terminal_throat_occupancy": throat_occupancy,
+            
+            # Preceding train & continuous section features
+            "lead_train_headway_gap_min": lead_headway_min,
+            "lead_train_delay_delta_min": lead_delay_delta,
+            "section_friction_score": section_friction,
+            "recent_lc_gate_detention_min": recent_lc_delay,
+            "preceding_train_dwell_surge_min": dwell_surge_spillover,
             
             # Ground truth targets
             "slack_recovered_min": actual_slack_recovered,
@@ -250,5 +294,10 @@ FEATURE_COLUMNS = [
     "remaining_stops_count",
     "downstream_tsr_count",
     "downstream_lc_gates_count",
-    "terminal_throat_occupancy"
+    "terminal_throat_occupancy",
+    "lead_train_headway_gap_min",
+    "lead_train_delay_delta_min",
+    "section_friction_score",
+    "recent_lc_gate_detention_min",
+    "preceding_train_dwell_surge_min"
 ]
