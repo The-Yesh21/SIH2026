@@ -8,10 +8,18 @@ from models.pain_factors import (
     ShapAttributionFactorModel,
     StationForecastRowModel,
     CorridorPainSummaryModel,
-    ConfidenceIntervalModel
+    ConfidenceIntervalModel,
+    PrecedingTrainContextModel,
+    SectionFrictionModel,
+    SectorHotspotModel,
+    TrainVulnerabilitySectorModel
 )
 from ml.pain_analyzer import (
     analyze_all_pain_factors,
+    resolve_lead_train_context,
+    compute_all_section_frictions,
+    get_corridor_sector_hotspots,
+    resolve_train_primary_vulnerability_sector,
     SWR_STATIONS_DATA,
     PRIORITY_SPECS
 )
@@ -164,7 +172,8 @@ def get_booked_station_mins(
 def predict_dynamic_eta_ml(
     train: TrainConfigModel,
     env: EnvironmentalConditionsModel,
-    user_injected_delay_min: float = 0.0
+    user_injected_delay_min: float = 0.0,
+    active_clock_mins: float = 0.0
 ) -> DynamicPredictionResponseModel:
     total_live_delay = train.initialDelayMin + user_injected_delay_min
     dep_mins = parse_time_to_minutes(train.scheduledDep)
@@ -172,25 +181,38 @@ def predict_dynamic_eta_ml(
     arr_mins = raw_arr_mins if raw_arr_mins >= dep_mins else raw_arr_mins + 1440.0
     scheduled_duration_mins = arr_mins - dep_mins
 
-    # 1. Traditional Naive Static ETA
+    # 1. Resolve Preceding Train Behavioral Context, Section Frictions & Hotspot Sectors
+    lead_ctx = resolve_lead_train_context(train, active_clock_mins, user_injected_delay_min)
+    sections_friction = compute_all_section_frictions(active_clock_mins, env)
+    hotspot_sectors = get_corridor_sector_hotspots()
+    primary_vuln = resolve_train_primary_vulnerability_sector(train, active_clock_mins)
+
+    # 2. Traditional Naive Static ETA
     traditional_eta_mins = arr_mins + total_live_delay
     traditional_static_eta = format_clock_display(traditional_eta_mins)
 
-    # 2. Pain Analysis
+    # 3. Pain Analysis
     pain_summary: CorridorPainSummaryModel = analyze_all_pain_factors(
         train=train,
         env=env,
-        injected_delay_min=user_injected_delay_min
+        injected_delay_min=user_injected_delay_min,
+        active_clock_mins=active_clock_mins
     )
 
-    # 3. Machine Learning Inference & SHAP Extraction via LightGBM Pipeline
+    # 4. Machine Learning Inference & SHAP Extraction via LightGBM Pipeline
     ml_output = ml_pipeline.predict_with_shap(
         train=train,
         env=env,
-        injected_delay_min=user_injected_delay_min
+        injected_delay_min=user_injected_delay_min,
+        preceding_ctx=lead_ctx
     )
 
+    # Adjust dynamic delay if train has not yet cleared its primary high-risk sector
     dynamic_delay_min = ml_output["predictedFinalDelayMin"]
+    if train.currentLocationKm < primary_vuln.endKm and primary_vuln.etaBufferAdjustedMin > 2.0:
+        # Blend sector vulnerability risk buffer
+        dynamic_delay_min = max(dynamic_delay_min, total_live_delay + primary_vuln.etaBufferAdjustedMin * 0.7)
+
     slack_recovered = ml_output["slackRecoveredMin"]
     bottlenecks_incurred = ml_output["bottlenecksIncurredMin"]
     confidence_margin = ml_output["confidenceMarginMin"]
@@ -213,18 +235,29 @@ def predict_dynamic_eta_ml(
         rmseMarginMin=round(confidence_margin, 1)
     )
 
-    # 4. Construct SHAP Attribution Factors for Frontend Waterfall
+    # 5. Construct SHAP Attribution Factors for Frontend Waterfall
     shap_factors: List[ShapAttributionFactorModel] = []
     
+    # Primary vulnerability sector factor
+    if train.currentLocationKm < primary_vuln.endKm:
+        shap_factors.append(ShapAttributionFactorModel(
+            category="Corridor Bottleneck Sector",
+            name=f"Sector Risk ({primary_vuln.primarySectorName})",
+            impactMinutes=round(primary_vuln.etaBufferAdjustedMin, 1),
+            type="delay",
+            rationale=f"{primary_vuln.historicalOccurrenceFrequencyPct}% historical delay recurrence for this service in {primary_vuln.chainageRangeKm} (avg +{primary_vuln.historicalAverageDelayMin}m)."
+        ))
+
     # Add top ML SHAP attributions
     for shap_item in ml_output["shapAttributions"][:6]:
-        shap_factors.append(ShapAttributionFactorModel(
-            category=shap_item["category"],
-            name=shap_item["name"],
-            impactMinutes=shap_item["impactMinutes"],
-            type=shap_item["type"],
-            rationale=shap_item["rationale"]
-        ))
+        if not any(f.name == shap_item["name"] for f in shap_factors):
+            shap_factors.append(ShapAttributionFactorModel(
+                category=shap_item["category"],
+                name=shap_item["name"],
+                impactMinutes=shap_item["impactMinutes"],
+                type=shap_item["type"],
+                rationale=shap_item["rationale"]
+            ))
 
     # Also augment with any active physical hotspot incidents from pain analysis
     for inc in pain_summary.incidents:
@@ -237,7 +270,7 @@ def predict_dynamic_eta_ml(
                 rationale=inc.rootCauseDescription
             ))
 
-    # 5. Station-by-Station Forecast Breakdown (17 SWR Stations)
+    # 6. Station-by-Station Forecast Breakdown (17 SWR Stations)
     station_breakdown: List[StationForecastRowModel] = []
 
     for i, st in enumerate(SWR_STATIONS_DATA):
@@ -263,7 +296,6 @@ def predict_dynamic_eta_ml(
             applied_delay = total_live_delay
         else:
             track_status = "FORECASTED"
-            # Interpolate delay recovery/addition smoothly along remaining distance
             frac_done = min(1.0, max(0.0, (st["km"] - train.currentLocationKm) / max(1.0, (138.25 - train.currentLocationKm))))
             applied_delay = total_live_delay + frac_done * (dynamic_delay_min - total_live_delay)
 
@@ -299,6 +331,10 @@ def predict_dynamic_eta_ml(
         bottlenecksIncurredMin=round(bottlenecks_incurred, 1),
         speedRestrictionPenaltyMin=round(pain_summary.speedRestrictionPenaltyMin, 1),
         signalHaltsPenaltyMin=round(pain_summary.signalDetentionMin, 1),
+        precedingTrainContext=lead_ctx,
+        sectionFriction=sections_friction,
+        hotspotSectors=hotspot_sectors,
+        primaryVulnerabilitySector=primary_vuln,
         shapFactors=shap_factors,
         stationBreakdown=station_breakdown,
         painSummary=pain_summary,
