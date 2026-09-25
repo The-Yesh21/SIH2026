@@ -1,6 +1,8 @@
 import {
   TrainConfig,
   DynamicPredictionResult,
+  ModelMetadata,
+  SectionFriction,
 } from "./types";
 import { EnvironmentalConditions, DEFAULT_ENVIRONMENT } from "./restrictions";
 import { computeDynamicEta } from "./dynamicEta";
@@ -30,6 +32,17 @@ export function getBackendStatus(): boolean {
   return isBackendOnline;
 }
 
+export interface ContinuousCorridorMonitorData {
+  activeClockMinutes: number;
+  activeClockDisplay: string;
+  corridorHealthScorePct: number;
+  overallStatus: "OPTIMAL_FLOW" | "MODERATE_FRICTION" | "SEVERE_CONGESTION";
+  activeTrainsCount: number;
+  sections: SectionFriction[];
+  precedingTrainAlerts: string[];
+  recentCrossingsSummary: string;
+}
+
 /**
  * High-Precision Dynamic ETA computation with automatic Python ML backend & TypeScript fallback
  */
@@ -37,6 +50,7 @@ export async function getDynamicPrediction(params: {
   train: TrainConfig;
   userInjectedDelayMin?: number;
   environment?: EnvironmentalConditions;
+  activeClockMinutes?: number;
 }): Promise<{ prediction: DynamicPredictionResult; source: "PYTHON_ML" | "CLIENT_KINEMATICS" }> {
   try {
     const res = await fetch(`${BACKEND_API_BASE}/api/predict/dynamic-eta`, {
@@ -46,6 +60,7 @@ export async function getDynamicPrediction(params: {
         train: params.train,
         environment: params.environment || DEFAULT_ENVIRONMENT,
         userInjectedDelayMin: params.userInjectedDelayMin || 0,
+        activeClockMinutes: params.activeClockMinutes || 0,
       }),
       signal: AbortSignal.timeout(2000),
     });
@@ -59,7 +74,6 @@ export async function getDynamicPrediction(params: {
       };
     }
   } catch (err) {
-    // Fallback to client-side kinematic simulator
     isBackendOnline = false;
   }
 
@@ -67,6 +81,7 @@ export async function getDynamicPrediction(params: {
     train: params.train,
     userInjectedDelayMin: params.userInjectedDelayMin,
     environment: params.environment,
+    activeClockMinutes: params.activeClockMinutes,
   });
 
   return {
@@ -75,7 +90,28 @@ export async function getDynamicPrediction(params: {
   };
 }
 
-export async function getModelMetadata(): Promise<import("./types").ModelMetadata | null> {
+export async function getContinuousCorridorMonitor(
+  clockMinutes: number = 840,
+  weather: string = "CLEAR"
+): Promise<ContinuousCorridorMonitorData | null> {
+  try {
+    const res = await fetch(
+      `${BACKEND_API_BASE}/api/corridor/continuous-monitor?clockMinutes=${clockMinutes}&weather=${encodeURIComponent(weather)}`,
+      {
+        method: "GET",
+        signal: AbortSignal.timeout(2000),
+      }
+    );
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    // backend unavailable
+  }
+  return null;
+}
+
+export async function getModelMetadata(): Promise<ModelMetadata | null> {
   try {
     const res = await fetch(`${BACKEND_API_BASE}/api/ml/model-info`, {
       method: "GET",
