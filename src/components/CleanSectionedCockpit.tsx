@@ -155,8 +155,8 @@ export function CleanSectionedCockpit({
           
           {/* Brand & Corridor Identity */}
           <div className="flex items-center gap-3.5">
-            <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
-              <TrainTrack className="h-5 w-5 stroke-[2.4]" />
+            <div className="h-10 w-10 flex items-center justify-center shrink-0">
+              <img src="/logo.svg" alt="RailRakshak Logo" className="h-10 w-10 object-contain drop-shadow-md" />
             </div>
             <div>
               <div className="flex items-center gap-2">

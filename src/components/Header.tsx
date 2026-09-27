@@ -80,8 +80,8 @@ export function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
         {/* Left: Branding & Corridor Identity */}
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 flex items-center justify-center text-chalk shrink-0">
-            <TrainTrack className="h-6 w-6 stroke-[2.2]" />
+          <div className="h-11 w-11 flex items-center justify-center shrink-0">
+            <img src="/logo.svg" alt="RailRakshak Logo" className="h-11 w-11 object-contain drop-shadow-md" />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
