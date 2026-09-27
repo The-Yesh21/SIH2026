@@ -26,6 +26,19 @@ export interface PlantedHazard {
   color: string;
 }
 
+export interface TrainRecoveryDNA {
+  trainId: string;
+  trainName: string;
+  trainType: string;
+  historicalRecoveryRate: number; // 0.0 to 1.0 (e.g. 0.85 = recovers 85% of potential slack)
+  tractiveRating: "ULTRA_HIGH_EMU" | "HIGH_WAP7_LHB" | "MODERATE_WAP7_ICF" | "COMMUTER_HEAVY_HALT" | "HEAVY_FREIGHT";
+  tractiveLabel: string;
+  accelerationMps2: number;
+  nominalCruiseKmph: number;
+  tractiveDescription: string;
+  dispatchPriorityTier: number;
+}
+
 export interface SimulationStateResult {
   currentKm: number;
   currentSpeedKmph: number;
@@ -40,19 +53,33 @@ export interface SimulationStateResult {
   activeHazardsCount: number;
   travelledTimeMinutes: number;
   travelledTimeFormatted: string;
-  totalIncurredDelayMin: number;
-  predictedNextStationDelayMin: number;
+  
+  // Static Naive vs Intelligent Dynamic Predictions
+  staticNaiveDelayMin: number;
+  staticNaiveSbcTime: string;
   predictedSbcArrivalDelayMin: number;
+  predictedSbcTime: string;
+  scheduledSbcTime: string;
+  
+  // Next Stop Predictions
+  predictedNextStationDelayMin: number;
   scheduledNextStationTime: string;
   predictedNextStationTime: string;
-  scheduledSbcTime: string;
-  predictedSbcTime: string;
+  
+  // Physical & Kinematic Metrics
+  estimatedPhysicalTransitTimeMin: number;
+  remainingClearDistanceKm: number;
+  remainingRestrictedDistanceKm: number;
+  slackMinutesRecovered: number;
+  recommendedPaceKmph: number;
   requiredRecoverySpeedKmph: number;
   requiredNextStationRecoverySpeedKmph: number;
   isRecoveryFeasible: boolean;
   maxRecoverableMin: number;
   optimalDelayMin: number;
-  netIrrecoverableDelayMin: number;
+  
+  // Train Historical Profile & Intelligence
+  trainDNA: TrainRecoveryDNA;
   dispatcherActionAdvice: string;
   hazardInZone: PlantedHazard | null;
   hasEncounteredPainFactors: boolean;
@@ -154,6 +181,103 @@ export const HAZARD_PALETTE: Omit<PlantedHazard, "id" | "chainageKm" | "location
 ];
 
 /**
+ * Resolves the historical recovery DNA and tractive aggressiveness profile for a train
+ */
+export function getTrainHistoricalRecoveryDNA(train: TrainConfig): TrainRecoveryDNA {
+  const typeUpper = (train.type || "").toUpperCase();
+  const idStr = String(train.id || "");
+
+  if (typeUpper.includes("VANDE") || idStr.includes("20608")) {
+    return {
+      trainId: train.id,
+      trainName: train.name,
+      trainType: "VANDE_BHARAT",
+      historicalRecoveryRate: 0.88, // 88% historical recovery exploitation
+      tractiveRating: "ULTRA_HIGH_EMU",
+      tractiveLabel: "Ultra-High Pick-up (EMU Distributed 130 km/h)",
+      accelerationMps2: 0.85,
+      nominalCruiseKmph: 115,
+      tractiveDescription: "Trainset with distributed traction & regenerative braking. Rapidly accelerates out of speed caps and recovers ~88% of sectional slack.",
+      dispatchPriorityTier: 1,
+    };
+  }
+
+  if (typeUpper.includes("SHATABDI") || idStr.includes("12008")) {
+    return {
+      trainId: train.id,
+      trainName: train.name,
+      trainType: "SHATABDI",
+      historicalRecoveryRate: 0.78,
+      tractiveRating: "HIGH_WAP7_LHB",
+      tractiveLabel: "High Pick-up (WAP-7 + 14 LHB Coaches)",
+      accelerationMps2: 0.70,
+      nominalCruiseKmph: 105,
+      tractiveDescription: "High power-to-weight ratio with non-stop corridor run. Recovers ~78% of slack when running on clear sections.",
+      dispatchPriorityTier: 1,
+    };
+  }
+
+  if (typeUpper.includes("SUPERFAST") || idStr.includes("12613")) {
+    return {
+      trainId: train.id,
+      trainName: train.name,
+      trainType: "SUPERFAST",
+      historicalRecoveryRate: 0.65,
+      tractiveRating: "HIGH_WAP7_LHB",
+      tractiveLabel: "Aggressive Superfast Pacing (WAP-7 + 22 LHB)",
+      accelerationMps2: 0.60,
+      nominalCruiseKmph: 98,
+      tractiveDescription: "High line priority with limited halts (Mandya, Ramanagaram, Kengeri). Drivers aggressively notch up to 110 km/h to reclaim 65% of delay.",
+      dispatchPriorityTier: 2,
+    };
+  }
+
+  if (typeUpper.includes("EXPRESS") || idStr.includes("16022") || idStr.includes("16215") || idStr.includes("16586")) {
+    return {
+      trainId: train.id,
+      trainName: train.name,
+      trainType: "EXPRESS",
+      historicalRecoveryRate: 0.45,
+      tractiveRating: "MODERATE_WAP7_ICF",
+      tractiveLabel: "Moderate Recovery (8-10 Halts + Commuters)",
+      accelerationMps2: 0.45,
+      nominalCruiseKmph: 88,
+      tractiveDescription: "Frequent commuter stops introduce dwell variance. Moderate recovery capacity (45%) due to intermediate station acceleration cycles.",
+      dispatchPriorityTier: 2,
+    };
+  }
+
+  if (typeUpper.includes("MEMU") || idStr.includes("66552")) {
+    return {
+      trainId: train.id,
+      trainName: train.name,
+      trainType: "MEMU",
+      historicalRecoveryRate: 0.22,
+      tractiveRating: "COMMUTER_HEAVY_HALT",
+      tractiveLabel: "Low Recovery (17 All-Stop Commuter Pattern)",
+      accelerationMps2: 0.55,
+      nominalCruiseKmph: 75,
+      tractiveDescription: "High motor acceleration but 17 scheduled halts limit top-speed cruising. Recovers only ~22% of delay due to platform congestion.",
+      dispatchPriorityTier: 3,
+    };
+  }
+
+  // Freight Default
+  return {
+    trainId: train.id,
+    trainName: train.name,
+    trainType: "FREIGHT",
+    historicalRecoveryRate: 0.08,
+    tractiveRating: "HEAVY_FREIGHT",
+    tractiveLabel: "Minimal Recovery (Heavy 45-Wagon Trailing Rake)",
+    accelerationMps2: 0.18,
+    nominalCruiseKmph: 60,
+    tractiveDescription: "Heavy 4,000+ tonne trailing load with low tractive acceleration. Frequently stabled on loop lines for passenger precedence.",
+    dispatchPriorityTier: 4,
+  };
+}
+
+/**
  * Find closest station by KM
  */
 export function getClosestStationName(km: number): string {
@@ -182,7 +306,8 @@ export function formatDurationMinutes(mins: number): string {
 }
 
 /**
- * Compute real-time simulator state based on train location, progress, and planted hazards
+ * Compute real-time simulator state based on train location, progress, active hazards,
+ * remaining distance physics, and train historical pick-up/recovery capability.
  */
 export function calculateSimulatorKinematics(params: {
   train: TrainConfig;
@@ -197,6 +322,9 @@ export function calculateSimulatorKinematics(params: {
   const progressPct = (boundedKm / totalLengthKm) * 100;
   const distanceRemainingKm = Math.max(0, totalLengthKm - boundedKm);
 
+  // Train Historical Recovery Profile
+  const trainDNA = getTrainHistoricalRecoveryDNA(train);
+
   // Determine current & next stations
   let currentStation = SWR_CORRIDOR_STATIONS[0];
   let nextStation = SWR_CORRIDOR_STATIONS[1];
@@ -210,12 +338,17 @@ export function calculateSimulatorKinematics(params: {
 
   const distanceToNextStationKm = Math.max(0, nextStation.distanceFromMysKm - boundedKm);
 
-  // Check if train is inside an active hazard zone, and track encountered hazards
+  // Check if train is inside an active hazard zone, and separate hazards ahead vs passed
   let hazardInZone: PlantedHazard | null = null;
-  let speedCap = train.sectionalMpsKmph || 110;
+  let currentInstantSpeedCap = train.sectionalMpsKmph || 110;
 
   const activeHazards = plantedHazards.filter((h) => h.active);
   const encounteredHazardsList: PlantedHazard[] = [];
+  const upcomingHazardsList: PlantedHazard[] = [];
+
+  let restrictedRemainingKm = 0;
+  let upcomingHazardDelayMinutes = 0;
+  let nextStationUpcomingHazardDelayMin = 0;
 
   for (const h of activeHazards) {
     const zoneStart = h.chainageKm;
@@ -224,106 +357,149 @@ export function calculateSimulatorKinematics(params: {
     // Check if currently inside zone
     if (boundedKm >= zoneStart && boundedKm <= zoneEnd) {
       hazardInZone = h;
-      speedCap = Math.min(speedCap, h.speedCapKmph);
+      currentInstantSpeedCap = Math.min(currentInstantSpeedCap, h.speedCapKmph);
     }
     
     // Check if train has reached or passed this hazard
     if (boundedKm >= zoneStart) {
       encounteredHazardsList.push(h);
+    } else {
+      // Hazard is ahead on the remaining track
+      upcomingHazardsList.push(h);
+      restrictedRemainingKm += Math.min(h.zoneLengthKm, Math.max(0, totalLengthKm - zoneStart));
+      upcomingHazardDelayMinutes += h.delayMinutes;
+      if (zoneStart <= nextStation.distanceFromMysKm) {
+        nextStationUpcomingHazardDelayMin += h.delayMinutes;
+      }
     }
   }
 
-  // Calculate current running speed
-  let runningSpeed = speedCap;
-  // If approaching a scheduled stop within 1.5 km, smoothly decelerate
+  // Calculate current instantaneous running speed
+  let runningSpeed = currentInstantSpeedCap;
   if (train.scheduledStops.includes(nextStation.code) && distanceToNextStationKm < 1.5 && distanceToNextStationKm > 0) {
-    runningSpeed = Math.min(runningSpeed, Math.max(20, (distanceToNextStationKm / 1.5) * speedCap));
+    runningSpeed = Math.min(runningSpeed, Math.max(20, (distanceToNextStationKm / 1.5) * currentInstantSpeedCap));
   } else if (distanceRemainingKm < 0.5) {
     runningSpeed = 0; // Terminated at SBC
   }
 
-  // Calculate cumulative delay from hazards encountered so far + hazards ahead
-  let totalHazardDelayMinutes = 0;
-  let nextStationHazardDelayMinutes = 0;
-
-  for (const h of activeHazards) {
-    totalHazardDelayMinutes += h.delayMinutes;
-    // If hazard is before or at the next station
-    if (h.chainageKm <= nextStation.distanceFromMysKm) {
-      nextStationHazardDelayMinutes += h.delayMinutes;
-    }
-  }
-
+  // Base Scheduled Timetable
   const baseScheduledDepMins = parseTimeToMinutes(train.scheduledDep);
   const baseScheduledArrMins = parseTimeToMinutes(train.scheduledArr);
   const nominalCorridorDurationMins = baseScheduledArrMins - baseScheduledDepMins;
 
-  // Calculate elapsed travelling time from origin to current KM
-  // Nominal time to current KM = (boundedKm / totalLengthKm) * nominalDuration + delay incurred so far
-  const nominalElapsedMins = (boundedKm / totalLengthKm) * nominalCorridorDurationMins;
+  // 1. Calculate Elapsed Travelling Time so far
   let delayIncurredSoFar = 0;
   for (const h of encounteredHazardsList) {
     delayIncurredSoFar += h.delayMinutes;
   }
+  const nominalElapsedMins = (boundedKm / totalLengthKm) * nominalCorridorDurationMins;
   const travelledTimeMinutes = Math.max(0, nominalElapsedMins + delayIncurredSoFar);
   const travelledTimeFormatted = formatDurationMinutes(travelledTimeMinutes);
 
-  // Next station scheduled and predicted times
-  const nextStationScheduledMins =
-    baseScheduledDepMins + (nextStation.distanceFromMysKm / totalLengthKm) * nominalCorridorDurationMins;
-  const nextStationPredictedMins = nextStationScheduledMins + nextStationHazardDelayMinutes;
+  // 2. Static Naive Calculation (Traditional sum: Base Schedule + all hazard delays)
+  const totalAllHazardDelayMinutes = activeHazards.reduce((acc, h) => acc + h.delayMinutes, 0);
+  const staticNaiveDelayMin = train.initialDelayMin + totalAllHazardDelayMinutes;
+  const staticNaiveSbcTime = formatClockDisplay(baseScheduledArrMins + staticNaiveDelayMin);
 
-  // Final SBC arrival dynamic prediction
-  const finalSbcScheduledMins = baseScheduledArrMins;
-  const finalSbcPredictedMins = finalSbcScheduledMins + totalHazardDelayMinutes;
+  // 3. True Physical & Kinematic Remaining Transit Time Model
+  const remainingClearDistanceKm = Math.max(0, distanceRemainingKm - restrictedRemainingKm);
+  const nominalCruiseSpeed = trainDNA.nominalCruiseKmph;
+  const maxLocoSpeed = train.priorityTier === 1 ? (trainDNA.trainType === "VANDE_BHARAT" ? 130 : 120) : (train.sectionalMpsKmph || 110);
 
-  // Kinematic Recovery Calculation for Destination (SBC)
-  const maxLocoSpeed = train.priorityTier === 1 ? 130 : 110;
-  const normalRemainingTimeHours = distanceRemainingKm > 0 ? distanceRemainingKm / (train.sectionalMpsKmph || 110) : 0;
-  const normalRemainingTimeMins = normalRemainingTimeHours * 60;
+  // Time to traverse remaining clear track at nominal cruise (minutes)
+  const timeClearTrackMins = remainingClearDistanceKm > 0 ? (remainingClearDistanceKm / nominalCruiseSpeed) * 60 : 0;
 
-  // Target remaining time to arrive strictly on scheduled booked time at SBC
-  const targetRemainingTimeMins = Math.max(1, normalRemainingTimeMins - totalHazardDelayMinutes);
-  const targetRemainingTimeHours = targetRemainingTimeMins / 60;
+  // Time to traverse remaining hazard zones with speed caps (minutes)
+  let timeRestrictedZonesMins = 0;
+  for (const h of upcomingHazardsList) {
+    const cappedSpeed = Math.max(15, Math.min(nominalCruiseSpeed, h.speedCapKmph));
+    timeRestrictedZonesMins += (h.zoneLengthKm / cappedSpeed) * 60 + h.delayMinutes;
+  }
 
-  const requiredRecoverySpeedKmph =
-    distanceRemainingKm > 0 && targetRemainingTimeHours > 0
-      ? Math.min(220, Math.round(distanceRemainingKm / targetRemainingTimeHours))
-      : Math.round(train.sectionalMpsKmph || 110);
+  // Acceleration and deceleration transition curve penalties (1.5 min per upcoming hazard)
+  const transitionLossMinutes = upcomingHazardsList.length * 1.5;
 
-  // Speed required to recover delay before NEXT STATION
-  const nominalToNextStationHours = distanceToNextStationKm > 0 ? distanceToNextStationKm / (train.sectionalMpsKmph || 110) : 0;
-  const nominalToNextStationMins = nominalToNextStationHours * 60;
-  const targetToNextStationMins = Math.max(0.5, nominalToNextStationMins - nextStationHazardDelayMinutes);
-  const targetToNextStationHours = targetToNextStationMins / 60;
-  const requiredNextStationRecoverySpeedKmph =
-    distanceToNextStationKm > 0 && targetToNextStationHours > 0
-      ? Math.min(220, Math.round(distanceToNextStationKm / targetToNextStationHours))
-      : Math.round(train.sectionalMpsKmph || 110);
+  // Upcoming scheduled halt dwell minutes
+  let remainingDwellsMin = 0;
+  for (const st of SWR_CORRIDOR_STATIONS) {
+    if (st.distanceFromMysKm > boundedKm && train.scheduledStops.includes(st.code)) {
+      remainingDwellsMin += (train.dwellMinutes && train.dwellMinutes[st.code]) || 2;
+    }
+  }
 
-  // Maximum recovery via slack by running at max permissible speed (MPS)
-  const maxRecoverableMins = Math.max(
-    0,
-    Math.round((distanceRemainingKm / 85 - distanceRemainingKm / maxLocoSpeed) * 60)
+  // Estimated physical transit time remaining to SBC (minutes)
+  const estimatedPhysicalTransitTimeMin = timeClearTrackMins + timeRestrictedZonesMins + transitionLossMinutes + remainingDwellsMin;
+
+  // Expected Physical Arrival vs Scheduled Booking
+  const simulatedClockMinutes = baseScheduledDepMins + travelledTimeMinutes;
+  const rawExpectedPhysicalArrivalMins = simulatedClockMinutes + estimatedPhysicalTransitTimeMin;
+  const grossDelayMin = Math.max(0, rawExpectedPhysicalArrivalMins - baseScheduledArrMins);
+
+  // 4. Intelligence Engine: Historical Train Slack Recovery & Pace Exploitation
+  // How much time can the locomotive physically recover on the remaining clear distance by notching to maxLocoSpeed?
+  const maxKinematicSlackRecoveryMinutes = remainingClearDistanceKm > 0
+    ? Math.max(0, (remainingClearDistanceKm / nominalCruiseSpeed - remainingClearDistanceKm / maxLocoSpeed) * 60)
+    : 0;
+
+  // Apply the train's unique Historical Recovery DNA (e.g., 88% for VB, 65% for Superfast, 22% for MEMU)
+  const slackMinutesRecovered = Math.min(
+    grossDelayMin,
+    Math.round(maxKinematicSlackRecoveryMinutes * trainDNA.historicalRecoveryRate)
   );
 
-  const isRecoveryFeasible = totalHazardDelayMinutes <= maxRecoverableMins && distanceRemainingKm > 10;
-  const optimalDelayMin = Math.max(0, totalHazardDelayMinutes - maxRecoverableMins);
-  const netIrrecoverableDelayMin = Math.max(0, totalHazardDelayMinutes - maxRecoverableMins);
+  // Final Intelligent Dynamic Predicted Arrival Delay & Clock ETA
+  const predictedSbcArrivalDelayMin = Math.max(0, grossDelayMin - slackMinutesRecovered);
+  const predictedSbcMins = baseScheduledArrMins + predictedSbcArrivalDelayMin;
+  const predictedSbcTime = formatClockDisplay(predictedSbcMins);
+  const scheduledSbcTime = formatClockDisplay(baseScheduledArrMins);
 
+  // 5. Immediate Next Station Dynamic ETA Forecast
+  const nextStationFraction = nextStation.distanceFromMysKm / totalLengthKm;
+  const nextStationScheduledMins = baseScheduledDepMins + nextStationFraction * nominalCorridorDurationMins;
+  
+  // Next stop physical transit calculation
+  const nextStopClearKm = Math.max(0, distanceToNextStationKm - (hazardInZone ? hazardInZone.zoneLengthKm : 0));
+  const nextStopTransitMin = (nextStopClearKm / nominalCruiseSpeed) * 60 + nextStationUpcomingHazardDelayMin + (hazardInZone ? 3 : 0);
+  const nextStationPhysicalArrivalMins = simulatedClockMinutes + nextStopTransitMin;
+  const predictedNextStationDelayMin = Math.max(0, Math.round(nextStationPhysicalArrivalMins - nextStationScheduledMins));
+  const predictedNextStationTime = formatClockDisplay(nextStationScheduledMins + predictedNextStationDelayMin);
+  const scheduledNextStationTime = formatClockDisplay(nextStationScheduledMins);
+
+  // 6. Recommended Pace & Target Velocity Engine (What pace is needed to recover?)
+  const targetRemainingTimeMins = Math.max(1, (baseScheduledArrMins - simulatedClockMinutes) - (timeRestrictedZonesMins + transitionLossMinutes + remainingDwellsMin));
+  const targetRemainingTimeHours = targetRemainingTimeMins / 60;
+
+  const recommendedPaceKmph = remainingClearDistanceKm > 0 && targetRemainingTimeHours > 0
+    ? Math.min(220, Math.round(remainingClearDistanceKm / targetRemainingTimeHours))
+    : nominalCruiseSpeed;
+
+  const requiredRecoverySpeedKmph = distanceRemainingKm > 0 && targetRemainingTimeHours > 0
+    ? Math.min(220, Math.round(distanceRemainingKm / targetRemainingTimeHours))
+    : maxLocoSpeed;
+
+  // Next stop recovery velocity
+  const nextStopTargetTimeHours = Math.max(0.05, (nextStationScheduledMins - simulatedClockMinutes) / 60);
+  const requiredNextStationRecoverySpeedKmph = distanceToNextStationKm > 0
+    ? Math.min(220, Math.round(distanceToNextStationKm / nextStopTargetTimeHours))
+    : nominalCruiseSpeed;
+
+  const isRecoveryFeasible = predictedSbcArrivalDelayMin === 0 && distanceRemainingKm > 10;
+  const optimalDelayMin = Math.max(0, grossDelayMin - Math.round(maxKinematicSlackRecoveryMinutes));
+
+  // Actionable Dispatcher Recommendation
   let dispatcherAdvice = "Normal corridor pacing. Timetable headway within standard green aspect tolerances.";
   if (hazardInZone) {
-    dispatcherAdvice = `🚨 ACTIVE RESTRICTION: Running inside ${hazardInZone.name}. Speed capped at ${hazardInZone.speedCapKmph} km/h (+${hazardInZone.delayMinutes}m delay added). Dynamic ETA recalculated.`;
-  } else if (totalHazardDelayMinutes > 0 && isRecoveryFeasible) {
-    dispatcherAdvice = `⚡ RECOVERY ADVISORY: Target throttle ${Math.min(maxLocoSpeed, requiredRecoverySpeedKmph)} km/h across next ${Math.round(distanceRemainingKm)} km to recover ${maxRecoverableMins}m delay before SBC.`;
-  } else if (totalHazardDelayMinutes > 0 && !isRecoveryFeasible) {
-    dispatcherAdvice = `⚠️ DELAY CRITICAL: Accumulated +${totalHazardDelayMinutes}m delay exceeds corridor slack (${maxRecoverableMins}m max recovery at ${maxLocoSpeed} km/h). Optimal achievable delay is +${optimalDelayMin}m at SBC.`;
+    dispatcherAdvice = `🚨 ACTIVE HAZARD: Speed capped at ${hazardInZone.speedCapKmph} km/h inside ${hazardInZone.name}. Physical delay accumulating: +${hazardInZone.delayMinutes}m. Train recovery engine recalculating target pace.`;
+  } else if (grossDelayMin > 0 && isRecoveryFeasible) {
+    dispatcherAdvice = `⚡ RECOVERY ADVISORY (${trainDNA.tractiveLabel}): Increase throttle to ${Math.min(maxLocoSpeed, recommendedPaceKmph)} km/h across next ${Math.round(remainingClearDistanceKm)} km. Historical DNA confirms train will recover ${slackMinutesRecovered} min slack before SBC.`;
+  } else if (grossDelayMin > 0 && !isRecoveryFeasible) {
+    dispatcherAdvice = `⚠️ DELAY CRITICAL: Gross delay (+${grossDelayMin}m) exceeds physical corridor slack (${maxKinematicSlackRecoveryMinutes.toFixed(0)}m max at ${maxLocoSpeed} km/h). Based on ${trainDNA.tractiveLabel}, optimal achievable arrival is +${predictedSbcArrivalDelayMin}m late (Static was +${staticNaiveDelayMin}m).`;
   }
 
   return {
     currentKm: Number(boundedKm.toFixed(2)),
     currentSpeedKmph: Math.round(runningSpeed),
-    maxCorridorMpsKmph: train.sectionalMpsKmph || 110,
+    maxCorridorMpsKmph: maxLocoSpeed,
     currentStationCode: currentStation.code,
     currentStationName: currentStation.name,
     nextStationCode: nextStation.code,
@@ -334,19 +510,31 @@ export function calculateSimulatorKinematics(params: {
     activeHazardsCount: activeHazards.length,
     travelledTimeMinutes: Number(travelledTimeMinutes.toFixed(1)),
     travelledTimeFormatted,
-    totalIncurredDelayMin: totalHazardDelayMinutes,
-    predictedNextStationDelayMin: nextStationHazardDelayMinutes,
-    predictedSbcArrivalDelayMin: totalHazardDelayMinutes,
-    scheduledNextStationTime: formatClockDisplay(nextStationScheduledMins),
-    predictedNextStationTime: formatClockDisplay(nextStationPredictedMins),
-    scheduledSbcTime: formatClockDisplay(finalSbcScheduledMins),
-    predictedSbcTime: formatClockDisplay(finalSbcPredictedMins),
+    
+    // Predictions
+    staticNaiveDelayMin,
+    staticNaiveSbcTime,
+    predictedSbcArrivalDelayMin,
+    predictedSbcTime,
+    scheduledSbcTime,
+    
+    predictedNextStationDelayMin,
+    scheduledNextStationTime,
+    predictedNextStationTime,
+    
+    // Kinematics
+    estimatedPhysicalTransitTimeMin: Math.round(estimatedPhysicalTransitTimeMin),
+    remainingClearDistanceKm: Number(remainingClearDistanceKm.toFixed(1)),
+    remainingRestrictedDistanceKm: Number(restrictedRemainingKm.toFixed(1)),
+    slackMinutesRecovered,
+    recommendedPaceKmph,
     requiredRecoverySpeedKmph,
     requiredNextStationRecoverySpeedKmph,
     isRecoveryFeasible,
-    maxRecoverableMin: maxRecoverableMins,
+    maxRecoverableMin: Math.round(maxKinematicSlackRecoveryMinutes),
     optimalDelayMin,
-    netIrrecoverableDelayMin,
+    
+    trainDNA,
     dispatcherActionAdvice: dispatcherAdvice,
     hazardInZone,
     hasEncounteredPainFactors: encounteredHazardsList.length > 0 || hazardInZone !== null,
