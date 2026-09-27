@@ -22,8 +22,35 @@ import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceD
 import { Flame } from "lucide-react";
 
 export function App() {
-  // Navigation View State - Defaults to the deep engineering cockpit
-  const [activeTab, setActiveTab] = useState<"COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">("COCKPIT");
+  // Navigation View State - Supports separate tab via URL query param (?tab=SIMULATOR)
+  const [activeTab, setActiveTab] = useState<"COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam === "SIMULATOR") return "SIMULATOR";
+      if (tabParam === "STITCH_INSIGHT") return "STITCH_INSIGHT";
+      if (tabParam === "PAIN_FACTORS") return "PAIN_FACTORS";
+      if (tabParam === "ANALYSIS") return "ANALYSIS";
+      if (window.location.hash === "#simulator") return "SIMULATOR";
+    } catch (e) {
+      // Fallback if window is not ready
+    }
+    return "COCKPIT";
+  });
+
+  // Sync tab changes with URL query string for clean bookmarking and separate tab navigation
+  const handleTabChange = (tab: "COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => {
+    setActiveTab(tab);
+    try {
+      const url = new URL(window.location.href);
+      if (tab === "COCKPIT") {
+        url.searchParams.delete("tab");
+      } else {
+        url.searchParams.set("tab", tab);
+      }
+      window.history.replaceState({}, "", url.toString());
+    } catch (e) {}
+  };
 
   // Initialize with exact real-world clock time (in minutes from midnight)
   const [activeClockMinutes, setActiveClockMinutes] = useState<number>(() => {
@@ -84,8 +111,8 @@ export function App() {
         setActiveClockMinutes={setActiveClockMinutes}
         isRealTimeSynced={isRealTimeSynced}
         setIsRealTimeSynced={setIsRealTimeSynced}
-        onSwitchToDarkCockpit={() => setActiveTab("COCKPIT")}
-        onOpenSimulator={() => setActiveTab("SIMULATOR")}
+        onSwitchToDarkCockpit={() => handleTabChange("COCKPIT")}
+        onOpenSimulator={() => handleTabChange("SIMULATOR")}
         environment={environment}
       />
     );
@@ -104,7 +131,7 @@ export function App() {
         isRealTimeSynced={isRealTimeSynced}
         setIsRealTimeSynced={setIsRealTimeSynced}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
       />
 
       {/* 2. Main Mission Control Body */}
@@ -217,7 +244,7 @@ export function App() {
               injectedDelay={injectedDelay}
               onSelectTrainForCockpit={(trainNo) => {
                 setSelectedTrainId(trainNo);
-                setActiveTab("COCKPIT");
+                handleTabChange("COCKPIT");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             />
@@ -229,7 +256,7 @@ export function App() {
               primaryVulnerability={prediction.primaryVulnerabilitySector}
               onSelectTrain={(trainId) => {
                 setSelectedTrainId(trainId);
-                setActiveTab("COCKPIT");
+                handleTabChange("COCKPIT");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               activeClockMinutes={activeClockMinutes}
