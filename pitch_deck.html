@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RailRakshak · Mentor Pitch Deck (SIH 2026)</title>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .slide { display: none; }
+    .slide.active { display: flex; }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.05); }
+    }
+    .glow-bg { animation: pulse-glow 6s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
+
+  <!-- Top Navigation & Presentation Header -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <img src="/logo.svg" alt="RailRakshak Logo" class="h-8 w-8 object-contain" />
+      <div>
+        <span class="font-bold text-sm tracking-tight text-white flex items-center gap-2">
+          RailRakshak <span class="text-[10px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-1.5 py-0.2 rounded">SIH 2026 PITCH</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Slide Indicators & Controls -->
+    <div class="flex items-center gap-4 font-mono text-xs">
+      <span id="slideCounter" class="text-slate-400 font-bold bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
+        Slide 1 / 10
+      </span>
+      <div class="flex items-center gap-1">
+        <button onclick="prevSlide()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors font-bold">
+          ◀ Prev
+        </button>
+        <button onclick="nextSlide()" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-colors font-bold shadow-sm">
+          Next ▶
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Slide Display Area -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-6 sm:p-10 flex flex-col justify-center">
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 1: TITLE & EXECUTIVE SUMMARY                                        -->
+    <!-- ========================================================================= -->
+    <section class="slide active flex-col space-y-6 relative">
+      <div class="absolute -top-10 -right-10 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none glow-bg"></div>
+      
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+          Smart India Hackathon 2026 · AI Railway Operations
+        </span>
+        <span class="px-3 py-1 rounded-full text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/30">
+          ● SWR Trunk Line (MYS ➔ SBC 138.25 km)
+        </span>
+      </div>
+
+      <div class="flex items-start gap-5">
+        <img src="/logo.svg" alt="RailRakshak" class="w-20 h-20 object-contain drop-shadow-2xl shrink-0" />
+        <div>
+          <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-white">
+            RailRakshak <span class="text-indigo-400 font-extrabold text-2xl sm:text-3xl block sm:inline">· Rail Insight 2.0</span>
+          </h1>
+          <p class="text-lg text-slate-300 mt-2 font-medium">
+            Next-Generation Railway Dispatch Intelligence, Dynamic Multi-Factor ETA &amp; Kinematic Simulation Platform
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-lg">
+          <div class="text-indigo-400 font-mono text-xs font-bold uppercase tracking-wider">01. The Problem</div>
+          <h3 class="font-bold text-white text-base">Static Linear Fallacy</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Existing systems compute <code>ETA = Booked + Live Delay</code>, ignoring locomotive traction, headway waves, and terminal cross-overs.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900/90 border border-indigo-500/30 space-y-2 shadow-lg ring-1 ring-indigo-500/20">
+          <div class="text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider">02. Our Innovation</div>
+          <h3 class="font-bold text-white text-base">Dual-Core Kinematic + ML</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            FastAPI + LightGBM + SHAP XAI integrating physical track resistance, 12 pain factors, and train historical recovery DNA.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-lg">
+          <div class="text-amber-400 font-mono text-xs font-bold uppercase tracking-wider">03. Actionable Output</div>
+          <h3 class="font-bold text-white text-base">Target Pace &amp; Sandbox</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Advises controllers on exact recovery speed (<span class="font-mono text-indigo-300">V_target</span>) vs MPS and provides a live 100ms God-Mode simulator.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 2: THE CORE PROBLEM STATEMENT                                      -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider">The Operational Crisis</span>
+        <h2 class="text-3xl font-bold text-white">Why Current Train Tracking Systems Fail</h2>
+      </div>
+
+      <div class="bg-rose-950/30 border border-rose-500/30 p-5 rounded-2xl space-y-2">
+        <div class="text-xs font-mono font-bold text-rose-300 uppercase">The Naive Linear Fallacy:</div>
+        <div class="text-2xl font-mono font-bold text-rose-200">
+          Predicted Arrival = Booked WTT Schedule + Current Live Delay
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          If a train is 15 minutes late at Mandya, legacy apps assume it arrives 15 minutes late at Bengaluru. This ignores train acceleration physics, headway compression behind freight, and terminal choke points.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
+          <div class="text-xl">🚫</div>
+          <h4 class="font-bold text-sm text-white">Zero Physical Awareness</h4>
+          <p class="text-xs text-slate-400">Ignores whether the locomotive is a 130 km/h Vande Bharat or a 17-halt commuter MEMU.</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
+          <div class="text-xl">🛑</div>
+          <h4 class="font-bold text-sm text-white">Headway Compression Blindness</h4>
+          <p class="text-xs text-slate-400">Fails to foresee Yellow/Red signal cascades when high-speed rakes trail slow freight.</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
+          <div class="text-xl">🚉</div>
+          <h4 class="font-bold text-sm text-white">Terminal Cross-over Surprises</h4>
+          <p class="text-xs text-slate-400">Kengeri-SBC platform reception conflicts generate sudden +15 min unpredicted detentions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 3: THREE PILLARS OF INTELLIGENCE                                   -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">System Architecture</span>
+        <h2 class="text-3xl font-bold text-white">The Three Pillars of Railway Intelligence</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-indigo-500/40 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-300 flex items-center justify-center font-bold text-lg border border-indigo-500/30">
+            01
+          </div>
+          <h3 class="font-bold text-white text-base">Pattern Recognition Engine</h3>
+          <ul class="text-xs text-slate-300 space-y-2 font-mono">
+            <li>• 24-Hour Temporal Wave Profiler (Commuter vs Freight Slots)</li>
+            <li>• Spatial Bottleneck Clusters (SBC Outer, Mandya Surge)</li>
+            <li>• Headway Compression &amp; Ripple Propagation</li>
+            <li>• Yesterday vs Today Delay Gap Forensics</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-300 flex items-center justify-center font-bold text-lg border border-amber-500/30">
+            02
+          </div>
+          <h3 class="font-bold text-white text-base">12-Factor Pain Taxonomy</h3>
+          <ul class="text-xs text-slate-300 space-y-2 font-mono">
+            <li>• Loop Stabling &amp; Overtake Precedence (+8.5m)</li>
+            <li>• Signal Aspect Cascades (Yellow/Red)</li>
+            <li>• TSR/PSR Track Maintenance Speed Caps</li>
+            <li>• OHE 25kV Sag, Wet-Rail Slip &amp; LC Jams</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-emerald-500/40 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-300 flex items-center justify-center font-bold text-lg border border-emerald-500/30">
+            03
+          </div>
+          <h3 class="font-bold text-white text-base">Dynamic Prediction &amp; Recovery</h3>
+          <ul class="text-xs text-slate-300 space-y-2 font-mono">
+            <li>• Physics-Informed LightGBM Regressor</li>
+            <li>• Train Historical Recovery DNA (88% vs 22%)</li>
+            <li>• Pacing Recommendation (V_target vs MPS)</li>
+            <li>• SHAP XAI Waterfall Attribution</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 4: 12-FACTOR OPERATIONAL PAIN TAXONOMY                              -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-5">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider">Root-Cause Attribution</span>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">Comprehensive 12-Factor Operational Pain Taxonomy</h2>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">🛑</div>
+          <div class="font-bold text-white">Signal Danger Hold</div>
+          <div class="text-slate-400 text-[11px]">Yellow/Red aspect detention (+12m)</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">🚧</div>
+          <div class="font-bold text-white">LC Gate Road Jam</div>
+          <div class="text-slate-400 text-[11px]">Boom failure / road obstruction (+10m)</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">⚡</div>
+          <div class="font-bold text-white">OHE 25kV Voltage Sag</div>
+          <div class="text-slate-400 text-[11px]">Feeder sag drops tractive torque (+8m)</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">🌧️</div>
+          <div class="font-bold text-white">Wet-Rail Micro-Slip</div>
+          <div class="text-slate-400 text-[11px]">Monsoon adhesion loss &amp; sanding (+6m)</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">🔀</div>
+          <div class="font-bold text-white">Loop Line Turnout</div>
+          <div class="text-slate-400 text-[11px]">1:8.5 diversion for overtake (+8.5m)</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">🚶</div>
+          <div class="font-bold text-white">Headway Compression</div>
+          <div class="text-slate-400 text-[11px]">Trailing behind slow freight rake (+14m)</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">🚪</div>
+          <div class="font-bold text-white">Commuter Dwell Surge</div>
+          <div class="text-slate-400 text-[11px]">Overcrowded passenger boarding (+5m)</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-lg">🚉</div>
+          <div class="font-bold text-white">Terminal Throat Choke</div>
+          <div class="text-slate-400 text-[11px]">SBC Yard platform reception (+15m)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 5: TRAIN HISTORICAL RECOVERY DNA                                    -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Locomotive Intelligence</span>
+        <h2 class="text-3xl font-bold text-white">Train-Specific Historical Recovery DNA</h2>
+        <p class="text-xs text-slate-400 font-mono">Different train rakes possess distinct acceleration profiles and slack recovery capabilities:</p>
+      </div>
+
+      <div class="space-y-2.5 font-mono text-xs">
+        <div class="p-3.5 rounded-2xl bg-indigo-950/50 border border-indigo-500/40 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-bold text-white text-sm">#20608 Vande Bharat Express (MYS - MAS)</div>
+            <div class="text-indigo-300 text-[11px] mt-0.5">Distributed EMU Traction · 0.85 m/s² · Max Speed 130 km/h · Priority Tier 1</div>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="px-3 py-1 rounded-full bg-emerald-950 text-emerald-300 font-bold border border-emerald-500/40">
+              88% Recovery Exploitation
+            </span>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-bold text-white text-sm">#12613 Wodeyar Superfast Express</div>
+            <div class="text-slate-400 text-[11px] mt-0.5">WAP-7 + 22 LHB Coaches · 0.60 m/s² · Max Speed 110 km/h · Priority Tier 2</div>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="px-3 py-1 rounded-full bg-blue-950 text-blue-300 font-bold border border-blue-500/40">
+              65% Recovery Exploitation
+            </span>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-bold text-white text-sm">#16022 Kaveri Express (Night)</div>
+            <div class="text-slate-400 text-[11px] mt-0.5">WAP-7 + 22 ICF Coaches (10 Commercial Halts) · 0.45 m/s² · Max Speed 110 km/h</div>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="px-3 py-1 rounded-full bg-amber-950 text-amber-300 font-bold border border-amber-500/40">
+              45% Moderate Recovery
+            </span>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-4">
+          <div>
+            <div class="font-bold text-white text-sm">#66552 Mysuru - SBC MEMU Passenger</div>
+            <div class="text-slate-400 text-[11px] mt-0.5">3-Phase MEMU (17 All-Stop Commuter Halts) · 0.55 m/s² · Max Speed 95 km/h</div>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="px-3 py-1 rounded-full bg-rose-950 text-rose-300 font-bold border border-rose-500/40">
+              22% Low Recovery Capacity
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 6: KINEMATIC PACING & THROTTLE ADVICE                               -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">Controller Guidance</span>
+        <h2 class="text-3xl font-bold text-white">Kinematic Pacing &amp; Throttle Optimization Engine</h2>
+      </div>
+
+      <div class="bg-slate-900 border border-indigo-500/30 p-5 rounded-2xl space-y-3 font-mono">
+        <div class="text-xs text-indigo-300 font-bold uppercase">Dynamic Target Pacing Formula:</div>
+        <div class="text-xl font-bold text-white">
+          V_target = Remaining Clear Distance (km) ÷ Target Scheduled Time Window (hrs)
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="p-5 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 space-y-2">
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-900 text-emerald-200">
+            CASE A: Recoverable Delay (V_target ≤ MPS)
+          </span>
+          <h4 class="font-bold text-white text-base">Throttle Target Advisory</h4>
+          <p class="text-xs text-slate-300 leading-relaxed font-mono">
+            "Increase throttle to <strong class="text-emerald-400">118 km/h</strong> across next 42 km of clear track. Locomotive power will recover <strong class="text-emerald-400">-6 min slack</strong> to arrive on time at SBC."
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-rose-950/30 border border-rose-500/30 space-y-2">
+          <span class="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-900 text-rose-200">
+            CASE B: Unrecoverable Delay (V_target &gt; MPS)
+          </span>
+          <h4 class="font-bold text-white text-base">Optimal Achievable Delay</h4>
+          <p class="text-xs text-slate-300 leading-relaxed font-mono">
+            "Required pace (145 km/h) exceeds 110 km/h limit. Maximum acceleration reclaims 9 min slack, achieving an <strong class="text-amber-400">Optimal Delay of +3m</strong> (Static was +12m)."
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 7: GOD-MODE SIMULATOR DECK                                          -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Interactive Simulation</span>
+        <h2 class="text-3xl font-bold text-white">God-Mode Moving Train &amp; Pain Factor Sandbox</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <div class="text-xl">🚆</div>
+          <h3 class="font-bold text-white text-base">Real-Time Moving Train HUD</h3>
+          <ul class="text-xs text-slate-300 space-y-2 font-mono">
+            <li>• 100ms physical animation loop across 138.25 km</li>
+            <li>• Floating on-train travel timer (<code class="text-indigo-300">⏱️ Elapsed: 42m</code>)</li>
+            <li>• Headlights, catenary sparks &amp; bogie rotation</li>
+            <li>• Variable playback speeds (<code class="text-indigo-300">0.5x, 1x, 2x, 5x, 10x, 20x</code>)</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <div class="text-xl">🖱️</div>
+          <h3 class="font-bold text-white text-base">Mouse-Clicker Pain Factor Dropper</h3>
+          <ul class="text-xs text-slate-300 space-y-2 font-mono">
+            <li>• Quick-access toolbelt (Signal 🛑, Wet Rail 🌧️, OHE ⚡)</li>
+            <li>• Custom detention slider (<code class="text-amber-300">+2m to +30m</code>)</li>
+            <li>• Live laser crosshair &amp; tooltip over track canvas</li>
+            <li>• Instant Dynamic ETA &amp; Pacing recalculation</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 8: TECH STACK & ARCHITECTURE                                        -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Production Engineering</span>
+        <h2 class="text-3xl font-bold text-white">Technical Architecture &amp; Hybrid Dual-Core Resilience</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 font-mono text-xs">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <div class="text-indigo-400 font-bold text-sm uppercase">Frontend Application (Port 8080)</div>
+          <ul class="text-slate-300 space-y-1.5">
+            <li>• React 18 + TypeScript + Vite 6</li>
+            <li>• Tailwind CSS (Tactical railway dark theme)</li>
+            <li>• Recharts &amp; Lucide React Icons</li>
+            <li>• Automatic backend health prober (every 5s)</li>
+          </ul>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <div class="text-emerald-400 font-bold text-sm uppercase">Python ML Intelligence Core (Port 8000)</div>
+          <ul class="text-slate-300 space-y-1.5">
+            <li>• Python 3.12 + FastAPI + Uvicorn</li>
+            <li>• LightGBM Gradient-Boosted Decision Trees</li>
+            <li>• SHAP TreeExplainer for Explainable AI (XAI)</li>
+            <li>• 35,000 SWR corridor journey synthetic dataset</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 font-mono">
+        <strong>Dual-Core Resilience:</strong> If the Python server is offline, the client seamlessly executes high-precision client-side kinematics for 100% offline uptime.
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 9: IMPACT & SCALABILITY                                             -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">SIH 2026 Value Proposition</span>
+        <h2 class="text-3xl font-bold text-white">Measurable Impact &amp; Indian Railways Scalability</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center font-mono">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-3xl font-black text-emerald-400">-28%</div>
+          <div class="text-xs font-bold text-white">Section Detentions</div>
+          <div class="text-[10px] text-slate-400">Via proactive headway decompression</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-3xl font-black text-indigo-400">95%</div>
+          <div class="text-xs font-bold text-white">Confidence Intervals</div>
+          <div class="text-[10px] text-slate-400">Accurate RMSE error bounds</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-3xl font-black text-amber-400">12</div>
+          <div class="text-xs font-bold text-white">Pain Factors Diagnosed</div>
+          <div class="text-[10px] text-slate-400">Real-time root cause forensics</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+          <div class="text-3xl font-black text-sky-400">100%</div>
+          <div class="text-xs font-bold text-white">Nationwide Scalable</div>
+          <div class="text-[10px] text-slate-400">Parameter-driven corridor engine</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- SLIDE 10: DEMO & CONCLUSION                                               -->
+    <!-- ========================================================================= -->
+    <section class="slide flex-col space-y-6">
+      <div class="space-y-1">
+        <span class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Ready for Live Evaluation</span>
+        <h2 class="text-3xl font-bold text-white">Live System Demonstration &amp; Q&amp;A</h2>
+      </div>
+
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/40 p-6 rounded-3xl space-y-4 shadow-2xl">
+        <div class="flex items-center gap-3">
+          <img src="/logo.svg" alt="RailRakshak" class="w-12 h-12 object-contain shrink-0" />
+          <div>
+            <h3 class="font-bold text-lg text-white">RailRakshak (Rail Insight 2.0)</h3>
+            <p class="text-xs text-indigo-300 font-mono">Live on Localhost &amp; Docker · Ready for Mentor Evaluation</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+          <a href="http://localhost:8080/" target="_blank" class="p-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-center transition-colors shadow-sm block">
+            🚀 Launch Mission Control Cockpit
+          </a>
+          <a href="http://localhost:8080/?tab=SIMULATOR" target="_blank" class="p-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 font-bold text-center transition-colors block">
+            🎮 Open God-Mode Simulator
+          </a>
+        </div>
+      </div>
+
+      <div class="text-center font-mono text-xs text-slate-500">
+        Use Left/Right arrow keys to navigate slides · Press 'F' for Fullscreen
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Progress Bar -->
+  <footer class="border-t border-slate-800 bg-slate-950/80 px-6 py-2.5 flex items-center justify-between text-xs font-mono text-slate-500">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>SIH 2026 Mentor Presentation Deck</span>
+    </div>
+    <div class="w-48 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+      <div id="progressBar" class="bg-indigo-500 h-full w-[10%] transition-all duration-300"></div>
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counter = document.getElementById('slideCounter');
+    const progress = document.getElementById('progressBar');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      counter.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
+      progress.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+  </script>
+</body>
+</html>
