@@ -269,40 +269,31 @@ export function CleanSectionedCockpit({
       {/* ========================================================================= */}
       <main className="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 py-6 space-y-6">
         
-        {/* Stepper Navigation Indicator */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 font-mono text-xs flex-wrap">
-            <button
-              onClick={() => setActiveStep("FLEET_SELECT")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all ${
-                activeStep === "FLEET_SELECT"
-                  ? "bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>1. Select Train Fleet ({ALL_CORRIDOR_FLEET.length} Trains)</span>
-            </button>
+        {/* Navigation Indicator / Breadcrumb */}
+        {activeStep === "TRAIN_DETAIL" && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-mono text-xs flex-wrap">
+              <button
+                onClick={() => setActiveStep("FLEET_SELECT")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all shadow-xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Fleet List</span>
+              </button>
 
-            <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 
-            <button
-              onClick={() => setActiveStep("TRAIN_DETAIL")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all ${
-                activeStep === "TRAIN_DETAIL"
-                  ? "bg-blue-50 text-blue-700 font-bold border border-blue-200 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <Train className="w-4 h-4" />
-              <span>2. #{selectedTrain.id} {selectedTrain.name}</span>
-            </button>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-800 font-bold border border-blue-200 shadow-xs">
+                <Train className="w-3.5 h-3.5 text-blue-600" />
+                <span>#{selectedTrain.id} {selectedTrain.name}</span>
+              </div>
+            </div>
+
+            <div className="text-xs font-mono text-slate-500">
+              Active Inspector: <strong className="text-slate-900">#{selectedTrain.id} {selectedTrain.name}</strong>
+            </div>
           </div>
-
-          <div className="text-xs font-mono text-slate-500">
-            Selected: <strong className="text-slate-900">#{selectedTrain.id} {selectedTrain.name}</strong>
-          </div>
-        </div>
+        )}
 
         {/* ========================================================================= */}
         {/* SCREEN 1: TRAIN FLEET SELECTOR (Click a train to open its interface)     */}
