@@ -737,7 +737,7 @@ export function GodModeSimulatorDeck({
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-indigo-600" />
                 <h3 className="text-base font-bold text-slate-900 font-heading">
-                  Real-Time Dynamic ETA Prediction Trigger
+                  Intelligent Multi-Factor Dynamic ETA Reaction
                 </h3>
               </div>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono border ${
@@ -747,6 +747,37 @@ export function GodModeSimulatorDeck({
               }`}>
                 {simState.hasEncounteredPainFactors ? "⚡ Dynamic Forecast Active" : "● Nominal Green Aspect"}
               </span>
+            </div>
+
+            {/* Static Naive vs Dynamic Intelligent ETA Comparison Banner */}
+            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 rounded-2xl text-white space-y-3 border border-indigo-500/40">
+              <div className="flex items-center justify-between text-xs font-mono text-indigo-300 border-b border-indigo-500/30 pb-2">
+                <span className="font-bold flex items-center gap-1.5 uppercase">
+                  <Activity className="w-3.5 h-3.5 text-indigo-400" />
+                  Static Linear vs. Intelligent Dynamic Prediction
+                </span>
+                <span className="text-slate-400">Terminus: SBC (KM 138.25)</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center font-mono">
+                <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700">
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Naive Static ETA</div>
+                  <div className="text-base font-bold text-slate-300 mt-0.5">{simState.staticNaiveSbcTime}</div>
+                  <div className="text-[10px] text-rose-400 font-bold">+{simState.staticNaiveDelayMin}m (Linear Sum)</div>
+                </div>
+
+                <div className="bg-indigo-900/80 p-2.5 rounded-xl border border-indigo-400/60 ring-1 ring-indigo-400/30">
+                  <div className="text-[10px] text-indigo-300 uppercase font-bold">Dynamic Predicted ETA</div>
+                  <div className="text-lg font-black text-indigo-200 mt-0.5">{simState.predictedSbcTime}</div>
+                  <div className="text-[10px] text-emerald-400 font-bold">+{simState.predictedSbcArrivalDelayMin}m variance</div>
+                </div>
+
+                <div className="bg-emerald-950/70 p-2.5 rounded-xl border border-emerald-500/40">
+                  <div className="text-[10px] text-emerald-400 uppercase font-bold">Slack Reclaimed</div>
+                  <div className="text-base font-bold text-emerald-300 mt-0.5">-{simState.slackMinutesRecovered} mins</div>
+                  <div className="text-[10px] text-slate-300 font-mono">via Tractive Power</div>
+                </div>
+              </div>
             </div>
 
             {/* Next Station & Final SBC Arrival Cards */}
@@ -776,26 +807,27 @@ export function GodModeSimulatorDeck({
                 </div>
               </div>
 
-              {/* Final Terminus SBC Dynamic ETA */}
+              {/* Physical Remaining Distance & Travel Profile */}
               <div className="bg-indigo-50/60 border border-indigo-200 rounded-2xl p-4 space-y-2">
                 <div className="text-xs font-mono text-indigo-600 uppercase font-semibold flex items-center justify-between">
-                  <span>KSR Bengaluru (SBC) Dynamic ETA</span>
-                  <span className="text-indigo-700 font-bold">{simState.distanceRemainingKm} km left</span>
+                  <span>Remaining Distance Breakdown</span>
+                  <span className="text-indigo-700 font-bold">{simState.distanceRemainingKm} km total</span>
                 </div>
 
-                <div className="text-2xl font-bold text-indigo-950 font-heading">
-                  {simState.predictedSbcTime}
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
+                  <div className="bg-white p-2 rounded-xl border border-indigo-100">
+                    <span className="text-slate-500 text-[10px] block">Clear Track:</span>
+                    <strong className="text-emerald-700 text-sm">{simState.remainingClearDistanceKm} km</strong>
+                  </div>
+                  <div className="bg-white p-2 rounded-xl border border-indigo-100">
+                    <span className="text-slate-500 text-[10px] block">Speed Capped:</span>
+                    <strong className="text-rose-600 text-sm">{simState.remainingRestrictedDistanceKm} km</strong>
+                  </div>
                 </div>
 
-                <div className="flex items-baseline justify-between pt-1 border-t border-indigo-200/60 text-xs font-mono">
-                  <span className="text-slate-500">Booked: {simState.scheduledSbcTime}</span>
-                  <span className="font-bold text-indigo-700">
-                    +{simState.predictedSbcArrivalDelayMin} min variance
-                  </span>
-                </div>
-
-                <div className="text-[11px] font-mono text-indigo-800">
-                  Total Delay Incurred: <strong>+{simState.totalIncurredDelayMin} mins</strong>
+                <div className="flex items-baseline justify-between pt-1 border-t border-indigo-200/60 text-xs font-mono text-slate-600">
+                  <span>Est. Physical Transit:</span>
+                  <strong className="text-indigo-950 font-bold">{simState.estimatedPhysicalTransitTimeMin} mins</strong>
                 </div>
               </div>
             </div>
@@ -812,11 +844,47 @@ export function GodModeSimulatorDeck({
             </div>
           </div>
 
+          {/* Train Historical Recovery DNA & Locomotive Profile Card */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Gauge className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-base font-bold text-slate-900 font-heading">
+                  Train Recovery DNA &amp; Historical Pick-up Capability
+                </h3>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {Math.round(simState.trainDNA.historicalRecoveryRate * 100)}% Recovery Exploitation
+              </span>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 font-heading">
+                    {simState.trainDNA.tractiveLabel}
+                  </h4>
+                  <p className="text-xs text-slate-500 font-mono mt-0.5">
+                    Acceleration: {simState.trainDNA.accelerationMps2} m/s² · Nominal Cruise: {simState.trainDNA.nominalCruiseKmph} km/h · Priority Tier: {simState.trainDNA.dispatchPriorityTier}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-mono text-slate-400 block">Recommended Pace</span>
+                  <span className="text-lg font-black font-mono text-indigo-600">{simState.recommendedPaceKmph} km/h</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed font-sans border-t border-slate-200/80 pt-2">
+                {simState.trainDNA.tractiveDescription}
+              </p>
+            </div>
+          </div>
+
           {/* Kinematic Recovery Speed Calculator & Optimal Achievable Delay */}
           <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2">
-                <Gauge className="w-5 h-5 text-emerald-600" />
+                <Zap className="w-5 h-5 text-emerald-600" />
                 <h3 className="text-base font-bold text-slate-900 font-heading">
                   Kinematic Speed &amp; Optimal Delay Recovery
                 </h3>
@@ -843,17 +911,17 @@ export function GodModeSimulatorDeck({
               </div>
 
               <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200">
-                <div className="text-[10px] text-blue-600 uppercase font-bold">Speed Needed to Recover</div>
+                <div className="text-[10px] text-blue-600 uppercase font-bold">Pace Needed on Clear Track</div>
                 <div className="text-xl font-bold text-blue-700 mt-1">
-                  {simState.requiredRecoverySpeedKmph} <span className="text-xs font-normal">km/h</span>
+                  {simState.recommendedPaceKmph} <span className="text-xs font-normal">km/h</span>
                 </div>
-                <div className="text-[10px] text-blue-600 mt-0.5">Next Stop Speed: {simState.requiredNextStationRecoverySpeedKmph} km/h</div>
+                <div className="text-[10px] text-blue-600 mt-0.5">Next Stop Pace: {simState.requiredNextStationRecoverySpeedKmph} km/h</div>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200">
                 <div className="text-[10px] text-emerald-600 uppercase font-bold">Slack Recoverable</div>
                 <div className="text-xl font-bold text-emerald-700 mt-1">
-                  -{simState.maxRecoverableMin} <span className="text-xs font-normal">mins</span>
+                  -{simState.slackMinutesRecovered} <span className="text-xs font-normal">mins</span>
                 </div>
                 <div className="text-[10px] text-emerald-600 mt-0.5">Optimal Delay: +{simState.optimalDelayMin}m</div>
               </div>
@@ -861,12 +929,12 @@ export function GodModeSimulatorDeck({
 
             <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3.5 rounded-2xl border border-slate-200 leading-relaxed space-y-1">
               <div>
-                <strong>Recovery Physics:</strong> To eliminate all <strong>+{simState.totalIncurredDelayMin}m</strong> delay over the remaining <strong>{simState.distanceRemainingKm} km</strong>, locomotive requires <strong>{simState.requiredRecoverySpeedKmph} km/h</strong>.
+                <strong>Recovery Physics:</strong> To recover lost time across the remaining <strong>{simState.remainingClearDistanceKm} km</strong> of clear track, train requires <strong>{simState.recommendedPaceKmph} km/h</strong>.
               </div>
               <div className="text-slate-500 text-[11px]">
-                {simState.requiredRecoverySpeedKmph <= simState.maxCorridorMpsKmph
-                  ? `Target speed is within the ${simState.maxCorridorMpsKmph} km/h corridor MPS limit. Accelerate to recover on-time arrival.`
-                  : `Target speed exceeds ${simState.maxCorridorMpsKmph} km/h limit. Maximum permissible acceleration recovers ${simState.maxRecoverableMin} min slack, resulting in an optimal achievable delay of +${simState.optimalDelayMin}m.`}
+                {simState.recommendedPaceKmph <= simState.maxCorridorMpsKmph
+                  ? `Target pace is within the ${simState.maxCorridorMpsKmph} km/h locomotive MPS limit. Driver can notch up to recover on-time arrival.`
+                  : `Target pace exceeds ${simState.maxCorridorMpsKmph} km/h locomotive limit. Maximum permissible acceleration recovers ${simState.maxRecoverableMin}m slack, resulting in an optimal achievable arrival delay of +${simState.optimalDelayMin}m.`}
               </div>
             </div>
           </div>
