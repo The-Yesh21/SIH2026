@@ -6,6 +6,7 @@ import {
   Clock,
   Cpu,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import { formatClockMinutes } from "../lib/rail/timeResolver";
 import { checkBackendHealth } from "../lib/rail/apiClient";
@@ -19,8 +20,8 @@ interface HeaderProps {
   setActiveClockMinutes: (mins: number) => void;
   isRealTimeSynced: boolean;
   setIsRealTimeSynced: (synced: boolean) => void;
-  activeTab: "COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS";
-  setActiveTab: (tab: "COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => void;
+  activeTab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS";
+  setActiveTab: (tab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => void;
 }
 
 export function Header({
@@ -186,6 +187,21 @@ export function Header({
         >
           <Radio className="w-4 h-4 text-signal-green" />
           <span>Corridor Dynamic Cockpit</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("OPTIMAL_ROUTE")}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border ${
+            activeTab === "OPTIMAL_ROUTE"
+              ? "bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30"
+              : "bg-emerald-950/40 text-emerald-300 border-emerald-800/60 hover:bg-emerald-900/50 hover:text-white"
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-emerald-300 animate-pulse" />
+          <span>🎯 Perfection System</span>
+          <span className="px-1.5 py-0.2 rounded bg-emerald-400 text-slate-950 text-[10px] font-mono font-black uppercase">
+            OPTIMAL
+          </span>
         </button>
 
         <button

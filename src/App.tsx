@@ -19,19 +19,22 @@ import { YesterdayTrafficAnalysis } from "./components/YesterdayTrafficAnalysis"
 import { FleetDelayAnalysisDeck } from "./components/FleetDelayAnalysisDeck";
 import { StopsAndWeatherIntelligenceDeck } from "./components/StopsAndWeatherIntelligenceDeck";
 import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceDeck";
+import { OptimalRouteOptimizer } from "./components/OptimalRouteOptimizer";
 import { Flame } from "lucide-react";
 
 export function App() {
   // Navigation View State - Supports separate tab via URL query param (?tab=SIMULATOR)
-  const [activeTab, setActiveTab] = useState<"COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">(() => {
+  const [activeTab, setActiveTab] = useState<"COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
+      if (tabParam === "OPTIMAL_ROUTE") return "OPTIMAL_ROUTE";
       if (tabParam === "SIMULATOR") return "SIMULATOR";
       if (tabParam === "STITCH_INSIGHT") return "STITCH_INSIGHT";
       if (tabParam === "PAIN_FACTORS") return "PAIN_FACTORS";
       if (tabParam === "ANALYSIS") return "ANALYSIS";
       if (window.location.hash === "#simulator") return "SIMULATOR";
+      if (window.location.hash === "#perfection" || window.location.hash === "#optimal") return "OPTIMAL_ROUTE";
     } catch (e) {
       // Fallback if window is not ready
     }
@@ -39,7 +42,7 @@ export function App() {
   });
 
   // Sync tab changes with URL query string for clean bookmarking and separate tab navigation
-  const handleTabChange = (tab: "COCKPIT" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => {
+  const handleTabChange = (tab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => {
     setActiveTab(tab);
     try {
       const url = new URL(window.location.href);
@@ -136,7 +139,27 @@ export function App() {
 
       {/* 2. Main Mission Control Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-7 sm:space-y-8">
-        {activeTab === "SIMULATOR" ? (
+        {activeTab === "OPTIMAL_ROUTE" ? (
+          /* Multi-Factor Perfection System: Optimal Trains & Transit Route Perfection */
+          <OptimalRouteOptimizer
+            activeClockMinutes={activeClockMinutes}
+            setActiveClockMinutes={setActiveClockMinutes}
+            isRealTimeSynced={isRealTimeSynced}
+            setIsRealTimeSynced={setIsRealTimeSynced}
+            environment={environment}
+            injectedDelay={injectedDelay}
+            onSelectTrainForCockpit={(trainId) => {
+              setSelectedTrainId(trainId);
+              handleTabChange("COCKPIT");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onSelectTrainForSimulator={(trainId) => {
+              setSelectedTrainId(trainId);
+              handleTabChange("SIMULATOR");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        ) : activeTab === "SIMULATOR" ? (
           /* God-Mode Interactive Moving Train & Real-Time Pain Factor Simulator */
           <GodModeSimulatorDeck
             selectedTrain={resolvedLive.config}
