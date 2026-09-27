@@ -230,9 +230,24 @@ export function OptimalRouteOptimizer({
             {/* Departure */}
             <div>
               <span className="text-[11px] font-medium text-slate-400 block">Departs {originStation.name}</span>
-              <div className="text-lg font-bold text-white mt-0.5">{bestTrain.predictedDepOriginStr}</div>
-              <div className="text-xs text-emerald-400 mt-0.5">
-                {bestTrain.waitTimeMins === 0 ? "Leaving now!" : `In ${bestTrain.waitTimeMins} mins`}
+              <div className="text-lg font-bold text-white mt-0.5">
+                {bestTrain.predictedDepOriginStr}
+                {bestTrain.departureStatus === "OVERNIGHT_NEXT_DAY" && (
+                  <span className="text-xs ml-1.5 px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-medium">
+                    Tomorrow
+                  </span>
+                )}
+              </div>
+              <div className="text-xs font-medium mt-0.5">
+                {bestTrain.waitTimeMins === 0 ? (
+                  <span className="text-emerald-400">Leaving right now!</span>
+                ) : bestTrain.departureStatus === "OVERNIGHT_NEXT_DAY" || bestTrain.waitTimeMins > 180 ? (
+                  <span className="text-amber-400">
+                    Next run: Tomorrow in {Math.floor(bestTrain.waitTimeMins / 60)}h {bestTrain.waitTimeMins % 60}m
+                  </span>
+                ) : (
+                  <span className="text-emerald-400">In {bestTrain.waitTimeMins} mins</span>
+                )}
               </div>
             </div>
 
@@ -259,12 +274,26 @@ export function OptimalRouteOptimizer({
             </div>
           </div>
 
-          {/* Why this train explanation */}
-          <div className="flex items-center gap-2.5 text-xs text-slate-300 bg-slate-800/40 p-3 rounded-lg border border-slate-800">
-            <Zap className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>
-              <strong>Why this train:</strong> {bestTrain.aiDecisionReason}
-            </span>
+          {/* Why this train explanation & Overnight Context */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5 text-xs text-slate-300 bg-slate-800/40 p-3 rounded-lg border border-slate-800">
+              <Zap className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                <strong>Why this train:</strong> {bestTrain.aiDecisionReason}
+              </span>
+            </div>
+
+            {(bestTrain.departureStatus === "OVERNIGHT_NEXT_DAY" || bestTrain.waitTimeMins > 180) && (
+              <div className="flex items-start gap-2.5 text-xs text-amber-300 bg-amber-950/30 p-3 rounded-lg border border-amber-800/40">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong>No late-night services for this intermediate stop:</strong> {originStation.name} and {destStation.name} are passenger halts served exclusively by daytime commuter trains.
+                  <div className="mt-1 text-slate-300">
+                    💡 <em>Tip: For late-night travel, nearby major junctions like <strong>Mandya (MYA)</strong> or <strong>Ramanagaram (RMGM)</strong> have 24/7 express services (such as #16022 Kaveri Express).</em>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
