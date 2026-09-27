@@ -67,7 +67,6 @@ export function GodModeSimulatorDeck({
 
   // Selected Hazard Template from palette
   const [selectedHazardTemplateIndex, setSelectedHazardTemplateIndex] = useState<number>(0);
-  const [customDelayMinutes, setCustomDelayMinutes] = useState<number>(10);
 
   // Active Selected Hazard for on-track popup inspector
   const [inspectedHazardId, setInspectedHazardId] = useState<string | null>(null);
@@ -170,7 +169,7 @@ export function GodModeSimulatorDeck({
       category: template.category,
       chainageKm: Math.round(boundedKm * 10) / 10,
       locationLabel: getClosestStationName(boundedKm),
-      delayMinutes: customDelayMinutes || template.delayMinutes,
+      delayMinutes: template.delayMinutes,
       speedCapKmph: template.speedCapKmph,
       zoneLengthKm: template.zoneLengthKm,
       description: template.description,
@@ -334,21 +333,6 @@ export function GodModeSimulatorDeck({
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-3 font-mono text-xs">
-            <span className="text-slate-500 font-semibold">Delay Impact:</span>
-            <input
-              type="range"
-              min="2"
-              max="30"
-              value={customDelayMinutes}
-              onChange={(e) => setCustomDelayMinutes(Number(e.target.value))}
-              className="w-28 accent-indigo-600 cursor-pointer"
-            />
-            <span className="px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-bold text-xs">
-              +{customDelayMinutes}m
-            </span>
-          </div>
         </div>
 
         {/* Quick Toolbar Pills */}
@@ -360,7 +344,6 @@ export function GodModeSimulatorDeck({
                 key={haz.type}
                 onClick={() => {
                   setSelectedHazardTemplateIndex(idx);
-                  setCustomDelayMinutes(haz.delayMinutes);
                 }}
                 className={`p-2 rounded-2xl border transition-all flex flex-col items-center text-center gap-1 group ${
                   isSelected
@@ -392,7 +375,7 @@ export function GodModeSimulatorDeck({
               </h3>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 font-mono">
-              Click anywhere on the track to plant <strong className="text-indigo-600">{activeTemplate.icon} {activeTemplate.name} (+{customDelayMinutes}m)</strong>. Click planted pins to inspect or remove.
+              Click anywhere on the track to plant <strong className="text-indigo-600">{activeTemplate.icon} {activeTemplate.name} (+{activeTemplate.delayMinutes}m)</strong>. Click planted pins to inspect or remove.
             </p>
           </div>
 
@@ -555,7 +538,7 @@ export function GodModeSimulatorDeck({
                 {/* Floating Clicker Preview Tooltip */}
                 <div className="bg-indigo-900/95 text-white border border-indigo-400/80 px-2.5 py-1 rounded-xl shadow-2xl text-[10px] font-mono whitespace-nowrap flex items-center gap-1.5 animate-pulse">
                   <span>{activeTemplate.icon}</span>
-                  <span className="font-bold">Plant +{customDelayMinutes}m at KM {cursorKm.toFixed(1)}</span>
+                  <span className="font-bold">Plant {activeTemplate.name} (+{activeTemplate.delayMinutes}m) at KM {cursorKm.toFixed(1)}</span>
                 </div>
 
                 {/* Vertical Laser Guideline */}
