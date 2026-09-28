@@ -65,6 +65,88 @@ export interface TrainConfig {
   currentLocationKm: number;       // Distance from MYS (0 to 138.250)
   currentSpeedKmph: number;
   initialDelayMin: number;
+  scheduledStops: string[];        // Array of station codes where this train halts
+  dwellMinutes?: Record<string, number>; // Specific halt dwell durations (e.g. { "MYA": 2 })
+}
+
+export interface PrecedingTrainContext {
+  hasPrecedingTrain: boolean;
+  leadTrainId?: string;
+  leadTrainName?: string;
+  leadTrainType?: string;
+  leadTrainLocationKm?: number;
+  headwayDistanceKm?: number;
+  headwayGapMinutes?: number;
+  leadTrainDelayDeltaMin: number;
+  leadTrainLastSection?: string;
+  sectionFrictionIndex: number;
+  rippleDelayPropagatedMin: number;
+  headwayCompressionRisk: "NOMINAL_GREEN" | "CAUTION_AMBER" | "HIGH_RISK_BRAKING";
+  operationalSummary: string;
+}
+
+export interface SectionFriction {
+  sectionCode: string;
+  fromStation: string;
+  toStation: string;
+  startKm: number;
+  endKm: number;
+  lengthKm: number;
+  frictionScore: number;  // 0.0 (Optimal) to 1.0 (Critical Congestion)
+  degradationTier: "OPTIMAL" | "MODERATE_FRICTION" | "HEAVY_CONGESTION" | "BLOCKED_RESTRICTED";
+  sectionalMpsKmph: number;
+  lastTraversedTrainId?: string;
+  lastTraversedTrainName?: string;
+  delayRecordedMin: number;
+  activeRestrictionReason: string;
+}
+
+export interface AffectedTrainRecord {
+  trainId: string;
+  trainName: string;
+  trainType: string;
+  avgHistoricalDelayMin: number;
+  maxDetentionMin: number;
+  historicalOccurrenceCount: number;
+  vulnerabilityReason: string;
+}
+
+export interface SectorHotspot {
+  id: string;
+  rank: number;
+  sectorName: string;
+  chainageKm: string;
+  startKm: number;
+  endKm: number;
+  totalCumulativeDelayMin: number;
+  delayFrequencyPct: number;
+  delayedTrainsCount: number;
+  totalObservedTrains: number;
+  avgDelayPerTrainMin: number;
+  maxSingleDetentionMin: number;
+  primaryCause: string;
+  causeCategory: "Terminal Throat" | "Suburban Commuters" | "Precedence & Loop" | "Track Curvature PSR" | "Level Crossing";
+  speedCapKmph: number;
+  affectedTrainsList: AffectedTrainRecord[];
+  mitigationStrategy: string;
+  etaPredictionRiskWeight: number;
+}
+
+export interface TrainVulnerabilitySector {
+  trainId: string;
+  trainName: string;
+  primarySectorId: string;
+  primarySectorName: string;
+  chainageRangeKm: string;
+  startKm: number;
+  endKm: number;
+  historicalAverageDelayMin: number;
+  historicalOccurrenceFrequencyPct: number;
+  maxHistoricalDetentionMin: number;
+  riskLevel: "CRITICAL_BOTTLENECK" | "HIGH_RISK" | "MODERATE_RISK" | "LOW_RISK";
+  vulnerabilityReason: string;
+  dispatchActionAdvice: string;
+  etaBufferAdjustedMin: number;
 }
 
 export interface DynamicPredictionResult {
@@ -77,12 +159,50 @@ export interface DynamicPredictionResult {
   bottlenecksIncurredMin: number;
   speedRestrictionPenaltyMin: number;
   signalHaltsPenaltyMin: number;
+  precedingTrainContext?: PrecedingTrainContext;
+  sectionFriction?: SectionFriction[];
+  hotspotSectors?: SectorHotspot[];
+  primaryVulnerabilitySector?: TrainVulnerabilitySector;
   shapFactors: ShapAttributionFactor[];
   stationBreakdown: StationForecastRow[];
+  confidenceInterval?: {
+    lowerEta: string;
+    upperEta: string;
+    lowerDelayMin: number;
+    upperDelayMin: number;
+    confidencePct: number;
+    rmseMarginMin: number;
+  };
+  modelConfidenceScore?: number;
+  engineVersion?: string;
+}
+
+export interface FeatureImportanceItem {
+  feature: string;
+  importance: number;
+  description: string;
+}
+
+export interface ModelMetadata {
+  modelName: string;
+  algorithm: string;
+  version: string;
+  status: string;
+  corridor: string;
+  evaluationMetrics: {
+    r2Score: number;
+    meanAbsoluteErrorMin: number;
+    rootMeanSquaredErrorMin: number;
+    sampleCount: number;
+    featuresCount: number;
+    trainedAt: string;
+  };
+  topFeatureImportances: FeatureImportanceItem[];
+  shapExplainerReady: boolean;
 }
 
 export interface ShapAttributionFactor {
-  category: "Speed Restrictions" | "Signaling & Headway" | "Precedence & Loop" | "LC Gate & Incident" | "Commuter Surge" | "Weather & Visibility" | "Timetable Buffer Slack";
+  category: string;
   name: string;
   impactMinutes: number; // Positive = Delay increase, Negative = Recovery
   type: "delay" | "recovery";
@@ -94,6 +214,8 @@ export interface StationForecastRow {
   name: string;
   chainageFromSbcKm: number;
   distanceFromMysKm: number;
+  isScheduledHalt: boolean;
+  haltDwellMin: number;
   bookedTime: string;
   predictedTime: string;
   predictedDelayMin: number;

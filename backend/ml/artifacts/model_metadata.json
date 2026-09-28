@@ -1,0 +1,162 @@
+{
+  "modelName": "RailRakshak LightGBM Corridor Intelligence Core",
+  "version": "3.0.0-PROD",
+  "features": [
+    "train_type_code",
+    "priority_tier",
+    "coaches",
+    "tractive_hp_per_ton",
+    "nominal_decel",
+    "sectional_mps",
+    "current_km",
+    "remaining_km",
+    "current_speed_kmph",
+    "initial_delay_min",
+    "injected_delay_min",
+    "total_current_delay",
+    "dep_hour",
+    "dep_hour_sin",
+    "dep_hour_cos",
+    "is_peak_hour",
+    "weather_code",
+    "ambient_temp_celsius",
+    "visibility_meters",
+    "rail_surface_code",
+    "adhesion_factor",
+    "commuter_surge_multiplier",
+    "ohe_voltage_kv",
+    "wild_alarm_flag",
+    "single_line_block_flag",
+    "remaining_stops_count",
+    "downstream_tsr_count",
+    "downstream_lc_gates_count",
+    "terminal_throat_occupancy",
+    "lead_train_headway_gap_min",
+    "lead_train_delay_delta_min",
+    "section_friction_score",
+    "recent_lc_gate_detention_min",
+    "preceding_train_dwell_surge_min"
+  ],
+  "featureDescriptions": {
+    "train_type_code": "Train Rolling Stock Type (Vande Bharat, Shatabdi, Superfast, Express, MEMU, Freight)",
+    "priority_tier": "Operational Dispatching Priority Tier (1: Highest, 4: Freight)",
+    "coaches": "Train Coach Composition Length",
+    "tractive_hp_per_ton": "Tractive Effort Power-to-Weight Ratio (HP/ton)",
+    "nominal_decel": "Service Braking Deceleration Rate (m/s\u00b2)",
+    "sectional_mps": "Maximum Permissible Speed for Train & Section (km/h)",
+    "current_km": "Current Traversed Distance from Mysuru Junction (km)",
+    "remaining_km": "Remaining Distance to SBC Terminal (km)",
+    "current_speed_kmph": "Live Telemetry Running Speed (km/h)",
+    "initial_delay_min": "Initial Recorded Schedule Delay (minutes)",
+    "injected_delay_min": "Active Scenario Injected Delay (minutes)",
+    "total_current_delay": "Total Cumulative Delay at Current Observation (minutes)",
+    "dep_hour": "Departure Hour of Day (0-23)",
+    "dep_hour_sin": "Cyclic Time Feature (Sine of Departure Hour)",
+    "dep_hour_cos": "Cyclic Time Feature (Cosine of Departure Hour)",
+    "is_peak_hour": "Corridor Peak Traffic Window (Morning / Evening Rush)",
+    "weather_code": "Environmental Weather State (Clear, Fog, Monsoon, Heavy Rain)",
+    "ambient_temp_celsius": "Ambient Track & Air Temperature (\u00b0C)",
+    "visibility_meters": "Driver Track Visibility Range (meters)",
+    "rail_surface_code": "Rail Adhesion Surface State (Dry, Damp, Wet, Waterlogged)",
+    "adhesion_factor": "Wheel-Rail Traction Adhesion Coefficient",
+    "commuter_surge_multiplier": "Suburban Passenger Boarding Surge Multiplier",
+    "ohe_voltage_kv": "25kV AC Overhead Traction Voltage (kV)",
+    "wild_alarm_flag": "Wheel Impact Load Detector Hotbox Alarm Active",
+    "single_line_block_flag": "Maintenance Mega-Block / Single Line Working Active",
+    "remaining_stops_count": "Number of Downstream Scheduled Halts Remaining",
+    "downstream_tsr_count": "Active Temporary Speed Restrictions Ahead",
+    "downstream_lc_gates_count": "Downstream Level Crossing Gates Ahead",
+    "terminal_throat_occupancy": "KSR Bengaluru (SBC) Approach Throat Congestion Ratio",
+    "lead_train_headway_gap_min": "Time Headway Spacing to Preceding Train (minutes)",
+    "lead_train_delay_delta_min": "Recent Delay Incurred by Preceding Train (minutes)",
+    "section_friction_score": "Live Downstream Section Degradation & Friction Index (0-1)",
+    "recent_lc_gate_detention_min": "Recent LC Gate Clearance Lag Recorded by Prior Trains (minutes)",
+    "preceding_train_dwell_surge_min": "Commuter Boarding Spillover Lag from Preceding Train (minutes)"
+  },
+  "metrics": {
+    "r2Score": 0.8318,
+    "meanAbsoluteErrorMin": 1.498,
+    "rootMeanSquaredErrorMin": 2.917,
+    "sampleCount": 35000,
+    "featuresCount": 34,
+    "trainedAt": "2026-09-25T16:59:01.531184+00:00"
+  },
+  "topImportances": [
+    {
+      "feature": "total_current_delay",
+      "importance": 0.096,
+      "description": "Total Cumulative Delay at Current Observation (minutes)"
+    },
+    {
+      "feature": "train_type_code",
+      "importance": 0.0833,
+      "description": "Train Rolling Stock Type (Vande Bharat, Shatabdi, Superfast, Express, MEMU, Freight)"
+    },
+    {
+      "feature": "current_km",
+      "importance": 0.0706,
+      "description": "Current Traversed Distance from Mysuru Junction (km)"
+    },
+    {
+      "feature": "lead_train_headway_gap_min",
+      "importance": 0.0676,
+      "description": "Time Headway Spacing to Preceding Train (minutes)"
+    },
+    {
+      "feature": "section_friction_score",
+      "importance": 0.0535,
+      "description": "Live Downstream Section Degradation & Friction Index (0-1)"
+    },
+    {
+      "feature": "remaining_km",
+      "importance": 0.0493,
+      "description": "Remaining Distance to SBC Terminal (km)"
+    },
+    {
+      "feature": "current_speed_kmph",
+      "importance": 0.0482,
+      "description": "Live Telemetry Running Speed (km/h)"
+    },
+    {
+      "feature": "recent_lc_gate_detention_min",
+      "importance": 0.0464,
+      "description": "Recent LC Gate Clearance Lag Recorded by Prior Trains (minutes)"
+    },
+    {
+      "feature": "commuter_surge_multiplier",
+      "importance": 0.0462,
+      "description": "Suburban Passenger Boarding Surge Multiplier"
+    },
+    {
+      "feature": "visibility_meters",
+      "importance": 0.044,
+      "description": "Driver Track Visibility Range (meters)"
+    },
+    {
+      "feature": "downstream_tsr_count",
+      "importance": 0.0406,
+      "description": "Active Temporary Speed Restrictions Ahead"
+    },
+    {
+      "feature": "lead_train_delay_delta_min",
+      "importance": 0.0388,
+      "description": "Recent Delay Incurred by Preceding Train (minutes)"
+    },
+    {
+      "feature": "preceding_train_dwell_surge_min",
+      "importance": 0.0338,
+      "description": "Commuter Boarding Spillover Lag from Preceding Train (minutes)"
+    },
+    {
+      "feature": "initial_delay_min",
+      "importance": 0.0321,
+      "description": "Initial Recorded Schedule Delay (minutes)"
+    },
+    {
+      "feature": "wild_alarm_flag",
+      "importance": 0.0321,
+      "description": "Wheel Impact Load Detector Hotbox Alarm Active"
+    }
+  ],
+  "trainedAt": "2026-09-25T16:59:01.531184+00:00"
+}

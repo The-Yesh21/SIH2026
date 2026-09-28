@@ -6,20 +6,55 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        body: ['"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+        data: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
       colors: {
-        rail: {
-          dark: "#0B0F19",
-          panel: "#111827",
-          border: "#1F2937",
-          accent: "#06B6D4",
-          success: "#10B981",
-          warning: "#F59E0B",
-          danger: "#EF4444",
+        ink: {
+          DEFAULT: "#0C1018",
+          light: "#111827",
+        },
+        surface: {
+          DEFAULT: "#151C2C",
+          raised: "#1C2538",
+          overlay: "#212B3F",
+        },
+        graphite: {
+          DEFAULT: "#2A3348",
+          light: "#384460",
+        },
+        steel: {
+          DEFAULT: "#8892A8",
+          light: "#A8B0C4",
+        },
+        chalk: {
+          DEFAULT: "#E8ECF4",
+          dim: "#C0C8D8",
+        },
+        signal: {
+          green: "#22C55E",
+          "green-muted": "#166534",
+          amber: "#F59E0B",
+          "amber-muted": "#78350F",
+          red: "#DC2626",
+          "red-muted": "#7F1D1D",
         },
       },
-      fontFamily: {
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      animation: {
+        'fade-in': 'fadeIn 0.2s ease-out forwards',
+        'slide-down': 'slideDown 0.2s ease-out forwards',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideDown: {
+          '0%': { opacity: '0', transform: 'translateY(-4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
     },
   },
