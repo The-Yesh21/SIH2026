@@ -21,6 +21,7 @@ import { StopsAndWeatherIntelligenceDeck } from "./components/StopsAndWeatherInt
 import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceDeck";
 import { OptimalRouteOptimizer } from "./components/OptimalRouteOptimizer";
 import { LocoPilotCabTerminal } from "./components/LocoPilotCabTerminal";
+import { ExecutiveHumanCockpit } from "./components/ExecutiveHumanCockpit";
 import { Flame } from "lucide-react";
 
 export function App() {
@@ -175,60 +176,21 @@ export function App() {
             onBackToMissionControl={() => handleTabChange("COCKPIT")}
           />
         ) : activeTab === "COCKPIT" ? (
-          <>
-            {/* Train Command Deck with 24-Hour Fleet and Live State Status */}
-            <TrainSelector
-              selectedTrainId={selectedTrainId}
-              onSelectTrain={(train) => handleSelectTrain(train.id)}
-              activeClockMinutes={activeClockMinutes}
-            />
-
-            {/* Live Train Status & Where-Is-My-Train Dynamic ETA Deck */}
-            <DelayIntelligenceDeck
-              prediction={prediction}
-              selectedTrain={resolvedLive.config}
-              environment={environment}
-              setEnvironment={setEnvironment}
-              injectedDelay={injectedDelay}
-              setInjectedDelay={setInjectedDelay}
-              showScenarioBar={showScenarioBar}
-              activeClockMinutes={activeClockMinutes}
-            />
-
-            {/* Bottleneck Sectors Ranked by Longest Delay Duration & Recurrence */}
-            <CorridorPainSectorDeck
-              selectedTrain={resolvedLive.config}
-              hotspotSectors={prediction.hotspotSectors}
-              primaryVulnerability={prediction.primaryVulnerabilitySector}
-              onSelectTrain={handleSelectTrain}
-              activeClockMinutes={activeClockMinutes}
-            />
-
-            {/* Continuous Preceding Train Telemetry & Section Friction Monitor */}
-            <PrecedingTrainMonitorDeck
-              selectedTrain={resolvedLive.config}
-              precedingContext={prediction.precedingTrainContext}
-              sections={prediction.sectionFriction}
-              activeClockMinutes={activeClockMinutes}
-              environment={environment}
-              onSelectTrain={handleSelectTrain}
-            />
-
-            {/* Dedicated Pain Factor Attribution & Kinematic Recovery Deck */}
-            <PainFactorIntelligenceDeck
-              selectedTrain={resolvedLive.config}
-              environment={environment}
-              injectedDelay={injectedDelay}
-              activeClockMinutes={activeClockMinutes}
-              onSelectTrain={handleSelectTrain}
-            />
-
-            {/* Physical Track Spine & Station-by-Station Live Running Log */}
-            <CorridorPhysicalSpine
-              prediction={prediction}
-              selectedTrain={resolvedLive.config}
-            />
-          </>
+          /* Redesigned Executive Human-Readable Cockpit with Light/Dark Theme */
+          <ExecutiveHumanCockpit
+            selectedTrain={resolvedLive.config}
+            prediction={prediction}
+            onSelectTrain={handleSelectTrain}
+            activeClockMinutes={activeClockMinutes}
+            setActiveClockMinutes={setActiveClockMinutes}
+            isRealTimeSynced={isRealTimeSynced}
+            setIsRealTimeSynced={setIsRealTimeSynced}
+            onOpenSimulator={() => handleTabChange("SIMULATOR")}
+            onOpenOptimalRoute={() => handleTabChange("OPTIMAL_ROUTE")}
+            environment={environment}
+            injectedDelay={injectedDelay}
+            setInjectedDelay={setInjectedDelay}
+          />
         ) : activeTab === "PAIN_FACTORS" ? (
           <>
             {/* Train Command Deck for Quick Selection */}
