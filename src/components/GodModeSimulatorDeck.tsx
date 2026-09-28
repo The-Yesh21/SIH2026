@@ -271,7 +271,7 @@ export function GodModeSimulatorDeck({
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="px-3.5 py-1 rounded-full text-xs font-bold font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1.5 shadow-xs">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-                GOD-MODE SIMULATOR &amp; 3D KINEMATIC ENGINE
+                DIGITAL TWIN SIMULATOR &amp; CORRIDOR KINEMATICS
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono text-emerald-400 bg-emerald-950/70 border border-emerald-500/30">
                 ● Live 100ms Physical Loop
@@ -285,11 +285,11 @@ export function GodModeSimulatorDeck({
             <div className="flex items-center gap-3 mt-2">
               <img src="/logo.svg" alt="RailRakshak Logo" className="h-9 w-9 object-contain drop-shadow" />
               <h2 className="text-2xl sm:text-3xl font-bold font-heading tracking-tight">
-                Real-Time Moving Train &amp; Interactive Pain Factor Simulator
+                Digital Twin Corridor &amp; Real-Time Delay Micro-Simulator
               </h2>
             </div>
             <p className="text-sm text-slate-300 mt-1 max-w-3xl leading-relaxed">
-              Watch the train navigate the Mysuru–Bengaluru line in real-time. Use your mouse clicker to drop operational pain factors onto the track. When the train passes through them, the Dynamic ETA engine triggers instant recalculations with recovery speed recommendations.
+              Real-time kinematic micro-simulation of the Mysuru–Bengaluru line. Inject operational delays, track holds, and weather hazards to evaluate real-time delay propagation and automatic recovery pacing.
             </p>
           </div>
 

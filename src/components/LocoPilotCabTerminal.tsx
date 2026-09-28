@@ -509,15 +509,20 @@ export function LocoPilotCabTerminal({ onBackToMissionControl }: LocoPilotCabTer
         </div>
       </div>
 
-      {/* 4. REAL-TIME SERVER ACKNOWLEDGMENT CONSOLE */}
+      {/* 4. REAL-TIME SERVER ACKNOWLEDGMENT & DATABASE ENGINE CONSOLE */}
       <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-slate-400">
         <div className="flex items-center gap-2">
           <Send className="w-4 h-4 text-emerald-400" />
           <span>Last Server Telemetry Ack: <strong className="text-white">{lastServerAck}</strong></span>
         </div>
-        <span className="text-[11px] text-slate-500">
-          FastAPI SQLite Ingestion Engine Active (:8000)
-        </span>
+        <div className="flex items-center gap-2 text-[11px]">
+          <span className="px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono font-bold">
+            Database: SQLite Time-Series + In-Memory Stream Buffer
+          </span>
+          <span className="text-slate-500">
+            FastAPI (:8000/api/telemetry/stream)
+          </span>
+        </div>
       </div>
     </div>
   );

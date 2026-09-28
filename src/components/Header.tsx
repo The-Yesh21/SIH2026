@@ -187,7 +187,7 @@ export function Header({
           }`}
         >
           <Radio className="w-4 h-4 text-signal-green" />
-          <span>Corridor Dynamic Cockpit</span>
+          <span>Section Controller Cockpit</span>
         </button>
 
         <button
@@ -199,7 +199,7 @@ export function Header({
           }`}
         >
           <Sparkles className="w-4 h-4 text-emerald-300 animate-pulse" />
-          <span>🎯 Perfection System</span>
+          <span>⚡ AI Dispatch Optimizer</span>
           <span className="px-1.5 py-0.2 rounded bg-emerald-400 text-slate-950 text-[10px] font-mono font-black uppercase">
             OPTIMAL
           </span>
@@ -214,9 +214,9 @@ export function Header({
           }`}
         >
           <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-          <span>🎮 God-Mode Simulator</span>
+          <span>🚂 Digital Twin Simulator</span>
           <span className="px-1.5 py-0.2 rounded bg-indigo-400 text-slate-950 text-[10px] font-mono font-black uppercase">
-            LIVE
+            PHYSICS
           </span>
         </button>
 
@@ -229,9 +229,9 @@ export function Header({
           }`}
         >
           <Satellite className="w-4 h-4 text-sky-400 animate-pulse" />
-          <span>🛰️ Loco-Pilot Cab</span>
+          <span>🛰️ Loco-Cab DAS (NavIC)</span>
           <span className="px-1.5 py-0.2 rounded bg-sky-400 text-slate-950 text-[10px] font-mono font-black uppercase">
-            NavIC
+            RTIS / NavIC
           </span>
         </button>
 
@@ -244,9 +244,9 @@ export function Header({
           }`}
         >
           <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-          <span>✨ Stitch Live Insight (Light)</span>
+          <span>📊 Station Master Briefing (Light)</span>
           <span className="px-1.5 py-0.2 rounded bg-blue-400 text-slate-950 text-[10px] font-mono font-black uppercase">
-            NEW
+            PORTAL
           </span>
         </button>
 
@@ -258,8 +258,8 @@ export function Header({
               : "text-steel hover:text-signal-amber border-b-2 border-transparent"
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-signal-red animate-pulse" />
-          <span>Pain Factors &amp; Recovery Confidence</span>
+          <span className="w-2 h-2 rounded-full bg-signal-amber animate-pulse" />
+          <span>Bottleneck Forensics &amp; Root-Causes</span>
         </button>
 
         <button
@@ -271,7 +271,7 @@ export function Header({
           }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>Fleet Delay Matrix &amp; Forensics</span>
+          <span>Fleet Punctuality &amp; KPI Analytics</span>
         </button>
       </div>
     </header>

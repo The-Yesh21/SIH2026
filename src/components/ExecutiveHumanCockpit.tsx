@@ -479,7 +479,7 @@ export function ExecutiveHumanCockpit({
               className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow"
             >
               <Play className="w-3.5 h-3.5" />
-              <span>Simulate in God-Mode</span>
+              <span>Digital Twin Simulator</span>
             </button>
           </div>
         </div>
