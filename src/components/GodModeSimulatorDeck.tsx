@@ -111,12 +111,17 @@ export function GodModeSimulatorDeck({
   ]);
 
   const trackContainerRef = useRef<HTMLDivElement>(null);
+  const prevTrainIdRef = useRef<string>(selectedTrain.id);
 
-  // When train prop changes, reset simulation location
+  // When train selection explicitly changes, initialize simulation location for the new train
   useEffect(() => {
-    const res = resolveTrainAtClockTime(selectedTrain, activeClockMinutes);
-    setSimulatedKm(res.operatingState === "RUNNING_ON_TRACK" ? res.currentLocationKm : 8.0);
-  }, [selectedTrain.id, activeClockMinutes]);
+    if (prevTrainIdRef.current !== selectedTrain.id) {
+      prevTrainIdRef.current = selectedTrain.id;
+      const res = resolveTrainAtClockTime(selectedTrain, activeClockMinutes);
+      setSimulatedKm(res.operatingState === "RUNNING_ON_TRACK" ? res.currentLocationKm : 8.0);
+      setIsPlaying(true);
+    }
+  }, [selectedTrain.id]);
 
   // Main Simulation Loop (runs every 100ms when playing)
   useEffect(() => {
