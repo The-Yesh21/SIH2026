@@ -7,6 +7,7 @@ import {
   Cpu,
   CheckCircle2,
   Sparkles,
+  Satellite,
 } from "lucide-react";
 import { formatClockMinutes } from "../lib/rail/timeResolver";
 import { checkBackendHealth } from "../lib/rail/apiClient";
@@ -20,8 +21,8 @@ interface HeaderProps {
   setActiveClockMinutes: (mins: number) => void;
   isRealTimeSynced: boolean;
   setIsRealTimeSynced: (synced: boolean) => void;
-  activeTab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS";
-  setActiveTab: (tab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => void;
+  activeTab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS";
+  setActiveTab: (tab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => void;
 }
 
 export function Header({
@@ -216,6 +217,21 @@ export function Header({
           <span>🎮 God-Mode Simulator</span>
           <span className="px-1.5 py-0.2 rounded bg-indigo-400 text-slate-950 text-[10px] font-mono font-black uppercase">
             LIVE
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("LOCO_PILOT")}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border ${
+            activeTab === "LOCO_PILOT"
+              ? "bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-500/30"
+              : "bg-sky-950/40 text-sky-300 border-sky-800/60 hover:bg-sky-900/50 hover:text-white"
+          }`}
+        >
+          <Satellite className="w-4 h-4 text-sky-400 animate-pulse" />
+          <span>🛰️ Loco-Pilot Cab</span>
+          <span className="px-1.5 py-0.2 rounded bg-sky-400 text-slate-950 text-[10px] font-mono font-black uppercase">
+            NavIC
           </span>
         </button>
 

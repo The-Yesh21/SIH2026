@@ -26,6 +26,28 @@ from ml.pain_analyzer import (
 )
 from ml.eta_predictor import predict_dynamic_eta_ml, format_clock_display
 from ml.model_pipeline import ml_pipeline
+from telemetry.manager import telemetry_manager
+from telemetry.db import get_train_telemetry_history
+
+class TelemetryStreamPacket(BaseModel):
+    train_id: str
+    train_name: Optional[str] = "Corridor Service"
+    loco_id: Optional[str] = "WAP-7"
+    driver_id: Optional[str] = "SWR-LP-01"
+    latitude: float
+    longitude: float
+    gps_speed_kmph: float = 0.0
+    heading_deg: Optional[float] = 48.0
+    accuracy_meters: Optional[float] = 4.0
+    altitude_meters: Optional[float] = 680.0
+    battery_level_pct: Optional[int] = 95
+    is_live_satellite: Optional[bool] = True
+
+class DriverIncidentReport(BaseModel):
+    train_id: str
+    driver_id: Optional[str] = "SWR-LP-01"
+    incident_type: str = "SIGNAL_HOLD"
+    reported_text: Optional[str] = ""
 
 app = FastAPI(
     title="RailRakshak ML Intelligence Core",
@@ -182,6 +204,73 @@ def get_continuous_corridor_monitor(
         precedingTrainAlerts=alerts,
         recentCrossingsSummary="Real-time telemetry continuously ingesting block section clearances & lead train delay deltas."
     )
+
+# ----------------- 🛰️ SATELLITE GPS & LOCO-PILOT TELEMETRY APIS -----------------
+
+@app.post("/api/telemetry/stream")
+def ingest_telemetry_stream(packet: TelemetryStreamPacket):
+    """
+    Ingests live GPS coordinate packets from Loco-Pilot mobile cab app,
+    snaps to SWR corridor chainage, updates in-memory live state, and logs to SQLite.
+    """
+    processed = telemetry_manager.process_incoming_telemetry(packet.model_dump())
+    return {
+        "status": "INGESTED",
+        "train_id": packet.train_id,
+        "snapped_chainage_km": processed["snapped_chainage_km"],
+        "nearest_station": processed["nearest_station_name"],
+        "target_throttle_kmph": processed["target_throttle_kmph"],
+        "signal_aspect_ahead": processed["signal_aspect_ahead"],
+        "distance_to_next_stop_km": processed["distance_to_next_stop_km"],
+        "recorded_at": processed["last_heartbeat_timestamp"]
+    }
+
+@app.get("/api/telemetry/live")
+def get_all_live_telemetry():
+    """
+    Returns latest in-memory live GPS telemetry state for all active trains across the corridor.
+    """
+    return {
+        "count": len(telemetry_manager.live_fleet_state),
+        "fleet": telemetry_manager.get_all_live_fleet()
+    }
+
+@app.get("/api/telemetry/live/{train_id}")
+def get_train_live_telemetry(train_id: str):
+    """
+    Returns latest live satellite GPS state for a specific locomotive / train service.
+    """
+    state = telemetry_manager.get_live_train_state(train_id)
+    if not state:
+        raise HTTPException(status_code=404, detail=f"No telemetry state found for train {train_id}")
+    return state
+
+@app.get("/api/telemetry/history/{train_id}")
+def get_train_history(train_id: str, limit: int = Query(default=100, le=500)):
+    """
+    Retrieves time-series GPS breadcrumbs for a train from SQLite.
+    """
+    logs = get_train_telemetry_history(train_id, limit)
+    return {
+        "train_id": train_id,
+        "count": len(logs),
+        "history": logs
+    }
+
+@app.post("/api/telemetry/incident")
+def report_driver_incident(incident: DriverIncidentReport):
+    """
+    Records a driver-flagged operational hazard or unscheduled signal hold.
+    """
+    res = telemetry_manager.record_driver_incident(incident.model_dump())
+    return {
+        "status": "INCIDENT_LOGGED",
+        "incident_id": res.get("incident_id"),
+        "train_id": incident.train_id,
+        "chainage_km": res.get("chainage_km"),
+        "nearest_station": res.get("nearest_station"),
+        "incident_type": incident.incident_type
+    }
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

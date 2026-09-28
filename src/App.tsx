@@ -20,20 +20,23 @@ import { FleetDelayAnalysisDeck } from "./components/FleetDelayAnalysisDeck";
 import { StopsAndWeatherIntelligenceDeck } from "./components/StopsAndWeatherIntelligenceDeck";
 import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceDeck";
 import { OptimalRouteOptimizer } from "./components/OptimalRouteOptimizer";
+import { LocoPilotCabTerminal } from "./components/LocoPilotCabTerminal";
 import { Flame } from "lucide-react";
 
 export function App() {
   // Navigation View State - Supports separate tab via URL query param (?tab=SIMULATOR)
-  const [activeTab, setActiveTab] = useState<"COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">(() => {
+  const [activeTab, setActiveTab] = useState<"COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
       if (tabParam === "OPTIMAL_ROUTE") return "OPTIMAL_ROUTE";
       if (tabParam === "SIMULATOR") return "SIMULATOR";
+      if (tabParam === "LOCO_PILOT") return "LOCO_PILOT";
       if (tabParam === "STITCH_INSIGHT") return "STITCH_INSIGHT";
       if (tabParam === "PAIN_FACTORS") return "PAIN_FACTORS";
       if (tabParam === "ANALYSIS") return "ANALYSIS";
       if (window.location.hash === "#simulator") return "SIMULATOR";
+      if (window.location.hash === "#locopilot" || window.location.hash === "#cab") return "LOCO_PILOT";
       if (window.location.hash === "#perfection" || window.location.hash === "#optimal") return "OPTIMAL_ROUTE";
     } catch (e) {
       // Fallback if window is not ready
@@ -42,7 +45,7 @@ export function App() {
   });
 
   // Sync tab changes with URL query string for clean bookmarking and separate tab navigation
-  const handleTabChange = (tab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => {
+  const handleTabChange = (tab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => {
     setActiveTab(tab);
     try {
       const url = new URL(window.location.href);
@@ -165,6 +168,11 @@ export function App() {
             selectedTrain={resolvedLive.config}
             onSelectTrain={handleSelectTrain}
             activeClockMinutes={activeClockMinutes}
+          />
+        ) : activeTab === "LOCO_PILOT" ? (
+          /* 🛰️ Loco-Pilot Satellite GPS / NavIC Cab Telemetry Terminal */
+          <LocoPilotCabTerminal
+            onBackToMissionControl={() => handleTabChange("COCKPIT")}
           />
         ) : activeTab === "COCKPIT" ? (
           <>
