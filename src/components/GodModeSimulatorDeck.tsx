@@ -217,6 +217,18 @@ export function GodModeSimulatorDeck({
     handlePlantHazardAtKm(targetKm);
   };
 
+  // Touch on Track for Mobile Devices
+  const handleTrackTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!trackContainerRef.current || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = trackContainerRef.current.getBoundingClientRect();
+    const clickX = touch.clientX - rect.left;
+    const clickPct = Math.max(0, Math.min(1, clickX / rect.width));
+    const targetKm = clickPct * 138.25;
+    handlePlantHazardAtKm(targetKm);
+  };
+
   // Remove a single hazard
   const removeHazard = (id: string) => {
     setPlantedHazards((prev) => prev.filter((h) => h.id !== id));
@@ -421,9 +433,10 @@ export function GodModeSimulatorDeck({
           <div
             ref={trackContainerRef}
             onClick={handleTrackClick}
+            onTouchStart={handleTrackTouch}
             onMouseMove={handleTrackMouseMove}
             onMouseLeave={handleTrackMouseLeave}
-            className="relative w-full h-40 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 rounded-2xl p-3 cursor-crosshair select-none overflow-hidden shadow-2xl border border-slate-800"
+            className="relative w-full h-40 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 rounded-2xl p-3 cursor-crosshair select-none overflow-hidden shadow-2xl border border-slate-800 touch-pan-x"
             title="Click anywhere on this track to drop the equipped pain factor"
           >
             {/* OHE Overhead Catenary Wire (25kV AC) */}

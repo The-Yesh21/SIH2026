@@ -177,10 +177,10 @@ export function Header({
       </div>
 
       {/* Primary Section Switcher Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto no-scrollbar touch-pan-x py-1">
         <button
           onClick={() => setActiveTab("COCKPIT")}
-          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
             activeTab === "COCKPIT"
               ? "text-chalk border-b-2 border-chalk font-bold"
               : "text-steel hover:text-chalk border-b-2 border-transparent"
@@ -192,7 +192,7 @@ export function Header({
 
         <button
           onClick={() => setActiveTab("OPTIMAL_ROUTE")}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "OPTIMAL_ROUTE"
               ? "bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30"
               : "bg-emerald-950/40 text-emerald-300 border-emerald-800/60 hover:bg-emerald-900/50 hover:text-white"
@@ -207,7 +207,7 @@ export function Header({
 
         <button
           onClick={() => setActiveTab("SIMULATOR")}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "SIMULATOR"
               ? "bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/30"
               : "bg-indigo-950/40 text-indigo-300 border-indigo-800/60 hover:bg-indigo-900/50 hover:text-white"
@@ -222,7 +222,7 @@ export function Header({
 
         <button
           onClick={() => setActiveTab("LOCO_PILOT")}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "LOCO_PILOT"
               ? "bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-500/30"
               : "bg-sky-950/40 text-sky-300 border-sky-800/60 hover:bg-sky-900/50 hover:text-white"
@@ -237,7 +237,7 @@ export function Header({
 
         <button
           onClick={() => setActiveTab("STITCH_INSIGHT")}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "STITCH_INSIGHT"
               ? "bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20"
               : "bg-blue-950/40 text-blue-300 border-blue-800/60 hover:bg-blue-900/40 hover:text-white"
@@ -252,7 +252,7 @@ export function Header({
 
         <button
           onClick={() => setActiveTab("PAIN_FACTORS")}
-          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
             activeTab === "PAIN_FACTORS"
               ? "text-signal-amber border-b-2 border-signal-amber font-bold"
               : "text-steel hover:text-signal-amber border-b-2 border-transparent"
@@ -264,7 +264,7 @@ export function Header({
 
         <button
           onClick={() => setActiveTab("ANALYSIS")}
-          className={`flex items-center gap-2 px-4 py-2 font-heading font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
             activeTab === "ANALYSIS"
               ? "text-chalk border-b-2 border-chalk font-bold"
               : "text-steel hover:text-chalk border-b-2 border-transparent"

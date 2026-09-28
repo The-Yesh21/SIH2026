@@ -370,7 +370,7 @@ export function ExecutiveHumanCockpit({
             onClick={onOpenSimulator}
             className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow"
           >
-            <span>Simulate Bottleneck in God-Mode</span>
+            <span>Simulate Bottleneck in Digital Twin</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>

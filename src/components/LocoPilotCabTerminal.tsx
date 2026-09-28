@@ -351,11 +351,11 @@ export function LocoPilotCabTerminal({ onBackToMissionControl }: LocoPilotCabTer
           </div>
 
           {/* Speed Display */}
-          <div className="text-center py-4 space-y-2">
-            <div className="text-7xl sm:text-8xl font-black font-data tracking-tight text-white drop-shadow-2xl">
+          <div className="text-center py-3 sm:py-4 space-y-1 sm:space-y-2">
+            <div className="text-6xl sm:text-7xl md:text-8xl font-black font-data tracking-tight text-white drop-shadow-2xl">
               {gpsSpeedKmph}
             </div>
-            <div className="text-sm font-mono font-bold text-slate-400 tracking-widest uppercase">
+            <div className="text-xs sm:text-sm font-mono font-bold text-slate-400 tracking-widest uppercase">
               Kilometers Per Hour (km/h)
             </div>
           </div>
