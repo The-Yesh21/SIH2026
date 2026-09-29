@@ -26,6 +26,12 @@ import { ALL_CORRIDOR_FLEET, resolveTrainAtClockTime, formatClockMinutes } from 
 import { SWR_CORRIDOR_STATIONS } from "../lib/rail/infrastructure";
 import { getTrainHistoricalRecoveryDNA } from "../lib/rail/godModeSimulator";
 import { EnvironmentalConditions, DEFAULT_ENVIRONMENT } from "../lib/rail/restrictions";
+import { RailwayTrafficSeverityLayer } from "./RailwayTrafficSeverityLayer";
+import { EtaUncertaintyRangeCard } from "./EtaUncertaintyRangeCard";
+import { DelayPropagationGraph } from "./DelayPropagationGraph";
+import { CounterfactualScenarioDeck } from "./CounterfactualScenarioDeck";
+import { ModelBenchmarkExperimentDeck } from "./ModelBenchmarkExperimentDeck";
+import { IntelligenceActionChainDeck } from "./IntelligenceActionChainDeck";
 
 interface ExecutiveHumanCockpitProps {
   selectedTrain: TrainConfig;
@@ -377,6 +383,11 @@ export function ExecutiveHumanCockpit({
       </div>
 
       {/* ========================================================================= */}
+      {/* 2.5 LIVE RAILWAY TRAFFIC SEVERITY LAYER 🟢🟡🟠🔴 (Google Maps for Rail)   */}
+      {/* ========================================================================= */}
+      <RailwayTrafficSeverityLayer activeClockMinutes={activeClockMinutes} />
+
+      {/* ========================================================================= */}
       {/* 3. SECTION 1: ALL TRAINS WE ARE COVERING (Fleet Navigator)                */}
       {/* ========================================================================= */}
       <div className="space-y-4">
@@ -553,6 +564,24 @@ export function ExecutiveHumanCockpit({
       </div>
 
       {/* ========================================================================= */}
+      {/* 4.5 PROBABILISTIC ETA CONFIDENCE & ITEMIZIED SHAP CAUSES (Req 4 & Req 5) */}
+      {/* ========================================================================= */}
+      <EtaUncertaintyRangeCard
+        train={selectedTrain}
+        currentDelay={currentSelectedState.totalDelay}
+        clockMinutes={activeClockMinutes}
+      />
+
+      {/* ========================================================================= */}
+      {/* 4.6 DELAY EXISTENCE VS PROPAGATION & CAUSAL TREE GRAPH (Req 2 & Req 3)    */}
+      {/* ========================================================================= */}
+      <DelayPropagationGraph
+        selectedTrain={selectedTrain}
+        currentDelay={currentSelectedState.totalDelay}
+        clockMinutes={activeClockMinutes}
+      />
+
+      {/* ========================================================================= */}
       {/* 5. SECTION 3: WHAT CAUSES THE DELAYS? (Corridor Root Causes & Hotspots)   */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -633,6 +662,21 @@ export function ExecutiveHumanCockpit({
           </div>
         </div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* 6. "WHAT HAPPENS IF..." COUNTERFACTUAL DECISION SCENARIOS (Req 6)          */}
+      {/* ========================================================================= */}
+      <CounterfactualScenarioDeck />
+
+      {/* ========================================================================= */}
+      {/* 7. BEFORE VS AFTER EMPIRICAL MODEL BENCHMARK (Req 7)                       */}
+      {/* ========================================================================= */}
+      <ModelBenchmarkExperimentDeck />
+
+      {/* ========================================================================= */}
+      {/* 8. ROOT CAUSE ➔ IMPACT ➔ PROPAGATION ➔ ACTION ➔ RESULT (Req 8)            */}
+      {/* ========================================================================= */}
+      <IntelligenceActionChainDeck />
     </div>
   );
 }
