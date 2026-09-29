@@ -10,7 +10,7 @@ import {
   Satellite,
 } from "lucide-react";
 import { formatClockMinutes } from "../lib/rail/timeResolver";
-import { checkBackendHealth } from "../lib/rail/apiClient";
+import { checkBackendHealth, wakeUpBackend } from "../lib/rail/apiClient";
 
 interface HeaderProps {
   showScenarioBar: boolean;
@@ -38,8 +38,8 @@ export function Header({
   setActiveTab,
 }: HeaderProps) {
   const [pythonBackendOnline, setPythonBackendOnline] = useState<boolean>(false);
+  const [isWaking, setIsWaking] = useState<boolean>(false);
 
-  // Check Python ML backend status periodically
   useEffect(() => {
     const probe = async () => {
       const isUp = await checkBackendHealth();
@@ -49,6 +49,15 @@ export function Header({
     const interval = setInterval(probe, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleWakeUp = async () => {
+    if (pythonBackendOnline || isWaking) return;
+    setIsWaking(true);
+    await wakeUpBackend();
+    const isUp = await checkBackendHealth();
+    setPythonBackendOnline(isUp);
+    setIsWaking(false);
+  };
 
   // Sync with real-time clock when in real-time mode
   useEffect(() => {
@@ -90,22 +99,37 @@ export function Header({
               <h1 className="text-lg font-heading font-bold text-chalk">
                 RailRakshak
               </h1>
-              {/* Python ML Backend Status Badge */}
-              <span
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-data font-semibold border transition-all ${
+              {/* Python ML Backend Status Badge with One-Click Wake-Up */}
+              <button
+                onClick={handleWakeUp}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-data font-semibold border transition-all cursor-pointer ${
                   pythonBackendOnline
                     ? "bg-signal-green/10 text-signal-green border-signal-green/30"
-                    : "bg-surface-raised text-steel border-graphite"
+                    : isWaking
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse"
+                    : "bg-surface-raised text-steel border-graphite hover:border-amber-500/50 hover:text-amber-300"
                 }`}
                 title={
                   pythonBackendOnline
                     ? "FastAPI Python ML Intelligence Core Active (LightGBM + SHAP)"
-                    : "Running in Client-Side Kinematics Simulation Mode"
+                    : isWaking
+                    ? "Waking up Render Python server from sleep..."
+                    : "Server sleeping. Click to wake up Render Python ML instance!"
                 }
               >
-                <Cpu className="w-3 h-3" />
-                <span>{pythonBackendOnline ? "Python ML Engine Online" : "Hybrid Offline Mode"}</span>
-              </span>
+                {isWaking ? (
+                  <div className="w-2.5 h-2.5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                ) : (
+                  <Cpu className="w-3 h-3" />
+                )}
+                <span>
+                  {pythonBackendOnline
+                    ? "Python ML Engine Online"
+                    : isWaking
+                    ? "Waking Cloud Engine..."
+                    : "Hybrid Offline Mode (Click to Wake)"}
+                </span>
+              </button>
             </div>
             <p className="text-sm font-body text-steel">
               SWR Corridor · <strong className="text-chalk">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km

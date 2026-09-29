@@ -17,25 +17,69 @@ const BACKEND_API_BASE =
     : RENDER_BACKEND_URL);
 
 let isBackendOnline = false;
+let isWakingUp = false;
 
 export async function checkBackendHealth(): Promise<boolean> {
   try {
     const res = await fetch(`${BACKEND_API_BASE}/api/health`, {
       method: "GET",
-      signal: AbortSignal.timeout(1500),
+      signal: AbortSignal.timeout(3000),
     });
     if (res.ok) {
       isBackendOnline = true;
+      isWakingUp = false;
       return true;
     }
   } catch (err) {
-    isBackendOnline = false;
+    // If api/health fails, try root endpoint fallback
+    try {
+      const rootRes = await fetch(`${BACKEND_API_BASE}/`, {
+        method: "GET",
+        signal: AbortSignal.timeout(3000),
+      });
+      if (rootRes.ok) {
+        isBackendOnline = true;
+        isWakingUp = false;
+        return true;
+      }
+    } catch (e) {
+      isBackendOnline = false;
+    }
   }
   return false;
 }
 
+export async function wakeUpBackend(): Promise<boolean> {
+  isWakingUp = true;
+  try {
+    const res = await fetch(`${BACKEND_API_BASE}/`, {
+      method: "GET",
+      signal: AbortSignal.timeout(15000), // longer timeout for cold start spin-up
+    });
+    if (res.ok) {
+      isBackendOnline = true;
+      isWakingUp = false;
+      return true;
+    }
+  } catch (e) {
+    // still booting
+  }
+  return checkBackendHealth();
+}
+
 export function getBackendStatus(): boolean {
   return isBackendOnline;
+}
+
+export function getIsWakingUp(): boolean {
+  return isWakingUp;
+}
+
+// Automatically start keep-alive heartbeat in browser (pings every 25 seconds to prevent Render cold spin-down)
+if (typeof window !== "undefined") {
+  setInterval(() => {
+    checkBackendHealth();
+  }, 25000);
 }
 
 export interface ContinuousCorridorMonitorData {
