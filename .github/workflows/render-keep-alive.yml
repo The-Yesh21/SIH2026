@@ -1,17 +1,30 @@
-name: Keep Render Backend Alive
+name: Keep Render Backend Alive 24/7
 
 on:
   schedule:
-    # Run every 10 minutes (cron: '*/10 * * * *')
+    # Runs every 10 minutes round-the-clock
     - cron: '*/10 * * * *'
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual one-click trigger from GitHub Actions UI
 
 jobs:
   ping-render:
+    name: Ping FastAPI ML Backend
     runs-on: ubuntu-latest
     steps:
-      - name: Ping FastAPI Render Backend
+      - name: Ping Render Backend Endpoint
         run: |
-          echo "Pinging Render backend to keep instance warm..."
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://sih2026-9ugs.onrender.com/api/health || curl -s -o /dev/null -w "%{http_code}" https://sih2026-9ugs.onrender.com/)
-          echo "Render Backend responded with HTTP status: $HTTP_STATUS"
+          echo "========================================================"
+          echo "🚀 Sending Keep-Alive Ping to Render ML Backend..."
+          echo "========================================================"
+          
+          # Ping /api/health and print the JSON response
+          RESPONSE=$(curl -s --max-time 20 https://sih2026-9ugs.onrender.com/api/health || curl -s --max-time 20 https://sih2026-9ugs.onrender.com/)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 https://sih2026-9ugs.onrender.com/api/health || curl -s -o /dev/null -w "%{http_code}" --max-time 20 https://sih2026-9ugs.onrender.com/)
+          
+          echo "HTTP Response Status Code: $HTTP_STATUS"
+          echo "Response Payload: $RESPONSE"
+          echo "========================================================"
+          echo "✅ Render instance is warm and active."
