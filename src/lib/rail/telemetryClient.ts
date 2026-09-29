@@ -38,10 +38,13 @@ export interface LiveTelemetryResponse {
   status: "ACTIVE_RUNNING" | "STOPPED_AT_STATION" | "STANDBY_SCHEDULED" | "SIGNAL_LOST";
 }
 
+const RENDER_BACKEND_URL = "https://sih2026-9ugs.onrender.com";
+
 const BACKEND_BASE =
-  typeof window !== "undefined" && window.location.hostname
+  ((import.meta as any)?.env?.VITE_API_URL as string) ||
+  (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     ? `http://${window.location.hostname}:8000`
-    : "http://localhost:8000";
+    : RENDER_BACKEND_URL);
 
 /**
  * Streams a single GPS packet to FastAPI backend
