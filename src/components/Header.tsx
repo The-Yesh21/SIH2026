@@ -23,6 +23,7 @@ interface HeaderProps {
   setIsRealTimeSynced: (synced: boolean) => void;
   activeTab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS";
   setActiveTab: (tab: "COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS") => void;
+  onOpenCorridorBriefing?: () => void;
 }
 
 export function Header({
@@ -36,6 +37,7 @@ export function Header({
   setIsRealTimeSynced,
   activeTab,
   setActiveTab,
+  onOpenCorridorBriefing,
 }: HeaderProps) {
   const [pythonBackendOnline, setPythonBackendOnline] = useState<boolean>(false);
   const [isWaking, setIsWaking] = useState<boolean>(false);
@@ -131,9 +133,18 @@ export function Header({
                 </span>
               </button>
             </div>
-            <p className="text-sm font-body text-steel">
-              SWR Corridor · <strong className="text-chalk">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km
-            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <button
+                onClick={onOpenCorridorBriefing}
+                className="text-xs font-body text-steel hover:text-indigo-300 flex items-center gap-1.5 transition-colors cursor-pointer group"
+                title="Click to view Evaluator Corridor Scope Briefing"
+              >
+                <span>SWR Corridor · <strong className="text-chalk group-hover:text-indigo-300">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km</span>
+                <span className="px-1.5 py-0.2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded text-[10px] font-mono font-bold">
+                  PROTOTYPE SCOPE
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 

@@ -22,9 +22,11 @@ import { PainFactorIntelligenceDeck } from "./components/PainFactorIntelligenceD
 import { OptimalRouteOptimizer } from "./components/OptimalRouteOptimizer";
 import { LocoPilotCabTerminal } from "./components/LocoPilotCabTerminal";
 import { ExecutiveHumanCockpit } from "./components/ExecutiveHumanCockpit";
+import { CorridorPreloaderModal } from "./components/CorridorPreloaderModal";
 import { Flame } from "lucide-react";
 
 export function App() {
+  const [showCorridorBriefing, setShowCorridorBriefing] = useState<boolean>(true);
   // Navigation View State - Supports separate tab via URL query param (?tab=SIMULATOR)
   const [activeTab, setActiveTab] = useState<"COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">(() => {
     try {
@@ -139,6 +141,13 @@ export function App() {
         setIsRealTimeSynced={setIsRealTimeSynced}
         activeTab={activeTab}
         setActiveTab={handleTabChange}
+        onOpenCorridorBriefing={() => setShowCorridorBriefing(true)}
+      />
+
+      {/* Evaluator Corridor Prototype Briefing Pre-loader Modal */}
+      <CorridorPreloaderModal
+        isOpen={showCorridorBriefing}
+        onClose={() => setShowCorridorBriefing(false)}
       />
 
       {/* 2. Main Mission Control Body */}
