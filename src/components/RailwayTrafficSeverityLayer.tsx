@@ -111,29 +111,31 @@ export function RailwayTrafficSeverityLayer({
           </div>
 
           {/* Interactive Block Sections Bar */}
-          <div className="grid grid-cols-8 sm:grid-cols-16 gap-1.5 p-2 rounded-2xl bg-slate-100 border border-slate-200">
-            {sections.map((sec) => {
-              const isSelected = sec.id === selectedSectionId;
-              let bgClass = "bg-emerald-500 hover:bg-emerald-600 text-white";
-              if (sec.severityTier === "SEVERE_CONGESTION") bgClass = "bg-red-500 hover:bg-red-600 text-white";
-              else if (sec.severityTier === "HIGH_FRICTION") bgClass = "bg-amber-500 hover:bg-amber-600 text-white";
-              else if (sec.severityTier === "MODERATE") bgClass = "bg-yellow-400 hover:bg-yellow-500 text-slate-900";
+          <div className="overflow-x-auto pb-1">
+            <div className="grid grid-cols-16 min-w-[680px] sm:min-w-0 gap-1.5 p-2 rounded-2xl bg-slate-100 border border-slate-200">
+              {sections.map((sec) => {
+                const isSelected = sec.id === selectedSectionId;
+                let bgClass = "bg-emerald-500 hover:bg-emerald-600 text-white";
+                if (sec.severityTier === "SEVERE_CONGESTION") bgClass = "bg-red-500 hover:bg-red-600 text-white";
+                else if (sec.severityTier === "HIGH_FRICTION") bgClass = "bg-amber-500 hover:bg-amber-600 text-white";
+                else if (sec.severityTier === "MODERATE") bgClass = "bg-yellow-400 hover:bg-yellow-500 text-slate-900";
 
-              return (
-                <button
-                  key={sec.id}
-                  onClick={() => setSelectedSectionId(sec.id)}
-                  title={`${sec.fromStationCode} ➔ ${sec.toStationCode}: Score ${sec.totalSeverityScore}/100 (${sec.severityTier})`}
-                  className={`h-14 rounded-xl flex flex-col items-center justify-center transition-all relative ${bgClass} ${
-                    isSelected ? "ring-3 ring-indigo-600 shadow-md scale-105 z-10" : "opacity-90 hover:opacity-100"
-                  }`}
-                >
-                  <span className="text-[10px] font-mono font-bold leading-none">{sec.fromStationCode}</span>
-                  <span className="text-[9px] opacity-80 leading-none mt-0.5">➔{sec.toStationCode}</span>
-                  <span className="text-[10px] font-black font-data mt-1">{sec.totalSeverityScore}</span>
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={sec.id}
+                    onClick={() => setSelectedSectionId(sec.id)}
+                    title={`${sec.fromStationCode} ➔ ${sec.toStationCode}: Score ${sec.totalSeverityScore}/100 (${sec.severityTier})`}
+                    className={`h-14 rounded-xl flex flex-col items-center justify-center transition-all relative ${bgClass} ${
+                      isSelected ? "ring-3 ring-indigo-600 shadow-md scale-105 z-10" : "opacity-90 hover:opacity-100"
+                    }`}
+                  >
+                    <span className="text-[10px] font-mono font-bold leading-none">{sec.fromStationCode}</span>
+                    <span className="text-[9px] opacity-80 leading-none mt-0.5">➔{sec.toStationCode}</span>
+                    <span className="text-[10px] font-black font-data mt-1">{sec.totalSeverityScore}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Severity Legend */}

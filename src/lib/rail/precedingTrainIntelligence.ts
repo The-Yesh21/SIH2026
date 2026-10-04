@@ -346,7 +346,7 @@ export function resolveClientPrecedingTrainContext(params: {
   const currentTrain = params.currentTrain;
   const curKm = currentTrain.currentLocationKm;
   const curDepMins = parseTimeToMinutes(currentTrain.scheduledDep);
-  const clock = params.activeClockMinutes || curDepMins + (curKm / 138.25) * 120.0;
+  const clock = params.activeClockMinutes !== undefined ? params.activeClockMinutes : curDepMins + (curKm / 138.25) * 120.0;
 
   const candidates: {
     train: TrainConfig;
@@ -360,11 +360,14 @@ export function resolveClientPrecedingTrainContext(params: {
 
     const oDep = parseTimeToMinutes(other.scheduledDep);
     let oArr = parseTimeToMinutes(other.scheduledArr);
-    if (oArr < oDep) oArr += 1440;
+    const isOtherOvernight = oArr < oDep;
+    if (isOtherOvernight) oArr += 1440;
     const dur = oArr - oDep;
 
-    if (oDep <= clock && clock <= oArr) {
-      const prog = (clock - oDep) / Math.max(1, dur);
+    const normClock = isOtherOvernight && clock < oDep ? clock + 1440 : clock;
+
+    if (oDep <= normClock && normClock <= oArr) {
+      const prog = (normClock - oDep) / Math.max(1, dur);
       const otherKm = prog * 138.25;
       if (otherKm >= curKm) {
         const distAhead = otherKm - curKm;

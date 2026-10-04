@@ -342,7 +342,7 @@ export function StopsAndWeatherIntelligenceDeck({
             <div className="space-y-3">
               {trainPredictions.map((pred, idx) => (
                 <div
-                  key={idx}
+                  key={`${pred.stationCode}-${pred.delayFactorCategory}-${idx}`}
                   className="bg-surface border border-graphite p-5 rounded-xl space-y-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

@@ -119,6 +119,7 @@ export async function reportDriverIncident(incident: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(incident),
+      signal: AbortSignal.timeout(5000),
     });
     return res.ok;
   } catch (err) {

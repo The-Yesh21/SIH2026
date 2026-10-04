@@ -123,6 +123,13 @@ export function GodModeSimulatorDeck({
     }
   }, [selectedTrain.id]);
 
+  // Stop playback when terminus reached
+  useEffect(() => {
+    if (simulatedKm >= 138.25 && isPlaying) {
+      setIsPlaying(false);
+    }
+  }, [simulatedKm, isPlaying]);
+
   // Main Simulation Loop (runs every 100ms when playing)
   useEffect(() => {
     if (!isPlaying) return;
@@ -130,7 +137,6 @@ export function GodModeSimulatorDeck({
     const interval = setInterval(() => {
       setSimulatedKm((prevKm) => {
         if (prevKm >= 138.25) {
-          setIsPlaying(false);
           return 138.25;
         }
 

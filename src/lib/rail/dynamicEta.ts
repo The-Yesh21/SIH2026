@@ -223,27 +223,27 @@ export function computeDynamicEta(params: {
   if (leadCtx.hasPrecedingTrain && leadCtx.rippleDelayPropagatedMin > 0.4) {
     runningDynamicDelay += leadCtx.rippleDelayPropagatedMin;
     signalHaltsPenaltyMin += leadCtx.rippleDelayPropagatedMin;
-    bottlenecksIncurredMin += leadCtx.rippleDelayPropagatedMin;
   }
 
   // Factor in primary sector vulnerability if downstream
   const trainLocKm = params.train.currentLocationKm;
+  let appliedSectorRiskMin = 0;
   if (trainLocKm < primaryVuln.endKm && primaryVuln.etaBufferAdjustedMin > 2.0) {
-    const sectorRisk = primaryVuln.etaBufferAdjustedMin * 0.7;
-    runningDynamicDelay += sectorRisk;
-    bottlenecksIncurredMin += sectorRisk;
+    appliedSectorRiskMin = primaryVuln.etaBufferAdjustedMin * 0.7;
+    runningDynamicDelay += appliedSectorRiskMin;
+    bottlenecksIncurredMin += appliedSectorRiskMin;
   }
 
   const weatherSpeedLimit = getWeatherSpeedLimit(env.weather);
   const stationForecasts: StationForecastRow[] = [];
   const shapFactors: ShapAttributionFactor[] = [];
 
-  // Primary sector risk factor for SHAP
-  if (trainLocKm < primaryVuln.endKm) {
+  // Primary sector risk factor for SHAP (consistent with applied dynamic delay)
+  if (trainLocKm < primaryVuln.endKm && appliedSectorRiskMin > 0) {
     shapFactors.push({
       category: "Corridor Bottleneck Sector",
       name: `Sector Risk (${primaryVuln.primarySectorName})`,
-      impactMinutes: Math.round(primaryVuln.etaBufferAdjustedMin * 10) / 10,
+      impactMinutes: Math.round(appliedSectorRiskMin * 10) / 10,
       type: "delay",
       rationale: `${primaryVuln.historicalOccurrenceFrequencyPct}% historical delay recurrence for this service in ${primaryVuln.chainageRangeKm} (avg +${primaryVuln.historicalAverageDelayMin}m).`,
     });

@@ -197,7 +197,11 @@ function interpolateTrainLocationKm(
     }
   }
 
-  if (normCurrent >= parseTimeToMinutes(checkpoints[checkpoints.length - 1]!.timeStr)) {
+  const lastCp = checkpoints[checkpoints.length - 1]!;
+  let lastCpTime = parseTimeToMinutes(lastCp.timeStr);
+  if (lastCpTime < depMins) lastCpTime += 1440;
+
+  if (normCurrent >= lastCpTime) {
     return 138.25;
   }
   return 0.0;
@@ -311,7 +315,7 @@ export function resolveTrainAtClockTime(
   const stations = SWR_CORRIDOR_STATIONS;
   const nextStnIdx = stations.findIndex((s) => s.distanceFromMysKm > locationKm + 0.05);
   const nextStn = nextStnIdx >= 0 ? stations[nextStnIdx]! : stations[stations.length - 1]!;
-  const prevStn = nextStnIdx > 0 ? stations[nextStnIdx - 1]! : stations[0]!;
+  const prevStn = nextStnIdx > 0 ? stations[nextStnIdx - 1]! : (nextStnIdx === -1 ? stations[stations.length - 2]! : stations[0]!);
   const distToNext = Number((Math.max(0, nextStn.distanceFromMysKm - locationKm)).toFixed(1));
 
   // Dynamic speed based on location and sectional limits

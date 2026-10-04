@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { TrainConfig } from "../lib/rail/types";
 import { decomposeDelayPropagation, getEtaChangeExplanation } from "../lib/rail/delayPropagationEngine";
+import { formatClockMinutes } from "../lib/rail/timeResolver";
 
 interface EtaUncertaintyRangeCardProps {
   train: TrainConfig;
@@ -25,6 +26,10 @@ export const EtaUncertaintyRangeCard: React.FC<EtaUncertaintyRangeCardProps> = (
 }) => {
   const decomp = decomposeDelayPropagation(train, currentDelay, clockMinutes);
   const explanation = getEtaChangeExplanation(currentDelay);
+
+  const [schH, schM] = train.scheduledArr.split(":").map(Number);
+  const scheduledArrMinutes = (schH || 0) * 60 + (schM || 0);
+  const predictedEtaDisplay = formatClockMinutes(scheduledArrMinutes + Math.round(decomp.futureProjectedDelayMinutes));
 
   // Confidence color
   const confColor =
@@ -71,7 +76,7 @@ export const EtaUncertaintyRangeCard: React.FC<EtaUncertaintyRangeCardProps> = (
               <div>
                 <span className="text-xs text-slate-500 block mb-0.5 font-medium">Destination Predicted Arrival (ETA)</span>
                 <div className="text-3xl font-black font-mono text-blue-700 tracking-tight flex items-baseline gap-2">
-                  <span>{train.scheduledArr}</span>
+                  <span>{predictedEtaDisplay}</span>
                   <span className="text-sm font-normal text-red-600 font-sans">
                     (+{decomp.futureProjectedDelayMinutes} min projected)
                   </span>
@@ -176,8 +181,8 @@ export const EtaUncertaintyRangeCard: React.FC<EtaUncertaintyRangeCardProps> = (
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 font-mono">
-                {explanation.causes.map((cause, idx) => (
-                  <tr key={idx} className="hover:bg-slate-100/50 transition-colors">
+                {explanation.causes.map((cause) => (
+                  <tr key={`${cause.category}-${cause.name}`} className="hover:bg-slate-100/50 transition-colors">
                     <td className="py-2.5 px-3 font-sans text-slate-800 flex items-center gap-2">
                       <span className={`text-base leading-none ${cause.iconColor}`}>•</span>
                       <span className="font-medium">{cause.name}</span>

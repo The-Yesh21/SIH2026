@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   Sliders, 
   Play, 
@@ -17,19 +17,29 @@ export const CounterfactualScenarioDeck: React.FC = () => {
   const [activeScenarioId, setActiveScenarioId] = useState<string>(COUNTERFACTUAL_SCENARIOS[0].id);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [hasRun, setHasRun] = useState<boolean>(false);
+  const simTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (simTimerRef.current) clearTimeout(simTimerRef.current);
+    };
+  }, []);
 
   const activeScenario: CounterfactualScenario =
     COUNTERFACTUAL_SCENARIOS.find((s) => s.id === activeScenarioId) || COUNTERFACTUAL_SCENARIOS[0];
 
   const handleRunSimulation = () => {
     setIsSimulating(true);
-    setTimeout(() => {
+    if (simTimerRef.current) clearTimeout(simTimerRef.current);
+    simTimerRef.current = setTimeout(() => {
       setIsSimulating(false);
       setHasRun(true);
     }, 600);
   };
 
   const handleReset = () => {
+    if (simTimerRef.current) clearTimeout(simTimerRef.current);
+    setIsSimulating(false);
     setHasRun(false);
   };
 

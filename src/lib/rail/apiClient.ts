@@ -46,6 +46,7 @@ export async function checkBackendHealth(): Promise<boolean> {
       isBackendOnline = false;
     }
   }
+  isWakingUp = false;
   return false;
 }
 
@@ -64,7 +65,9 @@ export async function wakeUpBackend(): Promise<boolean> {
   } catch (e) {
     // still booting
   }
-  return checkBackendHealth();
+  const healthy = await checkBackendHealth();
+  isWakingUp = false;
+  return healthy;
 }
 
 export function getBackendStatus(): boolean {

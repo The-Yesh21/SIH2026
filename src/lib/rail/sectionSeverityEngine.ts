@@ -64,8 +64,9 @@ export function computeNetworkTrafficSeverity(
     const lengthKm = endKm - startKm;
 
     // 1. Current Occupancy & Active Trains in this block
+    const isLastSection = i === SWR_CORRIDOR_STATIONS.length - 2;
     const trainsInSection = activeFleet.filter(
-      (t) => t.isRunning && t.currentKm >= startKm && t.currentKm < endKm
+      (t) => t.isRunning && t.currentKm >= startKm && (isLastSection ? t.currentKm <= endKm : t.currentKm < endKm)
     );
     const trainCount = trainsInSection.length;
     const trainNames = trainsInSection.map((t) => `#${t.train.id} ${t.train.name.split(" ")[0]}`);

@@ -33,12 +33,13 @@ export function haversineDistanceKm(lat1: number, lon1: number, lat2: number, lo
   const R = 6371.0;
   const dlat = ((lat2 - lat1) * Math.PI) / 180.0;
   const dlon = ((lon2 - lon1) * Math.PI) / 180.0;
-  const a =
+  const rawA =
     Math.sin(dlat / 2.0) ** 2 +
     Math.cos((lat1 * Math.PI) / 180.0) *
       Math.cos((lat2 * Math.PI) / 180.0) *
       Math.sin(dlon / 2.0) ** 2;
-  const c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
+  const a = Math.max(0.0, Math.min(1.0, rawA));
+  const c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(Math.max(0.0, 1.0 - a)));
   return R * c;
 }
 

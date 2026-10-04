@@ -125,52 +125,65 @@ export function LocoPilotCabTerminal({ onBackToMissionControl }: LocoPilotCabTer
     return () => navigator.geolocation.clearWatch(watchId);
   }, [isStreaming, streamMode, selectedTrain, locoNumber, driverId, batteryPct]);
 
+  const speedRef = useRef(gpsSpeedKmph);
+  speedRef.current = gpsSpeedKmph;
+
+  const simKmRef = useRef(simDriveKm);
+  simKmRef.current = simDriveKm;
+
+  const incidentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (incidentTimerRef.current) clearTimeout(incidentTimerRef.current);
+    };
+  }, []);
+
   // 2. Simulated Drive Engine (Runs every 1 second when in SIMULATED_DRIVE mode)
   useEffect(() => {
     if (!isStreaming || streamMode !== "SIMULATED_DRIVE") return;
 
+    const notchSpeedMap = [0, 20, 45, 65, 85, 100, 115, 125, 130];
+    const targetSpeed = Math.min(mps, notchSpeedMap[simThrottleNotch] || 80);
+
     const interval = setInterval(() => {
-      // Calculate speed based on notch
-      const notchSpeedMap = [0, 20, 45, 65, 85, 100, 115, 125, 130];
-      const targetSpeed = Math.min(mps, notchSpeedMap[simThrottleNotch] || 80);
+      // Calculate next speed
+      const curSpeed = speedRef.current;
+      let nextSpeed = curSpeed;
+      if (curSpeed < targetSpeed) nextSpeed = Math.min(targetSpeed, curSpeed + 4);
+      else if (curSpeed > targetSpeed) nextSpeed = Math.max(targetSpeed, curSpeed - 6);
 
-      setGpsSpeedKmph((prevSpeed) => {
-        if (prevSpeed < targetSpeed) return Math.min(targetSpeed, prevSpeed + 4);
-        if (prevSpeed > targetSpeed) return Math.max(targetSpeed, prevSpeed - 6);
-        return targetSpeed;
-      });
+      setGpsSpeedKmph(nextSpeed);
 
-      setSimDriveKm((prevKm) => {
-        const nextKm = prevKm + (gpsSpeedKmph / 3600) * 1.0;
-        const clampedKm = Math.min(138.25, nextKm);
+      // Advance chainage
+      const curKm = simKmRef.current;
+      const nextKm = Math.min(138.25, curKm + (nextSpeed / 3600) * 1.0);
+      setSimDriveKm(nextKm);
 
-        // Update synthetic GPS coordinates
-        const coords = interpolateGpsFromChainageKm(clampedKm);
-        setLatitude(coords.lat);
-        setLongitude(coords.lon);
+      // Update synthetic GPS coordinates
+      const coords = interpolateGpsFromChainageKm(nextKm);
+      setLatitude(coords.lat);
+      setLongitude(coords.lon);
 
-        // Push packet
-        sendPacket({
-          train_id: selectedTrain.id,
-          train_name: selectedTrain.name,
-          loco_id: locoNumber,
-          driver_id: driverId,
-          latitude: coords.lat,
-          longitude: coords.lon,
-          gps_speed_kmph: gpsSpeedKmph,
-          heading_deg: 48.0,
-          accuracy_meters: 2.8,
-          altitude_meters: 680.0,
-          battery_level_pct: batteryPct,
-          is_live_satellite: false,
-        });
-
-        return clampedKm;
+      // Push packet
+      sendPacket({
+        train_id: selectedTrain.id,
+        train_name: selectedTrain.name,
+        loco_id: locoNumber,
+        driver_id: driverId,
+        latitude: coords.lat,
+        longitude: coords.lon,
+        gps_speed_kmph: nextSpeed,
+        heading_deg: 48.0,
+        accuracy_meters: 2.8,
+        altitude_meters: 680.0,
+        battery_level_pct: batteryPct,
+        is_live_satellite: false,
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isStreaming, streamMode, simThrottleNotch, gpsSpeedKmph, mps, selectedTrain, locoNumber, driverId, batteryPct]);
+  }, [isStreaming, streamMode, simThrottleNotch, mps, selectedTrain.id, selectedTrain.name, locoNumber, driverId, batteryPct]);
 
   const sendPacket = async (packet: TelemetryPacket) => {
     const t0 = performance.now();
@@ -196,7 +209,8 @@ export function LocoPilotCabTerminal({ onBackToMissionControl }: LocoPilotCabTer
 
     if (success) {
       setIncidentBanner(`🚨 Incident Broadcasted: "${label}" logged to Central Dispatch.`);
-      setTimeout(() => setIncidentBanner(null), 5000);
+      if (incidentTimerRef.current) clearTimeout(incidentTimerRef.current);
+      incidentTimerRef.current = setTimeout(() => setIncidentBanner(null), 5000);
     }
   };
 

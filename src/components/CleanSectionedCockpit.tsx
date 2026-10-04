@@ -642,7 +642,7 @@ export function CleanSectionedCockpit({
                         </span>
                       </div>
                       <div className="text-blue-700 font-bold">
-                        Gap: {leadContext.headwayGapMinutes}m ({leadContext.headwayDistanceKm ? leadContext.headwayDistanceKm.toFixed(1) : "0.0"} km)
+                        Gap: {leadContext.headwayGapMinutes ?? 0}m ({leadContext.headwayDistanceKm ? leadContext.headwayDistanceKm.toFixed(1) : "0.0"} km)
                       </div>
                     </div>
                   )}
@@ -754,7 +754,7 @@ export function CleanSectionedCockpit({
                             {prediction.railrakshakDynamicEta}
                           </div>
                           <div className="text-xs text-blue-600 font-mono font-semibold">
-                            +{Math.round(prediction.railrakshakDynamicDelayMin)} min arrival variance
+                            {prediction.railrakshakDynamicDelayMin >= 0 ? "+" : ""}{Math.round(prediction.railrakshakDynamicDelayMin)} min arrival variance
                           </div>
                         </div>
                       </div>
@@ -841,7 +841,7 @@ export function CleanSectionedCockpit({
 
                           return (
                             <div
-                              key={idx}
+                              key={`${factor.category}-${factor.name}-${idx}`}
                               className={`p-3.5 rounded-xl border transition-all ${
                                 isRecovery
                                   ? "bg-emerald-50/50 border-emerald-200 text-emerald-950"

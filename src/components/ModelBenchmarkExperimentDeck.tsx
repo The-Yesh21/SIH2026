@@ -102,9 +102,9 @@ export const ModelBenchmarkExperimentDeck: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 font-mono">
-              {MODEL_BENCHMARK_RESULTS.map((res, idx) => (
+              {MODEL_BENCHMARK_RESULTS.map((res) => (
                 <tr 
-                  key={idx} 
+                  key={res.modelName} 
                   className={res.isRailRakshak ? "bg-emerald-50/80 hover:bg-emerald-100/60" : "hover:bg-slate-100/60"}
                 >
                   <td className="py-3 px-3.5 font-sans">

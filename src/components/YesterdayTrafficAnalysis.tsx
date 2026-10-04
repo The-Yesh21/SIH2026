@@ -275,9 +275,9 @@ export function YesterdayTrafficAnalysis({
                       Station-by-Station Delay Waterfall
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {run.sectionalBreakdown.map((sec, idx) => (
+                      {run.sectionalBreakdown.map((sec) => (
                         <div
-                          key={idx}
+                          key={`${sec.sectionName}-${sec.chainageKm}`}
                           className="bg-surface p-3 rounded-lg border border-graphite flex flex-col justify-between space-y-2"
                         >
                           <div className="flex items-center justify-between">

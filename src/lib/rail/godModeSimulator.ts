@@ -385,7 +385,10 @@ export function calculateSimulatorKinematics(params: {
   // Base Scheduled Timetable
   const baseScheduledDepMins = parseTimeToMinutes(train.scheduledDep);
   const baseScheduledArrMins = parseTimeToMinutes(train.scheduledArr);
-  const nominalCorridorDurationMins = baseScheduledArrMins - baseScheduledDepMins;
+  const isOvernightJourney = baseScheduledArrMins < baseScheduledDepMins;
+  const nominalCorridorDurationMins = isOvernightJourney
+    ? baseScheduledArrMins + 1440 - baseScheduledDepMins
+    : baseScheduledArrMins - baseScheduledDepMins;
 
   // 1. Calculate Elapsed Travelling Time so far
   let delayIncurredSoFar = 0;
@@ -423,7 +426,7 @@ export function calculateSimulatorKinematics(params: {
   let remainingDwellsMin = 0;
   for (const st of SWR_CORRIDOR_STATIONS) {
     if (st.distanceFromMysKm > boundedKm && train.scheduledStops.includes(st.code)) {
-      remainingDwellsMin += (train.dwellMinutes && train.dwellMinutes[st.code]) || 2;
+      remainingDwellsMin += train.dwellMinutes?.[st.code] ?? 2;
     }
   }
 
