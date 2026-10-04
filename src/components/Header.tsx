@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Sparkles,
   Satellite,
+  Info,
 } from "lucide-react";
 import { formatClockMinutes } from "../lib/rail/timeResolver";
 import { checkBackendHealth, wakeUpBackend } from "../lib/rail/apiClient";
@@ -89,16 +90,16 @@ export function Header({
   };
 
   return (
-    <header className="bg-ink/95 backdrop-blur-md border-b border-graphite sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
         {/* Left: Branding & Corridor Identity */}
         <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 flex items-center justify-center shrink-0">
-            <img src="/logo.svg" alt="RailRakshak Logo" className="h-11 w-11 object-contain drop-shadow-md" />
+          <div className="h-11 w-11 flex items-center justify-center shrink-0 rounded-2xl bg-indigo-50 border border-indigo-100 p-1 shadow-xs">
+            <img src="/logo.svg" alt="RailRakshak Logo" className="h-9 w-9 object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-lg font-heading font-bold text-chalk">
+              <h1 className="text-lg font-heading font-bold text-slate-900 tracking-tight">
                 RailRakshak
               </h1>
               {/* Python ML Backend Status Badge with One-Click Wake-Up */}
@@ -106,10 +107,10 @@ export function Header({
                 onClick={handleWakeUp}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-data font-semibold border transition-all cursor-pointer ${
                   pythonBackendOnline
-                    ? "bg-signal-green/10 text-signal-green border-signal-green/30"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                     : isWaking
-                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse"
-                    : "bg-surface-raised text-steel border-graphite hover:border-amber-500/50 hover:text-amber-300"
+                    ? "bg-amber-50 text-amber-700 border-amber-300 animate-pulse"
+                    : "bg-slate-100 text-slate-600 border-slate-300 hover:border-amber-400 hover:text-amber-700"
                 }`}
                 title={
                   pythonBackendOnline
@@ -120,7 +121,7 @@ export function Header({
                 }
               >
                 {isWaking ? (
-                  <div className="w-2.5 h-2.5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                  <div className="w-2.5 h-2.5 border-2 border-amber-600/30 border-t-amber-600 rounded-full animate-spin" />
                 ) : (
                   <Cpu className="w-3 h-3" />
                 )}
@@ -136,11 +137,11 @@ export function Header({
             <div className="flex items-center gap-2 mt-0.5">
               <button
                 onClick={onOpenCorridorBriefing}
-                className="text-xs font-body text-steel hover:text-indigo-300 flex items-center gap-1.5 transition-colors cursor-pointer group"
+                className="text-xs font-body text-slate-600 hover:text-indigo-600 flex items-center gap-1.5 transition-colors cursor-pointer group"
                 title="Click to view Evaluator Corridor Scope Briefing"
               >
-                <span>SWR Corridor · <strong className="text-chalk group-hover:text-indigo-300">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km</span>
-                <span className="px-1.5 py-0.2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 rounded text-[10px] font-mono font-bold">
+                <span>SWR Corridor · <strong className="text-slate-900 group-hover:text-indigo-600">Mysuru (MYS) ➔ KSR Bengaluru (SBC)</strong> · 138.25 km</span>
+                <span className="px-1.5 py-0.2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[10px] font-mono font-bold">
                   PROTOTYPE SCOPE
                 </span>
               </button>
@@ -149,20 +150,20 @@ export function Header({
         </div>
 
         {/* Center: Dynamic Real-Time Time Scrubber */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-surface p-2 rounded-lg border border-graphite font-data text-xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-slate-50 p-2 rounded-xl border border-slate-200 font-data text-xs">
           {/* Time Display & Real-Time Sync Toggle */}
           <div className="flex items-center justify-between sm:justify-start gap-2 px-2">
-            <div className="flex items-center gap-1.5 text-chalk font-data font-semibold text-sm">
-              <Clock className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 text-slate-900 font-data font-semibold text-sm">
+              <Clock className="w-4 h-4 text-indigo-600" />
               <span>{formatClockMinutes(activeClockMinutes)}</span>
             </div>
 
             <button
               onClick={handleSyncRealTime}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-bold border transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
                 isRealTimeSynced
-                  ? "bg-signal-green-muted border-signal-green text-signal-green"
-                  : "bg-surface-raised border-graphite text-steel"
+                  ? "bg-emerald-100 border-emerald-300 text-emerald-800"
+                  : "bg-white border-slate-300 text-slate-600 hover:bg-slate-100"
               }`}
             >
               {isRealTimeSynced ? "Real-Time Clock (Now)" : "Sync Real-Time"}
@@ -170,7 +171,7 @@ export function Header({
           </div>
 
           {/* Quick Scrub Presets */}
-          <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-graphite pt-2 sm:pt-0 sm:pl-2.5">
+          <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-slate-200 pt-2 sm:pt-0 sm:pl-2.5">
             {[
               { label: "Night (01:25 AM)", mins: 85 },
               { label: "Morning (07:30 AM)", mins: 450 },
@@ -182,10 +183,10 @@ export function Header({
                 <button
                   key={p.label}
                   onClick={() => handlePresetClick(p.mins)}
-                  className={`px-2 py-1 rounded-md transition-all whitespace-nowrap ${
+                  className={`px-2 py-1 rounded-md transition-all whitespace-nowrap text-xs ${
                     isActive
-                      ? "bg-surface-overlay text-chalk font-semibold"
-                      : "text-steel hover:text-chalk hover:bg-surface-raised"
+                      ? "bg-indigo-600 text-white font-bold shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
                   }`}
                 >
                   {p.label.split(" ")[0]}
@@ -199,29 +200,29 @@ export function Header({
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowScenarioBar(!showScenarioBar)}
-            className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 ${
+            className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${
               showScenarioBar
-                ? "bg-signal-amber-muted border-signal-amber text-signal-amber"
-                : "bg-surface-raised hover:bg-surface-overlay text-chalk-dim border-graphite"
+                ? "bg-amber-100 border-amber-300 text-amber-800 shadow-xs"
+                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300 shadow-xs"
             }`}
           >
-            <Sliders className="w-3.5 h-3.5 transition-transform group-hover:rotate-45" />
+            <Sliders className="w-3.5 h-3.5 text-amber-600 transition-transform group-hover:rotate-45" />
             <span>{showScenarioBar ? "Close Simulator" : "What-If Simulator"}</span>
           </button>
         </div>
       </div>
 
       {/* Primary Section Switcher Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto no-scrollbar touch-pan-x py-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-pan-x py-1.5 border-t border-slate-100">
         <button
           onClick={() => setActiveTab("COCKPIT")}
-          className={`flex items-center gap-2 px-3 sm:px-4 py-2 font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-heading font-semibold text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
             activeTab === "COCKPIT"
-              ? "text-chalk border-b-2 border-chalk font-bold"
-              : "text-steel hover:text-chalk border-b-2 border-transparent"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           }`}
         >
-          <Radio className="w-4 h-4 text-signal-green" />
+          <Radio className="w-4 h-4 text-emerald-400" />
           <span>Section Controller Cockpit</span>
         </button>
 
@@ -229,13 +230,13 @@ export function Header({
           onClick={() => setActiveTab("OPTIMAL_ROUTE")}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "OPTIMAL_ROUTE"
-              ? "bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30"
-              : "bg-emerald-950/40 text-emerald-300 border-emerald-800/60 hover:bg-emerald-900/50 hover:text-white"
+              ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+              : "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
           }`}
         >
-          <Sparkles className="w-4 h-4 text-emerald-300 animate-pulse" />
+          <Sparkles className="w-4 h-4 text-emerald-600" />
           <span>⚡ AI Dispatch Optimizer</span>
-          <span className="px-1.5 py-0.2 rounded bg-emerald-400 text-slate-950 text-[10px] font-mono font-black uppercase">
+          <span className="px-1.5 py-0.2 rounded bg-emerald-200 text-emerald-900 text-[10px] font-mono font-black uppercase">
             OPTIMAL
           </span>
         </button>
@@ -244,13 +245,13 @@ export function Header({
           onClick={() => setActiveTab("SIMULATOR")}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "SIMULATOR"
-              ? "bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/30"
-              : "bg-indigo-950/40 text-indigo-300 border-indigo-800/60 hover:bg-indigo-900/50 hover:text-white"
+              ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+              : "bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100"
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
           <span>🚂 Digital Twin Simulator</span>
-          <span className="px-1.5 py-0.2 rounded bg-indigo-400 text-slate-950 text-[10px] font-mono font-black uppercase">
+          <span className="px-1.5 py-0.2 rounded bg-indigo-200 text-indigo-900 text-[10px] font-mono font-black uppercase">
             PHYSICS
           </span>
         </button>
@@ -259,13 +260,13 @@ export function Header({
           onClick={() => setActiveTab("LOCO_PILOT")}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "LOCO_PILOT"
-              ? "bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-500/30"
-              : "bg-sky-950/40 text-sky-300 border-sky-800/60 hover:bg-sky-900/50 hover:text-white"
+              ? "bg-sky-600 text-white border-sky-600 shadow-xs"
+              : "bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100"
           }`}
         >
-          <Satellite className="w-4 h-4 text-sky-400 animate-pulse" />
+          <Satellite className="w-4 h-4 text-sky-600 animate-pulse" />
           <span>🛰️ Loco-Cab DAS (NavIC)</span>
-          <span className="px-1.5 py-0.2 rounded bg-sky-400 text-slate-950 text-[10px] font-mono font-black uppercase">
+          <span className="px-1.5 py-0.2 rounded bg-sky-200 text-sky-900 text-[10px] font-mono font-black uppercase">
             RTIS / NavIC
           </span>
         </button>
@@ -274,39 +275,39 @@ export function Header({
           onClick={() => setActiveTab("STITCH_INSIGHT")}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-heading font-bold transition-all duration-200 whitespace-nowrap border shrink-0 ${
             activeTab === "STITCH_INSIGHT"
-              ? "bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20"
-              : "bg-blue-950/40 text-blue-300 border-blue-800/60 hover:bg-blue-900/40 hover:text-white"
+              ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+              : "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100"
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-          <span>📊 Station Master Briefing (Light)</span>
-          <span className="px-1.5 py-0.2 rounded bg-blue-400 text-slate-950 text-[10px] font-mono font-black uppercase">
+          <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+          <span>📊 Station Master Briefing</span>
+          <span className="px-1.5 py-0.2 rounded bg-blue-200 text-blue-900 text-[10px] font-mono font-black uppercase">
             PORTAL
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("PAIN_FACTORS")}
-          className={`flex items-center gap-2 px-3 sm:px-4 py-2 font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
             activeTab === "PAIN_FACTORS"
-              ? "text-signal-amber border-b-2 border-signal-amber font-bold"
-              : "text-steel hover:text-signal-amber border-b-2 border-transparent"
+              ? "bg-amber-100 text-amber-900 font-bold"
+              : "text-slate-600 hover:text-amber-800 hover:bg-amber-50"
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-signal-amber animate-pulse" />
-          <span>Bottleneck Forensics &amp; Root-Causes</span>
+          <span className="w-2 h-2 rounded-full bg-amber-500" />
+          <span>Bottleneck Forensics</span>
         </button>
 
         <button
           onClick={() => setActiveTab("ANALYSIS")}
-          className={`flex items-center gap-2 px-3 sm:px-4 py-2 font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-heading font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap shrink-0 ${
             activeTab === "ANALYSIS"
-              ? "text-chalk border-b-2 border-chalk font-bold"
-              : "text-steel hover:text-chalk border-b-2 border-transparent"
+              ? "bg-slate-900 text-white font-bold"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           }`}
         >
-          <Sliders className="w-4 h-4" />
-          <span>Fleet Punctuality &amp; KPI Analytics</span>
+          <Sliders className="w-4 h-4 text-slate-500" />
+          <span>Fleet KPI Analytics</span>
         </button>
       </div>
     </header>

@@ -128,7 +128,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-ink text-chalk flex flex-col font-body selection:bg-signal-green/30 selection:text-chalk panel-grid">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-body panel-grid">
       {/* 1. Masthead Dispatcher Navigation with Live Real-Time Clock Scrubber & View Tabs */}
       <Header
         showScenarioBar={showScenarioBar}
@@ -315,7 +315,7 @@ export function App() {
       </main>
 
       {/* Footer Branding & Disclaimer */}
-      <footer className="border-t border-graphite bg-ink py-4 px-6 text-center text-xs font-data text-steel">
+      <footer className="border-t border-slate-200 bg-white py-4 px-6 text-center text-xs font-data text-slate-500">
         RailRakshak v2.0 · SWR Mysore–Bangalore Division · Corridor Delay Intelligence, Sector Bottleneck Forensics &amp; Preceding-Train Behavioral Monitor
       </footer>
     </div>

@@ -135,12 +135,12 @@ export function ExecutiveHumanCockpit({
   injectedDelay = 0,
   setInjectedDelay,
 }: ExecutiveHumanCockpitProps) {
-  // Light / Dark Theme State
+  // Light / Dark Theme State (Defaults to clean Light theme)
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     try {
-      return (localStorage.getItem("railrakshak_theme") as "dark" | "light") || "dark";
+      return (localStorage.getItem("railrakshak_theme") as "dark" | "light") || "light";
     } catch {
-      return "dark";
+      return "light";
     }
   });
 
