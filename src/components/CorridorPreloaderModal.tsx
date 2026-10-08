@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Train, 
   MapPin, 
-  Cpu, 
-  Layers, 
-  ShieldCheck, 
   ArrowRight, 
-  Sparkles, 
   Info, 
   X, 
   CheckCircle2,
-  Zap,
   Globe2,
-  Clock
+  Activity,
+  Radio,
+  Sparkles
 } from "lucide-react";
 
 interface CorridorPreloaderModalProps {
@@ -24,53 +21,70 @@ export const CorridorPreloaderModal: React.FC<CorridorPreloaderModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [countdown, setCountdown] = useState<number>(6);
-  const [autoDismiss, setAutoDismiss] = useState<boolean>(true);
+  const [dontShowAgain, setDontShowAgain] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("railrakshak_skip_briefing") === "true";
+    } catch {
+      return false;
+    }
+  });
 
+  // Handle ESC key to dismiss
   useEffect(() => {
     if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
-    if (autoDismiss && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (autoDismiss && countdown === 0) {
-      onClose();
-    }
-  }, [isOpen, countdown, autoDismiss, onClose]);
+  const handleDismiss = () => {
+    try {
+      if (dontShowAgain) {
+        localStorage.setItem("railrakshak_skip_briefing", "true");
+      } else {
+        localStorage.removeItem("railrakshak_skip_briefing");
+      }
+    } catch {}
+    onClose();
+  };
 
   if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in"
-      onMouseEnter={() => setAutoDismiss(false)}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleDismiss();
+      }}
     >
-      <div className="relative w-full max-w-2xl bg-white border-2 border-indigo-200 rounded-3xl p-6 sm:p-8 shadow-2xl text-slate-900 overflow-hidden">
-        {/* Glow ambient effects */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-900 overflow-hidden">
+        {/* Top Accent Strip */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500" />
 
         {/* Close Button */}
         <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-          title="Close Briefing"
+          onClick={handleDismiss}
+          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+          title="Close Briefing (Esc)"
+          aria-label="Close Briefing"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header Badge */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+        <div className="flex items-center gap-2 mb-3 pt-1">
+          <span className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-mono font-semibold uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span>SIH 2026 Evaluator Notice · Prototype Corridor Scope</span>
+            <span>SIH 2026 Evaluator Notice · Prototype Scope</span>
           </span>
         </div>
 
         {/* Main Title */}
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-heading tracking-tight leading-snug">
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
           South Western Railway Prototype: <br className="hidden sm:inline" />
           <span className="text-blue-700">
             Mysuru (MYS) ➔ KSR Bengaluru (SBC) Corridor
@@ -78,7 +92,7 @@ export const CorridorPreloaderModal: React.FC<CorridorPreloaderModalProps> = ({
         </h2>
 
         {/* Evaluator Explanatory Notice */}
-        <div className="mt-4 p-4 rounded-2xl bg-blue-50/70 border border-blue-200 text-xs text-slate-700 leading-relaxed space-y-2 shadow-xs">
+        <div className="mt-4 p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-slate-700 leading-relaxed space-y-2">
           <p className="flex items-start gap-2">
             <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <span>
@@ -89,7 +103,7 @@ export const CorridorPreloaderModal: React.FC<CorridorPreloaderModalProps> = ({
 
         {/* Corridor Technical Specs Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-5">
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2 text-blue-700 text-xs font-mono font-bold mb-1">
               <MapPin className="w-4 h-4" />
               <span>Section Scope</span>
@@ -98,7 +112,7 @@ export const CorridorPreloaderModal: React.FC<CorridorPreloaderModalProps> = ({
             <div className="text-[11px] text-slate-500 mt-0.5">16 Interlocked Stations from MYS to SBC</div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2 text-indigo-700 text-xs font-mono font-bold mb-1">
               <Train className="w-4 h-4" />
               <span>Fleet Coverage</span>
@@ -107,7 +121,7 @@ export const CorridorPreloaderModal: React.FC<CorridorPreloaderModalProps> = ({
             <div className="text-[11px] text-slate-500 mt-0.5">Vande Bharat, Shatabdi, Superfast, MEMU</div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2 text-emerald-700 text-xs font-mono font-bold mb-1">
               <Globe2 className="w-4 h-4" />
               <span>Nationwide Scale</span>
@@ -134,21 +148,20 @@ export const CorridorPreloaderModal: React.FC<CorridorPreloaderModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200">
-          <div className="text-[11px] text-slate-500 flex items-center gap-1.5 font-mono">
-            {autoDismiss && countdown > 0 ? (
-              <>
-                <Clock className="w-3.5 h-3.5 text-blue-600 animate-spin" />
-                <span>Entering mission control in <strong>{countdown}s</strong> (hover to pause)</span>
-              </>
-            ) : (
-              <span>Hover paused auto-dismiss · Ready for inspection</span>
-            )}
-          </div>
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+          <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={dontShowAgain}
+              onChange={(e) => setDontShowAgain(e.target.checked)}
+              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+            <span>Don't show automatically on startup</span>
+          </label>
 
           <button
-            onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-95"
+            onClick={handleDismiss}
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 group cursor-pointer"
           >
             <span>Enter Section Controller Cockpit</span>
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

@@ -23,10 +23,19 @@ import { OptimalRouteOptimizer } from "./components/OptimalRouteOptimizer";
 import { LocoPilotCabTerminal } from "./components/LocoPilotCabTerminal";
 import { ExecutiveHumanCockpit } from "./components/ExecutiveHumanCockpit";
 import { CorridorPreloaderModal } from "./components/CorridorPreloaderModal";
+import { AppPreloader } from "./components/AppPreloader";
+import { WelcomeLandingBanner } from "./components/WelcomeLandingBanner";
 import { Flame } from "lucide-react";
 
 export function App() {
-  const [showCorridorBriefing, setShowCorridorBriefing] = useState<boolean>(true);
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
+  const [showCorridorBriefing, setShowCorridorBriefing] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("railrakshak_skip_briefing") !== "true";
+    } catch {
+      return true;
+    }
+  });
   // Navigation View State - Supports separate tab via URL query param (?tab=SIMULATOR)
   const [activeTab, setActiveTab] = useState<"COCKPIT" | "OPTIMAL_ROUTE" | "SIMULATOR" | "LOCO_PILOT" | "STITCH_INSIGHT" | "PAIN_FACTORS" | "ANALYSIS">(() => {
     try {
@@ -129,6 +138,11 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-body panel-grid">
+      {/* 0. Cinematic Initial App Startup Pre-loader */}
+      {isInitialLoading && (
+        <AppPreloader onComplete={() => setIsInitialLoading(false)} />
+      )}
+
       {/* 1. Masthead Dispatcher Navigation with Live Real-Time Clock Scrubber & View Tabs */}
       <Header
         showScenarioBar={showScenarioBar}
@@ -185,21 +199,31 @@ export function App() {
             onBackToMissionControl={() => handleTabChange("COCKPIT")}
           />
         ) : activeTab === "COCKPIT" ? (
-          /* Redesigned Executive Human-Readable Cockpit with Light/Dark Theme */
-          <ExecutiveHumanCockpit
-            selectedTrain={resolvedLive.config}
-            prediction={prediction}
-            onSelectTrain={handleSelectTrain}
-            activeClockMinutes={activeClockMinutes}
-            setActiveClockMinutes={setActiveClockMinutes}
-            isRealTimeSynced={isRealTimeSynced}
-            setIsRealTimeSynced={setIsRealTimeSynced}
-            onOpenSimulator={() => handleTabChange("SIMULATOR")}
-            onOpenOptimalRoute={() => handleTabChange("OPTIMAL_ROUTE")}
-            environment={environment}
-            injectedDelay={injectedDelay}
-            setInjectedDelay={setInjectedDelay}
-          />
+          <>
+            {/* Landing Welcome Hero Banner */}
+            <WelcomeLandingBanner
+              onOpenSimulator={() => handleTabChange("SIMULATOR")}
+              onOpenOptimizer={() => handleTabChange("OPTIMAL_ROUTE")}
+              onOpenBriefing={() => setShowCorridorBriefing(true)}
+              onReplayPreloader={() => setIsInitialLoading(true)}
+            />
+
+            {/* Redesigned Executive Human-Readable Cockpit with Light/Dark Theme */}
+            <ExecutiveHumanCockpit
+              selectedTrain={resolvedLive.config}
+              prediction={prediction}
+              onSelectTrain={handleSelectTrain}
+              activeClockMinutes={activeClockMinutes}
+              setActiveClockMinutes={setActiveClockMinutes}
+              isRealTimeSynced={isRealTimeSynced}
+              setIsRealTimeSynced={setIsRealTimeSynced}
+              onOpenSimulator={() => handleTabChange("SIMULATOR")}
+              onOpenOptimalRoute={() => handleTabChange("OPTIMAL_ROUTE")}
+              environment={environment}
+              injectedDelay={injectedDelay}
+              setInjectedDelay={setInjectedDelay}
+            />
+          </>
         ) : activeTab === "PAIN_FACTORS" ? (
           <>
             {/* Train Command Deck for Quick Selection */}
